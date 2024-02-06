@@ -10,3 +10,6 @@
 [submodule "voro++"]
 	path = code/thirdparty/mandatory/voroxx/voro
 	url = git@github.com:chr1shr/voro.git
+[submodule "lodepng"]
+	path = code/thirdparty/deprecated/lodepng/lodepng
+	url = git@github.com:lvandeve/lodepng.git

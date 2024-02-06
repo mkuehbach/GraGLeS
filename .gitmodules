@@ -7,3 +7,6 @@
 [submodule "trng"]
 	path = code/thirdparty/mandatory/trng/trng4
 	url = git@github.com:rabauke/trng4.git
+[submodule "voro++"]
+	path = code/thirdparty/mandatory/voroxx/voro
+	url = git@github.com:chr1shr/voro.git

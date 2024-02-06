@@ -11,8 +11,7 @@ project(${MYPROJECTNAME} LANGUAGES C CXX)
 set(CMAKE_BUILD_DIR "build")
 
 
-set(MYPROJECTPATH "/home/mkuehbach/sprint18/gragles")
-# set(MYPROJECTPATH "${CMAKE_CURRENT_LIST_DIR}/..")
+set(MYPROJECTPATH "${CMAKE_CURRENT_LIST_DIR}/../..")
 set(MYEIGENPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/eigen/eigen")
 set(MYHDFPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.2/build/HDF5-1.14.2-Linux/HDF_Group/HDF5/1.14.2")
 set(MYVOROXXPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/voroxx/voro")

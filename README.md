@@ -16,4 +16,8 @@ git submodule update --init --recursive --jobs=4
 
 # compile structure_generator from within code/structure_generator/build via following the instructions in its ../README.md
 # compile twod_obc_solver within code/twod_obc_solver/build via following the instructions in its ../README.md
+# that is create a build directory and cd into them respectively, thereafter use cmake to create a Makefile
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 ..
+# now build (using n many threads here n is 16)
+make -j16
 ```

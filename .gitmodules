@@ -4,3 +4,6 @@
 [submodule "rapidxml"]
 	path = code/thirdparty/mandatory/rapidxml/rapidxml
 	url = git@github.com:viriw/rapidxml.git
+[submodule "trng"]
+	path = code/thirdparty/mandatory/trng/trng4
+	url = git@github.com:rabauke/trng4.git

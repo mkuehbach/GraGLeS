@@ -1,3 +1,6 @@
 [submodule "libeigen"]
 	path = code/thirdparty/mandatory/eigen/eigen
-	url = https://gitlab.com/libeigen/eigen.git
+	url = git@gitlab.com:libeigen/eigen.git
+[submodule "rapidxml"]
+	path = code/thirdparty/mandatory/rapidxml/rapidxml
+	url = git@github.com:viriw/rapidxml.git

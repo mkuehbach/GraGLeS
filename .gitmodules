@@ -1,15 +1,15 @@
 [submodule "libeigen"]
 	path = code/thirdparty/mandatory/eigen/eigen
-	url = https://www.gitlab.com/libeigen/eigen.git
+	url = https://gitlab.com/libeigen/eigen.git
 [submodule "rapidxml"]
 	path = code/thirdparty/mandatory/rapidxml/rapidxml
-	url = https://www.github.com/viriw/rapidxml.git
+	url = https://github.com/viriw/rapidxml.git
 [submodule "trng"]
 	path = code/thirdparty/mandatory/trng/trng4
-	url = https://www.github.com/rabauke/trng4.git
+	url = https://github.com/rabauke/trng4.git
 [submodule "voro++"]
 	path = code/thirdparty/mandatory/voroxx/voro
-	url = https://www.github.com/chr1shr/voro.git
+	url = https://github.com/chr1shr/voro.git
 [submodule "lodepng"]
 	path = code/thirdparty/deprecated/lodepng/lodepng
-	url = https://www.github.com/lvandeve/lodepng.git
+	url = https://github.com/lvandeve/lodepng.git

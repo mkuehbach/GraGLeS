@@ -22,7 +22,7 @@ mkdir -p f64 && cp fftw-$MYFFTW_VERSION.tar.gz f64
 rm fftw-$MYFFTW_VERSION.tar.gz
 
 cd $MYPROJECTHOME/code/thirdparty/mandatory/fftw/f32
-tar -xvf fftw-$MYFFTW_VERSION.tar.gz && rm fftw-$MYFFTW_VERSION.tar.gz cd fftw-$MYFFTW_VERSION
+tar -xvf fftw-$MYFFTW_VERSION.tar.gz && rm fftw-$MYFFTW_VERSION.tar.gz && cd fftw-$MYFFTW_VERSION
 ./configure --prefix=$PWD --enable-float --enable-avx512 2>&1 | tee FFTW.F32.Configure.STDOUTERR.txt
 make -j16 2>&1 | tee FFTW.F32.Make.STDOUTERR.txt
 make check 2>&1 | tee FFTW.F32.MakeCheck.STDOUTERR.txt

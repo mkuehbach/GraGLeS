@@ -1,0 +1,3 @@
+[submodule "libeigen"]
+	path = code/thirdparty/mandatory/eigen/eigen
+	url = https://gitlab.com/libeigen/eigen.git

@@ -13,3 +13,6 @@
 [submodule "lodepng"]
 	path = code/thirdparty/deprecated/lodepng/lodepng
 	url = https://github.com/lvandeve/lodepng.git
+[submodule "jemalloc"]
+	path = code/thirdparty/optional/jemalloc/jemalloc
+	url = https://github.com/jemalloc/jemalloc.git

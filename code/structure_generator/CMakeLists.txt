@@ -15,6 +15,7 @@ set(MYPROJECTPATH "${CMAKE_CURRENT_LIST_DIR}/../..")
 set(MYEIGENPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/eigen/eigen")
 set(MYHDFPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.2/build/HDF5-1.14.2-Linux/HDF_Group/HDF5/1.14.2")
 set(MYVOROXXPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/voroxx/voro")
+set(MYJEMALLOCPATH "${MYPROJECTPATH}/code/thirdparty/optional/jemalloc/jemalloc")
 set(MYTOOLSRCPATH "${MYPROJECTPATH}/code/structure_generator/src/cxx")
 
 #pull general information about external libraries and paths related to paraprobe
@@ -22,6 +23,7 @@ message([STATUS] "MYPROJECTPATH: ${MYPROJECTPATH}")
 message([STATUS] "MYEIGENPATH: ${MYEIGENPATH}")
 message([STATUS] "MYHDF5PATH: ${MYHDFPATH}")
 message([STATUS] "MYVOROXXPATH: ${MYVOROXXPATH}")
+message([STATUS] "MYJEMALLOCPATH: ${MYJEMALLOCPATH}")
 message([STATUS] "MYTOOLPATH: ${MYTOOLPATH}")
 set(EMPLOY_GNUCOMPILER ON)
 message([STATUS] "MYCCC_COMPILER: __${CMAKE_C_COMPILER}__")
@@ -44,7 +46,8 @@ endif()
 #HDF5 local installation for advanced I/O, collecting metadata and bundle analysis results together
 include_directories("${MYHDFPATH}/include")
 link_directories("${MYHDFPATH}/lib")
-set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a -ldl")
+set(MYHDF_LINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a -ldl")
+set(MYJEMALLOC_LINKFLAGS "-L${MYJEMALLOCPATH}/local/lib/ ${MYJEMALLOCPATH}/local/lib/libjemalloc.a")
 include_directories("${MYEIGENPATH}")
 include_directories("${MYVOROXXPATH}/src")
 
@@ -61,7 +64,7 @@ endif()
 
 #list firstly the precompiled shared aka utils, secondly the tool-specific components, lastly the tool-specific main
 add_executable(${MYPROJECTNAME}
-	${MYTOOLSRCPATH}/allocator.cpp
+	# ${MYTOOLSRCPATH}/allocator.cpp
 	${MYTOOLSRCPATH}/lodepng.cpp
 	${MYTOOLSRCPATH}/newMicrostructureGenerator.cpp
 	${MYTOOLSRCPATH}/microStructureHdl.cpp
@@ -89,4 +92,4 @@ add_executable(${MYPROJECTNAME}
 )
 
 #linking process, the target link libraries command is specific for each tool of the toolbox
-target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MYHDFLINKFLAGS} -lnuma)
+target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MYHDF_LINKFLAGS} -lnuma ${MYJEMALLOC_LINKFLAGS})

@@ -16,6 +16,7 @@ set(MYEIGENPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/eigen/eigen")
 set(MYFFTWPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/fftw")
 set(MYHDFPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.2/build/HDF5-1.14.2-Linux/HDF_Group/HDF5/1.14.2")
 set(MYVOROXXPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/voroxx/voro")
+set(MYJEMALLOCPATH "${MYPROJECTPATH}/code/thirdparty/optional/jemalloc/jemalloc")
 set(MYTOOLSRCPATH "${MYPROJECTPATH}/code/twod_obc_solver/src/cxx")
 
 #pull general information about external libraries and paths related to paraprobe
@@ -24,6 +25,7 @@ message([STATUS] "MYEIGENPATH: ${MYEIGENPATH}")
 message([STATUS] "MYFFTWPATH: ${MYFFTWPATH}")
 message([STATUS] "MYHDF5PATH: ${MYHDFPATH}")
 message([STATUS] "MYVOROXXPATH: ${MYVOROXXPATH}")
+message([STATUS] "MYJEMALLOCPATH: ${MYJEMALLOCPATH}")
 message([STATUS] "MYTOOLPATH: ${MYTOOLPATH}")
 set(EMPLOY_GNUCOMPILER ON)
 # set(EMPLOY_INTELCOMPILER ON)
@@ -64,6 +66,7 @@ link_directories("${MYHDFPATH}/lib")
 set(MYHDFLINKFLAGS "-L${MYHDFPATH}/lib/ ${MYHDFPATH}/lib/libhdf5_hl.a ${MYHDFPATH}/lib/libhdf5.a ${MYHDFPATH}/lib/libz.a -ldl")
 set(MYFFTW_FLOAT_LINKFLAGS "-L${MYFFTWPATH}/f32/fftw-3.3.10/lib/ ${MYFFTWPATH}/f32/fftw-3.3.10/lib/libfftw3f.a")
 set(MYFFTW_DOUBLE_LINKFLAGS "-L${MYFFTWPATH}/f64/fftw-3.3.10/lib/ ${MYFFTWPATH}/f64/fftw-3.3.10/lib/libfftw3.a")
+set(MYJEMALLOC_LINKFLAGS "-L${MYJEMALLOCPATH}/local/lib/ ${MYJEMALLOCPATH}/local/lib/libjemalloc.a")
 include_directories("${MYEIGENPATH}")
 include_directories("${MYVOROXXPATH}/src")
 
@@ -91,7 +94,7 @@ endif()
 
 #list firstly the precompiled shared aka utils, secondly the tool-specific components, lastly the tool-specific main
 add_executable(${MYPROJECTNAME}
-	${MYTOOLSRCPATH}/allocator.cpp
+	# ${MYTOOLSRCPATH}/allocator.cpp
 	${MYTOOLSRCPATH}/ggLS.cpp
 	${MYTOOLSRCPATH}/mymath.cpp
 	${MYTOOLSRCPATH}/SCORE_Random.cpp
@@ -125,4 +128,4 @@ add_executable(${MYPROJECTNAME}
 )
 
 #linking process, the target link libraries command is specific for each tool of the toolbox
-target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MYHDFLINKFLAGS} ${MYFFTW_FLOAT_LINKFLAGS} ${MYFFTW_DOUBLE_LINKFLAGS} -lm -lnuma)
+target_link_libraries(${MYPROJECTNAME} ${MYOMP} ${MYHDFLINKFLAGS} ${MYFFTW_FLOAT_LINKFLAGS} ${MYFFTW_DOUBLE_LINKFLAGS} -lm -lnuma ${MYJEMALLOC_LINKFLAGS})

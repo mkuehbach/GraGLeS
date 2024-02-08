@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Parameters>
    <StartTime>0</StartTime>
-   <NumberOfParticles>9830202</NumberOfParticles> 
+   <NumberOfParticles>12991</NumberOfParticles> 
    <NumberOfPointsPerGrain>15</NumberOfPointsPerGrain>
    <AnalysisTimestep>1</AnalysisTimestep>
    <NumberOfTimesteps>1000000</NumberOfTimesteps>
@@ -21,8 +21,8 @@
 		3		E_GENERATE_TESTCASE,
 		4		E_READ_VOXELIZED_MICROSTRUCTURE
    -->
-   <ReadFromFilename>Container.raw</ReadFromFilename>
-   <AdditionalFilename>Microstructure.uds</AdditionalFilename>
+   <ReadFromFilename>Microstructure.SimID.10.GrainIDs.2D.1188.raw</ReadFromFilename>
+   <AdditionalFilename>Microstructure.SimID.10.uds</AdditionalFilename>
    <LatticeType>0</LatticeType>
 	   <!-- USAGE:
 	   	O		E_CUBIC,
@@ -63,7 +63,7 @@
    -->
    
    <ExecuteInParallel>1</ExecuteInParallel>
-   <MaximumNumberOfThreads>8</MaximumNumberOfThreads>
+   <MaximumNumberOfThreads>16</MaximumNumberOfThreads>
    <GridCoarsement>1</GridCoarsement>
    <GridCoarsementGradient>0.98</GridCoarsementGradient> 
    <ConvolutionMode>2</ConvolutionMode>   

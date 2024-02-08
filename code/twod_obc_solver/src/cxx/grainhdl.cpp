@@ -1151,8 +1151,8 @@ void grainhdl::run_sim() {
 			if ( ((loop - Settings::StartTime) % ( int(Settings::PlotInterval * Settings::AnalysisTimestep) ) == 0) && loop != 0 ) {
 				//##MK::for debug purposes still do plotting of network
 				//save_NetworkPlot();
-				save_GBCurvApprx();
 				/*
+				save_GBCurvApprx();
 				save_GBContourPlot();
 				save_GBJunctionPlot();
 				*/
@@ -1193,10 +1193,10 @@ cout << "I am incrementing the real-time realTime/dt/PhysDomSize/realDomainSize/
 			save_GBContourPlot();
 			save_GBJunctionPlot();
 			save_TextureFaces_Binary(); //MK::save_Texture(); MODF writing disabled to reduce number of files
+			save_GBCurvApprx();
 			*/
 			save_RealtimeLog();
 
-			save_GBCurvApprx();
 			save_NrGrainsStats();
 			save_Full_Microstructure_for_Restart();
 			//! With activated ResearchMode the id to centroid assignment is plotted

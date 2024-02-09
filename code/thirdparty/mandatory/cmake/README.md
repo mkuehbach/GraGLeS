@@ -1,0 +1,1 @@
+Install cmake ideally via the developer's apt repository as it is explained here: https://apt.kitware.com

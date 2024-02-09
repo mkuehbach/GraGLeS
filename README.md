@@ -1,47 +1,23 @@
-# GraGLeS_3D
-The brand new parallel level-set grain growth solver - faster, more effitient and bigger networks than ever before
+How to install these software tools on a modern Linux (tested with Ubuntu):
 
-Grain Growth Level Set 3dim (GraGLeS_3D) is a software kit to simulate the grain growth and related phenoma such as recrystallization in polycrytalline materials. The software is designed to account for anisotropic grain boundaries, finite, in particular, low triple junction mobilities (ongoing work) and any additional driving force such as bulk energy densities resulting from anisotropic magnetic
-susceptibilities or orientation dependent stored elastic energy densities.
+```
+# clone this repository
+git clone https://github.com/mkuehbach/GraGLeS.git --branch mcl-modernization
+cd GraGLeS
+git submodule sync --recursive
+git submodule update --init --recursive --jobs=4
 
-The algorithm considers pysical units as input argumenst but utilizes normilized quantities internally. To mimic very specific material properties, such as grain size, GB mobilities, GB energies and bulk energies or even microstructure with certain orientation gradients or stored elastic energies related to orientations of grains or subgrains, you are encouraged to use the IMM microstructure generator:
-https://github.com/GraGLeS/IMM_MicrostructureGenerator
+# set-up and assure that you have a working system for compiling C/C++ applications:
+# that is e.g. the GNU/C/C++ compiler, cmake, and (auto)make
+# then follow the instructions in
+# code/thirdparty/mandatory/fftw
+# code/thirdparty/mandatory/hdf5
+# code/thirdparty/mandatory/imkl
 
-The GraGLeS algorithm utilizes an OpenMP parallelization strategy and is optimized for ccNUMA archictecture. If you want to switch on this features set the <GrainScheduler> to 1. 0 is default.
-
-An installation guide is provided here:
-http://gragles.readthedocs.org/en/latest/
-
-Operating the 3D version is essentially the same as the 2D. You will need to install jemalloc on your system to overload linux malloc to assure thread-local memory placement.
-
-For detailed information about the algorithm we refer to our publications:
-
-Articles:
-
-A highly efficient 3D level-set grain growth algorithm tailored for ccNUMA architecture
-C. Mießen, N. Velinov, G. Gottstein, L.A. Barrales-Mora
-https://arxiv.org/abs/1701.06658
-Cite as:	arXiv:1701.06658
-This article is submitted to IOP MSMSE.
-
-An Advanced Level Set Approach to Grain Growth - Accounting for Grain Boundary Anisotropy and Finite Triple Junction Mobility, Acta Materialia, Volume 99, 15 October 2015, Pages 39–48
-DOI information: 10.1016/j.actamat.2015.07.040.
-
-bibtex:
-@article{
-Miessen2015,
-Author = {Mie{\ss}en, C. and Liesenjohann, M. and Barrales-Mora, L. A. and Shvindlerman, L. S. and Gottstein, G.},
-Title = {An advanced level set approach to grain growth – Accounting for grain boundary anisotropy and finite triple junction mobility},
-Journal = {Acta Materialia},
-Volume = {99},
-Pages = {39-48},
-Year = {2015} 
-}
-
-(private version attached to the 2D git)
-
-
-
-Acknowledgements:
-
-The authors gratefully acknowledge the support from the FZJuelich and the RWTH Aachen University for granting computing time within the frame of the JARAHPC project no 6687.
+# compile structure_generator from within code/structure_generator/build via following the instructions in its ../README.md
+# compile twod_obc_solver within code/twod_obc_solver/build via following the instructions in its ../README.md
+# that is create a build directory and cd into them respectively, thereafter use cmake to create a Makefile
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 ..
+# now build (using n many threads here n is 16)
+make -j16
+```

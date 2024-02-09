@@ -13,6 +13,7 @@ git submodule update --init --recursive --jobs=4
 # code/thirdparty/mandatory/fftw
 # code/thirdparty/mandatory/hdf5
 # code/thirdparty/mandatory/imkl
+# code/thirdparty/optional/jemalloc
 
 # compile structure_generator from within code/structure_generator/build via following the instructions in its ../README.md
 # compile twod_obc_solver within code/twod_obc_solver/build via following the instructions in its ../README.md
@@ -20,4 +21,5 @@ git submodule update --init --recursive --jobs=4
 cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc-13 -DCMAKE_CXX_COMPILER=g++-13 ..
 # now build (using n many threads here n is 16)
 make -j16
+# compiling instead with the Intel oneAPI C/C++ compiler is achieved with replacing gcc-13 for icx and g++-13 for icpx respectively
 ```

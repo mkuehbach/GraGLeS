@@ -1,0 +1,1 @@
+# A fork of the IMM structure generator to instantiate simple globulitic or striped two-layer hierarchical grain/sub-grain microstructures in 2D or 3D to be used for instantiating simulations with GraGLeS

@@ -4,12 +4,11 @@ cmake_minimum_required(VERSION 3.18.4)
 ##DEVELOPER SECTION#############################################################################################################
 ##in this section software developers need to make changes when debugging#######################################################
 ################################################################################################################################
-#please name your project accordingly
+# please name your project accordingly
 set(MYPROJECTNAME "gragles_structure_generator")
 message([STATUS] "Projectname is ${MYPROJECTNAME}")
 project(${MYPROJECTNAME} LANGUAGES C CXX)
 set(CMAKE_BUILD_DIR "build")
-
 
 set(MYPROJECTPATH "${CMAKE_CURRENT_LIST_DIR}/../..")
 set(MYEIGENPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/eigen/eigen")
@@ -17,27 +16,25 @@ set(MYHDFPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/hdf5/CMake-hdf5-1.14.2
 set(MYVOROXXPATH "${MYPROJECTPATH}/code/thirdparty/mandatory/voroxx/voro")
 set(MYJEMALLOCPATH "${MYPROJECTPATH}/code/thirdparty/optional/jemalloc/jemalloc")
 set(MYTOOLSRCPATH "${MYPROJECTPATH}/code/structure_generator/src/cxx")
-
-#pull general information about external libraries and paths related to paraprobe
 message([STATUS] "MYPROJECTPATH: ${MYPROJECTPATH}")
 message([STATUS] "MYEIGENPATH: ${MYEIGENPATH}")
 message([STATUS] "MYHDF5PATH: ${MYHDFPATH}")
 message([STATUS] "MYVOROXXPATH: ${MYVOROXXPATH}")
 message([STATUS] "MYJEMALLOCPATH: ${MYJEMALLOCPATH}")
 message([STATUS] "MYTOOLPATH: ${MYTOOLPATH}")
-set(EMPLOY_GNUCOMPILER ON)
+set(EMPLOY_GNUCOMPILER OFF)  # GNU C/C++ compiler for general purpose, if OFF using Intel oneAPI C/C++ compiler (probably best for Intel CPUs)
+
 message([STATUS] "MYCCC_COMPILER: __${CMAKE_C_COMPILER}__")
 message([STATUS] "MYCXX_COMPILER: __${CMAKE_CXX_COMPILER}__")
 
 
-#choose optimization level
+# choose optimization level
 ##-O0 nothing, debug purposes, -O1 moderate optimization, -O2 -O3 for production level up to aggressive architecture specific non-portable optimization
-if(EMPLOY_GNUCOMPILER)
-	set(MYOPTLEVEL "-O2")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MYOPTLEVEL}")
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYOPTLEVEL}")
-	message([STATUS] "We utilize optimization level ${MYOPTLEVEL}")
-endif()
+set(MYOPTLEVEL "-O2")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MYOPTLEVEL}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MYOPTLEVEL}")
+message([STATUS] "We utilize optimization level ${MYOPTLEVEL}")
+
 
 ################################################################################################################################
 ##END OF INTERACTION FOR NON PRO USERS##########################################################################################
@@ -51,14 +48,20 @@ set(MYJEMALLOC_LINKFLAGS "-L${MYJEMALLOCPATH}/local/lib/ ${MYJEMALLOCPATH}/local
 include_directories("${MYEIGENPATH}")
 include_directories("${MYVOROXXPATH}/src")
 
-#setting up compiler-specifics
+# setting up compiler-specifics
 if(EMPLOY_GNUCOMPILER)
-	# set(MYVERBOSE "-fopt-info") # optimization details only
-	set(MYVERBOSE "-Wall") # all warnings
+	set(MYVERBOSE "-Wall") # all warnings, -fopt-info for optimization details only
 	add_definitions("${MYOPTLEVEL}")
 	add_definitions("${MYVERBOSE}")
-	set(MYOMP "-fopenmp")  # -lpthread")
-	add_definitions(${MYOMP})
+	set(MYOMP "-fopenmp")
+	add_definitions("${MYOMP}")
+	add_definitions("-std=c++17")
+else()
+	set(MYVERBOSE "-Wall")
+	add_definitions("${MYOPTLEVEL}")
+	add_definitions("${MYVERBOSE}")
+	set(MYOMP "-qopenmp")
+	add_definitions("${MYOMP}")
 	add_definitions("-std=c++17")
 endif()
 

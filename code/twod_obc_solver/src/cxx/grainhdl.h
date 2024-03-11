@@ -34,6 +34,18 @@
 // #define min(x,y) (x<y?x:y)
 // #define max(x,y) (x>y?x:y)
 
+#define NX_IDENTIFIER		0	//id
+#define NX_SIZE				1	//volume
+//double perimeter;
+//double GBEnergy;
+#define NX_SEE				4	//BulkEnergy
+#define NX_ORI				5	//phi1, PHI, phi2
+#define NX_BARY				6	//x, y
+#define NX_NBOR_CNT			7	//NeighbourCount
+#define NX_EDGE_CONTACT		8	//intersectsBoundaryGrain
+
+
+
 using namespace voro;
 using namespace std;
 
@@ -130,7 +142,15 @@ public:
 	virtual void run_sim();
 	void save_NrGrainsStats();
 	void clear_mem();
-	void save_NeXus();
+
+	vector<unsigned int> get_nexus_grain_identifier();
+	vector<double> get_nexus_grain_size();
+	vector<double> get_nexus_grain_stored_elastic_energy();
+	vector<unsigned char> get_nexus_grain_edge_contact();
+	vector<double> get_nexus_grain_orientation();
+	vector<double> get_nexus_grain_barycentre();
+	bool save_NeXus();
+
 	void save_Texture();
 	void save_TextureFaces_Binary();
 	void save_RealtimeLog();

@@ -860,9 +860,178 @@ for	(auto id : workload) {
 }
 
 
-void grainhdl::save_NeXus()
+vector<unsigned int> grainhdl::get_nexus_grain_identifier()
 {
+	vector<unsigned int> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->getID() );
+		}
+	}
+	return retval;
+}
 
+
+vector<double> grainhdl::get_nexus_grain_size()
+{
+	vector<double> retval;
+	double A = Settings::Physical_Domain_Size * Settings::Physical_Domain_Size;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->getVolume() ); //*0.5 ??
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_stored_elastic_energy()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->get_StoredElasticEnergy() );
+		}
+	}
+	return retval;
+}
+
+
+vector<unsigned char> grainhdl::get_nexus_grain_edge_contact()
+{
+	vector<unsigned char> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->has_edge_contact() );
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_orientation()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> quat = grains[i]->get_quaternion();
+			retval.insert( retval.end(), quat.begin(), quat.end());
+			/*
+			for( size_t j = 0; j < bunge.size(); j++ ) {
+				retval.push_back( bunge[j] );
+			}
+			*/
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_barycentre()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> xy = grains[i]->get_barycentre();
+			retval.insert( retval.end(), xy.begin(), xy.end() );
+			/*
+			for( size_t j = 0; j < xy.size(); j++ ) {
+				f64.push_back( xy[j] );
+			}
+			*/
+		}
+	}
+	return retval;
+}
+
+
+bool grainhdl::save_NeXus()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+	vector<unsigned int> u32;
+	vector<double> f64;
+	vector<unsigned char> u8;
+
+	grpnm = "/entry1/ms/step" + to_string(loop);
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot") );
+	if ( h5w.nexus_path_exists( grpnm ) == false ) {
+		if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+	}
+	else {
+		return true;
+	}
+
+	dsnm = grpnm + "/grain_identifier";
+	u32 = get_nexus_grain_identifier();
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/grain_size";
+	f64 = get_nexus_grain_size();
+	anno = ioAttributes();
+	//anno.add( "unit", string("m") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/grain_stored_elastic_energy";
+	f64 = get_nexus_grain_stored_elastic_energy();
+	anno = ioAttributes();
+	//anno.add( "unit", string("1/m^2") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+
+	if ( loop == 1 ) {
+		dsnm = grpnm + "/grain_orientation";
+		f64 = get_nexus_grain_orientation();
+		anno = ioAttributes();
+		//anno.add( "unit", string("°") );
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64.size() / 4, 4}, {f64.size() / 4, 4}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64 = vector<double>();
+	}
+
+	dsnm = grpnm + "/grain_barycentre";
+	f64 = get_nexus_grain_barycentre();
+	anno = ioAttributes();
+	//anno.add( "unit", string("m") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size() / 2, 2}, {f64.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/grain_edge_contact";
+	u8 = get_nexus_grain_edge_contact();
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u8.size()}, {u8.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u8,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	u8 = vector<unsigned char>();
+
+	return true;
 }
 
 
@@ -1167,6 +1336,12 @@ void grainhdl::run_sim() {
 
 			//if ( loop >= 4000 )
 
+			if ( save_NeXus() == true ) {
+				cout << "Writing snapshot data for loop " << loop << " into NeXus file success." << "\n";
+			}
+			{
+				cerr << "Writing snapshot data for loop " << loop << " into NeXus file failed!" << "\n";
+			}
 			/*
 			save_TextureFaces_Binary(); //MK::save_Texture(); MODF writing disabled to reduce number of files
 			*/

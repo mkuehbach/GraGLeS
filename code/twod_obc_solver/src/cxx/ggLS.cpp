@@ -109,6 +109,12 @@ bool debug_hdf5()
 				anno) != MYHDF5_SUCCESS ) { return false; }
 	}
 	//##MK::add dim_alias names
+
+	grpnm = "/entry" + to_string(entry_id) + "/ms";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot_set") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+
 	return true;
 }
 
@@ -117,7 +123,7 @@ bool debug_hdf5()
 int main(int argc, char *argv[]) {
 
 	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimID) + ".nxs";
-	return (int) debug_hdf5();
+	int status = debug_hdf5();
 
 	if (argc > 1)
 		Settings::initializeParameters(argv[1]);

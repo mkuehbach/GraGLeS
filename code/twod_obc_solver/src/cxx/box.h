@@ -220,6 +220,8 @@ public:
 
 	void outputMemoryUsage(ofstream& output);
 	TextureData collectTextureData();
+	vector<double> get_quaternion();
+	vector<double> get_barycentre();
 	void writeGBCurvatureApprx( FILE *externalfh );
 	void writeGBContourPoints( FILE *externalfh, int gridblowup );
 	void writeGBJunctionPoints( FILE *externalfh, int gridblowup );
@@ -283,6 +285,9 @@ public:
 	}
 	inline struct wghtd_imcurv_res get_curvApprx() {
 		return m_curvapprx;
+	}
+	inline unsigned char has_edge_contact() {
+		return (unsigned char) this->m_intersectsBoundaryGrain;
 	}
 	LSbox* getNeighbourAt(int i, int j);
 };

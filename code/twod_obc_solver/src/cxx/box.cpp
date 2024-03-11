@@ -2547,8 +2547,32 @@ TextureData LSbox::collectTextureData() {
 	return newdata;
 }
 
-#define I_DONT_KNOW_YET		(-100.0)
+vector<double> LSbox::get_quaternion() {
+	/*
+	double* newori = this->m_orientationQuat->quaternion2Euler();
+	double phi1 = newori[0];
+	double Phi = newori[1];
+	double phi2 = newori[2];
+	delete [] newori;
+	return vector<double> { phi1, Phi, phi2 };
+	*/
+	return vector<double> {
+		m_orientationQuat->get_q0(),
+		m_orientationQuat->get_q1(),
+		m_orientationQuat->get_q2(),
+		m_orientationQuat->get_q3() };
+}
 
+
+vector<double> LSbox::get_barycentre() {
+	double x = (getMaxX() - getMinX()) / 2 + getMinX();
+	x *= m_grainHandler->get_h();
+	double y = (getMaxY() - getMinY()) / 2 + getMinY();
+	y *= m_grainHandler->get_h();
+	return vector<double>{ x, y };
+}
+
+#define I_DONT_KNOW_YET		(-100.0)
 
 
 

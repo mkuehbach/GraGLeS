@@ -69,6 +69,7 @@ enum E_GRAIN_SCHEDULER {
 class Settings {
 public:
 	static unsigned long StartTime;
+	static unsigned int SimID;
 	static unsigned int NumberOfParticles;
 	static unsigned long NumberOfPointsPerGrain;
 	static unsigned long NumberOfTimesteps;
@@ -82,6 +83,8 @@ public:
 	static E_RESEARCH_PROJECT ResearchProject;
 	static std::string ReadFromFilename;
 	static std::string AdditionalFilename;
+	static std::string ConfigFileName;
+	static std::string ResultsFileName;
 	static unsigned long LatticeType;
 	static double HAGB_Mobility;
 	static double HAGB_Energy;

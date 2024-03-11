@@ -27,7 +27,97 @@ using namespace std;
 #include <stdio.h>
 
 
+bool debug_hdf5()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) { return false; }
+
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	unsigned int entry_id = 1;
+	grpnm = "/entry" + to_string(entry_id);
+
+	stringstream sstr;
+	sstr << "https://github.com/mkuehbach/GraGLeS/<<ADD COMMID ID>>/NXms_gragles_results";
+	cout << sstr.str() << "\n";
+	anno = ioAttributes();
+	anno.add( "version", string(sstr.str()) );
+	anno.add( "NX_class", string("NXentry") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	dsnm = grpnm + "/definition";
+	string appdef_name = "NXms_gragles_results";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	dsnm = grpnm + "/program";
+	string program_name = "twod_obc_solver";
+	anno = ioAttributes();
+	anno.add( "version", string("<<ADD PARSING OF xstr(GITSHA)>>") );
+	anno.add( "preprocessor_date", string(__DATE__) );
+	anno.add( "preprocessor_time", string(__TIME__) );
+	if ( h5w.nexus_write( dsnm, program_name, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	dsnm = grpnm + "/analysis_identifier";
+	unsigned int identifier = Settings::SimID;
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write( dsnm, identifier, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	dsnm = grpnm + "/start_time";
+	string start_time_stamp = "<<ADD TIME PARSING via utils/src/cxx>>";
+	anno = ioAttributes();
+	//MK::IF THE VALUE to WRTIE IS A STRING IT MUST NOT BE A CONST STRING
+	if ( h5w.nexus_write( dsnm, start_time_stamp, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	dsnm = grpnm + "/config_filename";
+	string config_file_sha256 = "<<ADD SHA256( ConfigShared::ConfigurationFile )>>";
+	string config_file_name = "<<ADD ConfigShared::ConfigurationFile>>";
+	cout << "config_file_sha256 " << config_file_sha256 << "\n";
+	cout << "config_file_name " << config_file_name << "\n";
+	anno = ioAttributes();
+	anno.add( "version", config_file_sha256 );
+	anno.add( "comment", string("SHA256 checksum"));
+	if ( h5w.nexus_write( dsnm, config_file_name, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	grpnm = "/entry" + to_string(entry_id) + "/coordinate_system_set";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcoordinate_system_set") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	grpnm = "/entry" + to_string(entry_id) + "/coordinate_system_set/gragles";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXtransformations") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+
+	vector<string> axis_name = { "/x", "/y", "/z" };
+	for( size_t i = 0; i < 3; i++ ) {
+		dsnm = grpnm + axis_name[i];
+		vector<double> real = vector<double>( 3, 0. );
+		real[i] = 1.;
+		anno = ioAttributes();
+		anno.add( "depends_on", string(".") );
+		anno.add( "offset", string("{0., 0., 0.}, storing 1d array as an attribute value not yet implemented") ); //##MK::not yet implemented
+		anno.add( "offset_units", string("nm") );
+		if ( h5w.nexus_write(
+				dsnm,
+				io_info({3, 1},
+						{3, 1}),
+				real,
+				anno) != MYHDF5_SUCCESS ) { return false; }
+	}
+	//##MK::add dim_alias names
+	return true;
+}
+
+
+
 int main(int argc, char *argv[]) {
+
+	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimID) + ".nxs";
+	return (int) debug_hdf5();
 
 	if (argc > 1)
 		Settings::initializeParameters(argv[1]);
@@ -63,5 +153,5 @@ int main(int argc, char *argv[]) {
 	my_sim->clear_mem();
 
 	delete my_sim;
-
+	return 0;
 }

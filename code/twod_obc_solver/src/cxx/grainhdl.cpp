@@ -859,6 +859,13 @@ for	(auto id : workload) {
 }
 }
 
+
+void grainhdl::save_NeXus()
+{
+
+}
+
+
 void grainhdl::save_Texture() {
 	cerr << "grainhdl::save_Texture FIX ME !!" << "\n";
 	/*

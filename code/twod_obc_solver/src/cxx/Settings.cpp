@@ -27,6 +27,7 @@ using namespace rapidxml;
 
 //Initializing the static setting variables
 unsigned long Settings::StartTime = 0;
+unsigned int Settings::SimID = 0;
 unsigned int Settings::NumberOfParticles = 0;
 unsigned long Settings::NumberOfPointsPerGrain = 0;
 unsigned long Settings::BreakupNumber = 0;
@@ -41,8 +42,10 @@ double Settings::GridCoarsementGradient = 0.95;
 E_CONVOLUTION_MODE Settings::ConvolutionMode = E_INVALID_VALUE;
 E_MICROSTRUCTURE_GEN_MODE Settings::MicrostructureGenMode = E_INVALID_VAL;
 E_RESEARCH_PROJECT Settings::ResearchProject = E_DEFAULT;
-string Settings::ReadFromFilename;
-string Settings::AdditionalFilename;
+string Settings::ReadFromFilename = "";
+string Settings::AdditionalFilename = "";
+string Settings::ConfigFileName = "";
+string Settings::ResultsFileName = "";
 unsigned long Settings::LatticeType = 0;
 double Settings::HAGB_Energy = 1.0;
 double Settings::HAGB_Mobility = 1.0;

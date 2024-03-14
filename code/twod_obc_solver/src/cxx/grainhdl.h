@@ -27,7 +27,7 @@
 #include "misorientation.h"
 #include "IGrainScheduler.h"
 #include "dimensionalBuffer.h"
-#include "PARAPROBE_HDF5Core.h"
+#include "../../../utils/src/cxx/PARAPROBE_HDF5Core.h"
 
 #define xsect(p1,p2) (h[p2]*xh[p1]-h[p1]*xh[p2])/(h[p2]-h[p1])
 #define ysect(p1,p2) (h[p2]*yh[p1]-h[p1]*yh[p2])/(h[p2]-h[p1])

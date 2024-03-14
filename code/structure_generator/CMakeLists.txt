@@ -68,6 +68,7 @@ endif()
 #list firstly the precompiled shared aka utils, secondly the tool-specific components, lastly the tool-specific main
 add_executable(${MYPROJECTNAME}
 	# ${MYTOOLSRCPATH}/allocator.cpp
+	${MYTOOLSRCPATH}/../../../utils/src/cxx/PARAPROBE_HDF5Core.cpp
 	${MYTOOLSRCPATH}/lodepng.cpp
 	${MYTOOLSRCPATH}/newMicrostructureGenerator.cpp
 	${MYTOOLSRCPATH}/microStructureHdl.cpp

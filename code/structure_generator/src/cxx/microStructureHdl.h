@@ -269,6 +269,7 @@ public:
 	unsigned int CountNumberOfSubgrains();
 	void RehashGrainIDs();
 	void BreakPeriodicity();
+	void SaveNeXus();
 	void SaveDataGraGeLeS();
 	void SaveDataDAMASKMatConfig();
 	void SaveDataDAMASKGeometry();

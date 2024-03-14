@@ -263,7 +263,11 @@ public:
 	*/
 	inline T* getRawData()
 	{return &m_values[0];}
-
+	/*!
+	* \brief This method returns number of data entries stored in the buffer.
+	*/
+	inline size_t getSize()
+	{return m_values.size();}
 
 private:
 	int 	m_xMin;

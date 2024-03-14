@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -59,9 +59,10 @@ enum E_CRYSTAL_STRUCTURE { //Corresponds to the CRYSTAL STRUCTURE of the sample 
 };
 
 enum E_PLOT_DIMENSION {
-	E_3D,
+	E_DEFAULT_DIMENSION,
+	E_1D,
 	E_2D,
-	E_DEFAULT_DIMENSION
+	E_3D
 };
 
 enum E_GRAIN_AGGREGATE {
@@ -128,6 +129,7 @@ public:
 
 	static string ReadFromFilename;
 	static string AdditionalFilename;
+	static string ResultsFileName;
 
 	static void readXML(string filename = "");
 

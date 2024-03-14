@@ -690,7 +690,6 @@ myPreferenceOri microStructureHdl::findNextPreferenceOrientation(
 		myQuaternion ori) {
 	if (Settings::TextureGEN == E_USE_PREFERENCEORI) {
 		double min = 15.0 * PI / 180.0;
-		myPreferenceOri* i;
 		unsigned int idx = 0;
 		for ( unsigned int p = 0; p < m_PreferenceOrientations->size(); p++ ) {
 			double misori = ori.misorientationCubicQxQ( &((*m_PreferenceOrientations)[p].ori) );
@@ -756,13 +755,12 @@ void microStructureHdl::RehashGrainIDs() {
 	if ( Settings::BreakPerZ == true )	offset += 2;
 
 	int newoffset = 0;
-	vector<Grains*>::iterator itG;
-	for (itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
 		if ((Settings::NumberOfSubgrains != 0) && (*itG)->m_SubGrains.size() > 1) {
 			newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset); // implicit rehashing of all ID's
 			offset = --newoffset;
-			vector<SubGrain*>::iterator it;
-		} else {
+		}
+		else {
 			newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset);
 			offset = newoffset;
 		}
@@ -863,6 +861,258 @@ void microStructureHdl::BreakPeriodicity() {
 	//nothing to do otherwise
 
 	myprofiler.logev( "BreakPeriodicity", (omp_get_wtime() - timer) );
+}
+
+
+bool microStructureHdl::SaveNeXus() {
+	double tic = omp_get_wtime();
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+
+	vector<double> f64;
+	vector<float> f32;
+	vector<unsigned int> u32;
+	vector<int> i32;
+	vector<unsigned char> u8;
+
+	grpnm = "/entry1";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXentry") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	grpnm = "/entry1/ms";
+	anno = ioAttributes();
+	anno.add( "NX_class", "NXms_snapshot" );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	/*
+	grpnm = "/entry1/ms/grid";
+	anno = ioAttributes();
+	anno.add( "NX_class", "NXcg_grid" );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+	*/
+
+	dsnm = grpnm + "/unknown_offset";
+	unsigned long idoff = this->get_first_id(); //for grains or cells?
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, idoff, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	dsnm = grpnm + "/average_subgrain_discretization";
+	u32 = vector<unsigned int>( Settings::PlotDimension, Settings::NumberOfPointsPerSubGrain);
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, u32, anno ) != MYHDF5_SUCCESS ) { return; }
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/extent"; //real extent ?
+	u32 = vector<unsigned int>( Settings::PlotDimension, Settings::NumberOfGridpoints);
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, u32, anno ) != MYHDF5_SUCCESS ) { return; }
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/number_of_subgrains";
+	unsigned int n_subgr = CountNumberOfSubgrains();
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, n_subgr, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	grpnm = "/entry1/ms";
+	dsnm = grpnm + "/grain_is_subgrain";
+	for (vector<Grains*>::itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						u8.push_back(0x01);
+					}
+				}
+			}
+			else {
+				u8.push_back(0x00);
+			}
+		}
+	}
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, io_info({u8.size()}, {u8.size()}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	u8 = vector<unsigned char>();
+
+	dsnm = grpnm + "/grain_identifier";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						u32.push_back(*itS->get_ID());
+					}
+				}
+			}
+			else {
+				u32.push_back(*itG->get_ID());
+			}
+		}
+	}
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, io_info({u32.size()}, {u32.size}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/grain_barycentre_naive";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL ) {
+						f64.push_back((((*itS)->getMaxX() - (*itS)->getMinX()) / 2 + (*itS)->getMinX()));
+						f64.push_back((((*itS)->getMaxY() - (*itS)->getMinY()) / 2 + (*itS)->getMinY()));
+						if (Settings::PlotDimension == E_3D) {
+							f64.push_back((((*itS)->getMaxZ() - (*itS)->getMinZ()) / 2 + (*itS)->getMinZ()));
+						}
+					}
+				}
+			}
+			else {
+				f64.push_back((((*itG)->getMaxX() - (*itG)->getMinX()) / 2 + (*itG)->getMinX()));
+				f64.push_back((((*itG)->getMaxY() - (*itG)->getMinY()) / 2 + (*itG)->getMinY()));
+				if (Settings::PlotDimension == E_3D) {
+					f64.push_back((((*itG)->getMaxZ() - (*itG)->getMinZ()) / 2 + (*itG)->getMinZ()));
+				}
+			}
+		}
+	}
+	anno = ioAttributes();
+	anno.add( "unit", string("m ?????") );
+	size_t n_cols = Settings::PlotDimension;
+	if ( h5w.nexus_write( dsnm, io_info({f64.size() / n_cols, n_cols}, {f64.size() / n_cols, n_cols}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/grain_orientation";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						f64.push_back((*itS)->get_Orientation()->get_q0());
+						f64.push_back((*itS)->get_Orientation()->get_q1());
+						f64.push_back((*itS)->get_Orientation()->get_q2());
+						f64.push_back((*itS)->get_Orientation()->get_q3());
+					}
+				}
+			}
+			else {
+				f64.push_back((*itG)->getOri().get_q0());
+				f64.push_back((*itG)->getOri().get_q1());
+				f64.push_back((*itG)->getOri().get_q2());
+				f64.push_back((*itG)->getOri().get_q3());
+			}
+		}
+	}
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, io_info({f64.size() / 4, 4}, {f64.size() / 4, 4}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/grain_aabb";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						i32.push_back((*itS)->getMinX());
+						i32.push_back((*itS)->getMaxX());
+						i32.push_back((*itS)->getMinY());
+						i32.push_back((*itS)->getMaxY());
+						if (Settings::PlotDimension != E_2D) {
+							i32.push_back((*itS)->getMinZ());
+							i32.push_back((*itS)->getMaxZ());
+						}
+					}
+				}
+			}
+			else {
+				i32.push_back((*itG)->getMinX());
+				i32.push_back((*itG)->getMaxX());
+				i32.push_back((*itG)->getMinY());
+				i32.push_back((*itG)->getMaxY());
+				if (Settings::PlotDimension == E_2D) {
+					i32.push_back((*itG)->getMinZ());
+					i32.push_back((*itG)->getMaxZ());
+				}
+			}
+		}
+	}
+	anno = ioAttributes();
+	n_cols = Settings::PlotDimension;
+	if ( h5w.nexus_write( dsnm, io_info({i32.size() / n_cols, n_cols}, {i32.size() / n_cols, n_cols}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	i32 = vector<int>();
+
+	dsnm = grpnm + "/grain_size";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						double vol = (*itS)->get_Volume();
+						unsigned int vol_discr = 0;
+						double divisor = (Settings::PlotDimension == E_2D ) ? (m_h * m_h * m_h) : (m_h * m_h);
+						if ( divisor > DBL_EPSILON ) {
+							vol_discr = (unsigned int) (vol / divisor);
+						}
+						u32.push_back(vol_discr);
+					}
+				}
+			}
+			else {
+				double vol = (*itG)->get_Volume();
+				unsigned int vol_discr = 0;
+				double divisor = (Settings::PlotDimension == E_3D) ? (m_h * m_h * m_h) : (m_h * m_h);
+				if ( divisor > DBL_EPSILON ) {
+					vol_discr = (unsigned int) (vol / divisor);
+				}
+				u32.push_back(vol_discr);
+			}
+		}
+	}
+	anno = ioAttributes();
+	if (Settings::PlotDimension == E_3D ) {
+		anno.add( "unit", string("m^3 ?????") );
+	}
+	else {
+		anno.add( "unit", string("m^2 ?????") );
+	}
+	if ( h5w.nexus_write( dsnm, io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+	
+	dsnm = grpnm + "/stored_elastic_energy";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ( (*itG) != NULL ) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL ) {
+						f64.push_back((*itS)->getSEE());
+					}
+				}
+			}
+			else {
+				f64.push_back((*itG)->getSEE());
+			}
+		}
+	}
+	anno = ioAttributes();
+	anno.add( "unit", string("1/m^2 ?????") );
+	if ( h5w.nexus_write( dsnm, io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01), anno ) != MYHDF5_SUCCESS ) { return; }
+
+	dsnm = grpnm + "/grain_identifier";
+	//##MK::write m_container->getRawData() in-place
+	u32 = m_container->getRawData();
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({m_container->getSize()}, {m_container->getSize()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) { return; }
+	u32 = vector<unsigned int>();
+
+
+	double toc = omp_get_wtime();
+	myprofiler.logev("WritingNeXus", (toc - tic));
 }
 
 

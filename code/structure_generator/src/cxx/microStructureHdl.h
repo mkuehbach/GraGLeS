@@ -205,19 +205,6 @@ typedef struct {
 	double	pbunge3;
 } SubgrainMetadata;
 
-/*
-typedef struct {
-	unsigned int simid;
-	unsigned int NGrains;
-	unsigned int firstgid;
-	unsigned int DX;
-	unsigned int DY;
-	unsigned int DZ;
-	unsigned int NX;
-	unsigned int NY;
-	unsigned int NZ;
-} SimMetadata;
-*/
 
 typedef struct {
 	int simid;
@@ -256,12 +243,10 @@ public:
 	void VoroGEN();
 	void readParticleFile();
 	void VoroGenPseudoPeriodic();
-	void initializeGrains(vector<vector<Eigen::Vector3d>> hulls,
-			vector<double> grainVolume);
+	void initializeGrains(vector<vector<Eigen::Vector3d>> hulls, vector<double> grainVolume);
 	void find_neighbors();
 	void updateGlobalVoxelContainer();
 	void Execute_SubgrainConstruction();
-
 	void DistributeGrainOriAndSEE();
 	void DistributeSubgrainOrientations();
 	myPreferenceOri findNextPreferenceOrientation(myQuaternion ori);
@@ -270,34 +255,11 @@ public:
 	void RehashGrainIDs();
 	void BreakPeriodicity();
 	void SaveNeXus();
-	void SaveDataGraGeLeS();
-	void SaveDataDAMASKMatConfig();
-	void SaveDataDAMASKGeometry();
-	void SaveDataDAMASK();
 	void SaveDetailedDiagnosticsASCII();
-	void SaveDetailedDiagnosticsBINARY();
-	void SaveParenthood();
-	void DebugGetDistParentGrainBnd( const string udsfn, const string rawfn );
-	void DebugHDF5();
-	void DebugHDF5XDMF();
-	void SaveHDF5_WriteGeometry( const char* fname );
-	void SaveHDF5_WriteGeometryCompound( const char* fname );
-	void SaveHDF5_WriteSubgrainMetadataType( const char* fname );
-	void SaveHDF5_WriteSubgrainMetadataTypeCompound( const char* fname );
-	void SaveHDF5_WriteVoxeldata( const char* fname );
-	void SaveHDF5_CollectMetadata( SubgrainMetadata* buf );
-	void SaveHDF5();
-	void CreateColormap( struct RGB* thecolormap );
-	void PlotIPF2DSection();
-	void Plot3DVolume();
 	void ReportProfile();
-
 	void initEnvironment();
 	void initNUMABindings();
-	void saveTexture();    //Plots density of orientation
-	void plotGrains();
 	void copyContainer();
-
 	void testprng( unsigned int n, double mu, double sigma );
 
 	//getter setter

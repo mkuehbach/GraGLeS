@@ -2548,7 +2548,7 @@ TextureData LSbox::collectTextureData() {
 }
 
 
-void LSbox::get_boundary_geometry( vector<double> & vrts )
+size_t LSbox::get_contour_vertices( vector<double> & vrts )
 {
 	//vertices
 	//facets
@@ -2561,6 +2561,7 @@ void LSbox::get_boundary_geometry( vector<double> & vrts )
 		vrts.push_back( it->x );
 		vrts.push_back( it->y );
 	}
+	return m_grainBoundary.getRawBoundary().size();
 	//aforementioned loops follows the sequence
 	/*
 	unsigned int prv = 0;
@@ -2574,21 +2575,24 @@ void LSbox::get_boundary_geometry( vector<double> & vrts )
 		fcts.push_back( fct_id );
 	}
 	*/
-	return vrts_offset;
 }
 
 
-void LSbox::get_boundary_facets( vector<unsigned int> & fcts )
+void LSbox::get_contour_xdmf_topology( const unsigned int vrts_offset, vector<unsigned int> & inds )
 {
+	inds.push_back( 3 ); //XDMF polygon topology
+	inds.push_back( m_grainBoundary.getRawBoundary().size() );
+	unsigned int i = 0;
+	for ( const auto& iterator : m_grainBoundary.getRawBoundary()) {
+		inds.push_back( vrts_offset + i ); //+1 missing ?
+		i++;
+	}
 }
 
 
-void LSbox::get_boundary_info( vector<unsigned int> & inds, vector<double> & ifo )
+void LSbox::get_contour_xdmf_info( vector<double> & ifo )
 {
-	//inds
-	//ifo
 	for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-		inds.push_back( m_ID );
 		ifo.push_back( iterator.energy * iterator.mob );
 	}
 }

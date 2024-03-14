@@ -945,31 +945,50 @@ vector<double> grainhdl::get_nexus_grain_barycentre()
 }
 
 
-void grainhdl::get_nexus_grain_boundary_geometry( vector<double> & vrts )
+void grainhdl::get_nexus_grain_boundary_vertices( vector<double> & vrts )
 {
-	//vector<unsigned int> & fcts ) {
+	nx_vrts_offsets = vector<size_t>( grains.size(), 0 );
 	for (int i = 1; i < grains.size(); i++) {
 		if (grains[i] != NULL && grains[i]->grainExists() ) {
 			vector<double> i_vrts;
-			//vector<unsigned int> i_fcts;
-			grains[i]->get_boundary_geometry( i_vrts );
+			nx_vrts_offsets[i] = grains[i]->get_contour_vertices( i_vrts );
 			vrts.insert( vrts.end(), i_vrts.begin(), i_vrts.end() );
 			i_vrts = vector<double>();
-			//fcts.insert( fcts.end(), i_fcts.begin(), i_fcts.end() );
-			//i_fcts = vector<unsigned int>();
 		}
 	}
 }
 
 
-size_t grainhdl::get_nexus_grain_boundary_facets( vector<unsigned int> & fcts )
+void grainhdl::get_nexus_grain_boundary_xdmf_topology( vector<unsigned int> & inds )
 {
-	return 0;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<unsigned int> i_inds;
+			unsigned int i_offset = 0;
+			for ( int j = 0; j < i; j++ ) {
+				i_offset += nx_vrts_offsets[j];
+			}
+			grains[i]->get_contour_xdmf_topology( i_offset, i_inds );
+			inds.insert( inds.end(), i_inds.begin(), i_inds.end() );
+			i_inds = vector<unsigned int>();
+		}
+	}
 }
 
 
-void grainhdl::get_nexus_grain_boundary_info(
-	vector<unsigned int> & inds, vector<double> & ifo )
+void grainhdl::get_nexus_grain_boundary_xdmf_grain_indices( vector<unsigned int> & grain_ids )
+{
+	//individual indices on pointer array grains
+	//which is not necessarily for each grain the return value of grains[i]->getID() !
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			grain_ids.push_back( i );
+		}
+	}
+}
+
+
+void grainhdl::get_nexus_grain_boundary_info( vector<double> & ifo )
 {
 }
 
@@ -1063,33 +1082,43 @@ bool grainhdl::save_NeXus()
 	u8 = vector<unsigned char>();
 
 	vector<double> f64_vrts;
-	//vector<unsigned int> u32_fcts;
 	//should be implemented with incrementally writing i.e.
 	//first a probe_nexus_grain_boundary to find the bounds
-	get_nexus_grain_boundary( f64_vrts ); //, u32_fcts );
 	dsnm = grpnm + "/grain_boundary_vertices";
+	get_nexus_grain_boundary_vertices( f64_vrts );
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
 		io_info({f64_vrts.size() / 2, 2}, {f64_vrts.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
 		f64_vrts,
 		anno ) != MYHDF5_SUCCESS ) { return false; }
-	f64_vrts = vector<unsigned char>();
-	/*
-	dsnm = grpnm + "/grain_boundary_facets";
+	f64_vrts = vector<double>();
+
+	vector<unsigned int> u32_xdmf_topo;
+	dsnm = grpnm + "/grain_boundary_xdmf_topology";
+	get_nexus_grain_boundary_xdmf_topology( u32_xdmf_topo );
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({u32_fcts.size()}, {u32_fcts.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		u32_fcts,
+		io_info({u32_xdmf_topo.size()}, {u32_xdmf_topo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32_xdmf_topo,
 		anno ) != MYHDF5_SUCCESS ) { return false; }
-	u32_fcts = vector<unsigned char>();
-	*/
+	u32_xdmf_topo = vector<unsigned int>();
 
-	vector<unsigned int> u32_inds;
+	dsnm = grpnm + "/grain_boundary_xdmf_grain_id";
+	get_nexus_grain_boundary_xdmf_grain_indices( u32 );
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	u32 = vector<unsigned int>();
+
+	/*
 	vector<double> f64_ifo;
-	get_nexus_grain_boundary_info( u32_inds, f64_ifo );
 	dsnm = grpnm + "/grain_boundary_energy_times_mobility";
+	get_nexus_grain_boundary_info( f64_ifo );
 	anno = ioAttributes();
 	//anno.add( "unit", string("(J/m^2)*(m^4/J/s)") );
 	if ( h5w.nexus_write(
@@ -1098,15 +1127,7 @@ bool grainhdl::save_NeXus()
 		f64_ifo,
 		anno ) != MYHDF5_SUCCESS ) { return false; }
 	f64_ifo = vector<double>();
-
-	dsnm = grpnm + "/grain_boundary_inds";
-	anno = ioAttributes();
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({u32_inds.size()}, {u32_inds.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		u32_inds,
-		anno ) != MYHDF5_SUCCESS ) { return false; }
-	u32_inds = vector<unsigned int>();
+	*/
 
 	return true;
 }

@@ -149,9 +149,11 @@ public:
 	vector<unsigned char> get_nexus_grain_edge_contact();
 	vector<double> get_nexus_grain_orientation();
 	vector<double> get_nexus_grain_barycentre();
-	void get_nexus_grain_boundary_geometry(vector<double> & vrts);
-	void get_nexus_grain_boundary_facets(vector<unsigned int> & fcts);
-	void get_nexus_grain_boundary_info(vector<unsigned int> & inds, vector<double> & ifo );
+	void get_nexus_grain_boundary_vertices(vector<double> & vrts);
+	vector<size_t> nx_vrts_offsets;
+	void get_nexus_grain_boundary_xdmf_topology(vector<unsigned int> & inds );
+	void get_nexus_grain_boundary_xdmf_grain_indices( vector<unsigned int> & grain_ids );
+	void get_nexus_grain_boundary_info(vector<double> & ifo );
 	bool save_NeXus();
 
 	void save_Texture();

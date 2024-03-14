@@ -2547,6 +2547,53 @@ TextureData LSbox::collectTextureData() {
 	return newdata;
 }
 
+
+void LSbox::get_boundary_geometry( vector<double> & vrts )
+{
+	//vertices
+	//facets
+	//absCoordinates
+	//x = CLAMP((iterator.x - m_grainHandler->get_grid_blowup()) * m_grainHandler->get_h());
+	//y = CLAMP((iterator.y - m_grainHandler->get_grid_blowup()) * m_grainHandler->get_h());
+	//for ( const auto& iterator : m_grainBoundary.getRawBoundary()) {
+	for ( vector<SPoint>::iterator it = m_grainBoundary.getRawBoundary().begin();
+		it != m_grainBoundary.getRawBoundary().end(); it++ ) {
+		vrts.push_back( it->x );
+		vrts.push_back( it->y );
+	}
+	//aforementioned loops follows the sequence
+	/*
+	unsigned int prv = 0;
+	unsigned int nxt = 1;
+	size_t last = m_grainBoundary.getRawBoundary().size();
+	for ( vector<SPoint>::iterator it = m_grainBoundary.getRawBoundary().begin();
+		it != m_grainBoundary.getRawBoundary().end(); it++ ) {
+		fcts.push_back(prv);
+		fcts.push_back(nxt);
+		prv++;
+		fcts.push_back( fct_id );
+	}
+	*/
+	return vrts_offset;
+}
+
+
+void LSbox::get_boundary_facets( vector<unsigned int> & fcts )
+{
+}
+
+
+void LSbox::get_boundary_info( vector<unsigned int> & inds, vector<double> & ifo )
+{
+	//inds
+	//ifo
+	for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
+		inds.push_back( m_ID );
+		ifo.push_back( iterator.energy * iterator.mob );
+	}
+}
+
+
 vector<double> LSbox::get_quaternion() {
 	/*
 	double* newori = this->m_orientationQuat->quaternion2Euler();

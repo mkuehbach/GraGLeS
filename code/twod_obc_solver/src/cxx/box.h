@@ -220,6 +220,9 @@ public:
 
 	void outputMemoryUsage(ofstream& output);
 	TextureData collectTextureData();
+	void get_boundary_geometry(vector<double> & vrts);
+	void get_boundary_facets(vector<unsigned int> & fcts);
+	void get_boundary_info(vector<unsigned int> & inds, vector<double> & ifo );
 	vector<double> get_quaternion();
 	vector<double> get_barycentre();
 	void writeGBCurvatureApprx( FILE *externalfh );

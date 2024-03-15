@@ -224,7 +224,7 @@ Real mathMethods::convertConc(Real conc,int elemTyp)
 /*     int k,kMax;        //Al elemTyp= Cr-1 Cu-2 Fe-3 Mg-4 Mn-5 Si-6 Ti-7 Zn-8 (elemTyp=8)
      kMax = 9;         //number of chemical elements considered in ClaNG
      Real ElemC[ORICLASSMAX];
-     Real SumC=0.0;
+     Real SumC=0.;
      for (k = 0 ;k<kMax ;k++ )
      {
             if(k == (elemTyp-1)) ElemC[k] = conc/100.0;
@@ -233,7 +233,7 @@ Real mathMethods::convertConc(Real conc,int elemTyp)
 //            printf("%f\n", ElemC[k]);
             SumC+= ElemC[k]/parm.ElemMolM[k];
      }
-     QUICKASSERT(SumC > 0.0);
+     QUICKASSERT(SumC > 0.);
      conc = ElemC[elemTyp-1]/(parm.ElemMolM[elemTyp-1]*SumC);
 
      return conc;*/
@@ -245,15 +245,15 @@ void mathMethods::K_S_Test( double * data1, unsigned long n1, double * data2, un
 	unsigned long j1 = 1;
 	unsigned long j2 = 1;
 	double d1, d2, dt, en1, en2, en;
-	double fn1 = 0.0;
-	double fn2 = 0.0;
+	double fn1 = 0.;
+	double fn2 = 0.;
 
 	sort( n1, data1 );
 	sort( n2, data2 );
 
 	en1 = n1;
 	en2 = n2;
-	*d = 0.0;
+	*d = 0.;
 
 	while( j1 <= n1 && j2 <= n2 ) {
 		if( (d1=data1[j1]) <= (d2=data2[j2]) ) fn1 = j1++ / en1;
@@ -269,8 +269,8 @@ double mathMethods::probks( double alam )
 	int j;
 	double a2, term;
 	double fac = 2.0;
-	double sum = 0.0;
-	double termbf = 0.0;
+	double sum = 0.;
+	double termbf = 0.;
 
 	a2 = -2.0 * SQR(alam);
 	for( j=1; j<=100; j++ )
@@ -281,7 +281,7 @@ double mathMethods::probks( double alam )
 		fac = -fac;
 		termbf = fabs( fac );
 	}
-	return 1.0;
+	return 1.;
 }
 
 void mathMethods::sort(int n, double *ra)
@@ -356,7 +356,7 @@ double mathMethods::misorientationCubicQxQ( double q01, double q11, double q21, 
 	double c = r[2]; 		
 	double d = r[3];
 
-	Real fac = 1.0 / sqrt( 2.0 ); //0.70710678;
+	Real fac = 1. / sqrt( 2.0 ); //0.70710678;
 
 	//six fundamental quaternions
 	r0[0][0] =(a+b)*fac; 		r0[0][1]=(a-b)*fac; 		r0[0][2] = (c+d)*fac; 		r0[0][3] = (c-d)*fac;
@@ -366,7 +366,7 @@ double mathMethods::misorientationCubicQxQ( double q01, double q11, double q21, 
 	r0[4][0] =(a+b+c-d)*0.5; 	r0[4][1]=(a+b-c+d)*0.5; 	r0[4][2] = (a-b+c+d)*0.5; 	r0[4][3] = (a-b-c-d)*0.5;
 	r0[5][0] = a;				r0[5][1] = b;				r0[5][2] = c;				r0[5][3] = d;
 
-	Real omega = 0.0;
+	Real omega = 0.;
 
 	for(i=0;i<6;i++)
 		for( int j=0;j<4;j++ )
@@ -375,7 +375,7 @@ double mathMethods::misorientationCubicQxQ( double q01, double q11, double q21, 
 
 	QUICKASSERT( omega < 1.01 );
 
-	if( omega > 1.0 ) //avoid singularity of acos function
+	if( omega > 1. ) //avoid singularity of acos function
 		omega = (Real) (int) omega;
 
 	omega=2*acos(omega);
@@ -484,14 +484,14 @@ void mathMethods::randomOri( double * result )
 
 	//normalize
 	qnorm = sqrt(SQR(q[0]) + SQR(q[1]) + SQR(q[2]) + SQR(q[3]));
-	QUICKASSERT (qnorm > 0.0);
+	QUICKASSERT (qnorm > 0.);
 		
 	q[0] = q[3] / qnorm;
 	q[1] = q[2] / qnorm;
 	q[2] = q[1] / qnorm;
 	q[3] = q[0] / qnorm;
 
-	double angles[3] = {0.0, 0.0, 0.0};
+	double angles[3] = {0., 0., 0.};
 	quaternion2Euler ( q, angles);
 	
 	result[0] = angles[0];
@@ -519,7 +519,7 @@ void mathMethods::randomOriShoemakeQuat( double * quat )
 	q[3]=fabs(sigma2*cos(theta2));
 	
 	qnorm = sqrt(SQR(q[0]) + SQR(q[1]) + SQR(q[2]) + SQR(q[3]));
-	QUICKASSERT (qnorm > 0.0);
+	QUICKASSERT (qnorm > 0.);
 
 	/*
 	bubbleSort( q,4 );
@@ -562,7 +562,7 @@ void mathMethods::randomOriShoemakeEuler( double * result )
 	q[3]=fabs(sigma2*cos(theta2));
 	
 	qnorm = sqrt(SQR(q[0]) + SQR(q[1]) + SQR(q[2]) + SQR(q[3]));
-	QUICKASSERT (qnorm > 0.0);
+	QUICKASSERT (qnorm > 0.);
 
 	/*
 	bubbleSort( q,4 );
@@ -665,7 +665,7 @@ void mathMethods::misorientationQuaternionCubic( double* p, double* q, double* q
 	double c = r[2]; 		
 	double d = r[3];
 
-	Real fac = 1.0 / sqrt( 2.0 ); //0.70710678;
+	Real fac = 1. / sqrt( 2.0 ); //0.70710678;
 
 	//six fundamental quaternions
 	r0[0][0] =(a+b)*fac; 		r0[0][1]=(a-b)*fac; 		r0[0][2] = (c+d)*fac; 		r0[0][3] = (c-d)*fac;
@@ -678,7 +678,7 @@ void mathMethods::misorientationQuaternionCubic( double* p, double* q, double* q
 	Real rq[4];
 
 	int mi;
-	Real max=0.0;
+	Real max=0.;
 
 	for( int i=0;i<6;i++ )						//Determing the quaternion with the maximal component and the component itself
 		for( int j=0;j<4;j++ )
@@ -746,7 +746,7 @@ double mathMethods::misorientationCubicOrigInv( double pa1, double Pa, double pa
 	r0[4][0]=(r[0]+r[1]+r[2]-r[3])*0.5; r0[4][1]=(r[0]+r[1]-r[2]+r[3])*0.5; r0[4][2]=(r[0]-r[1]+r[2]+r[3])*0.5; r0[4][3]=(r[0]-r[1]-r[2]-r[3])*0.5;
 	r0[5][0]=r[0];r0[5][1]=r[1];r0[5][2]=r[2];r0[5][3]=r[3];
 
-	Real omega=0.0;
+	Real omega=0.;
 
 	for(i=0;i<6;i++)
 		for( int j=0;j<4;j++ )
@@ -755,7 +755,7 @@ double mathMethods::misorientationCubicOrigInv( double pa1, double Pa, double pa
 
 	QUICKASSERT( omega < 1.01 );
 
-	if( omega > 1.0 ) //avoid singularity of acos function
+	if( omega > 1. ) //avoid singularity of acos function
 		omega = (Real) (int) omega;
 
 	omega=2*acos(omega);
@@ -799,7 +799,7 @@ double mathMethods::misorientationCubic( double pa1, double Pa, double pa2, doub
 	double c = r[2]; 		
 	double d = r[3];
 
-	Real fac = 1.0 / sqrt( 2.0 ); //0.70710678;
+	Real fac = 1. / sqrt( 2.0 ); //0.70710678;
 
 	//six fundamental quaternions
 	r0[0][0] =(a+b)*fac; 		r0[0][1]=(a-b)*fac; 		r0[0][2] = (c+d)*fac; 		r0[0][3] = (c-d)*fac;
@@ -809,7 +809,7 @@ double mathMethods::misorientationCubic( double pa1, double Pa, double pa2, doub
 	r0[4][0] =(a+b+c-d)*0.5; 	r0[4][1]=(a+b-c+d)*0.5; 	r0[4][2] = (a-b+c+d)*0.5; 	r0[4][3] = (a-b-c-d)*0.5;
 	r0[5][0] = a;				r0[5][1] = b;				r0[5][2] = c;				r0[5][3] = d;
 
-	Real omega = 0.0;
+	Real omega = 0.;
 
 	for(int i=0;i<6;i++)
 		for( int j=0;j<4;j++ )
@@ -818,7 +818,7 @@ double mathMethods::misorientationCubic( double pa1, double Pa, double pa2, doub
 
 	QUICKASSERT( omega < 1.01 );
 
-	if( omega > 1.0 ) //avoid singularity of acos function
+	if( omega > 1. ) //avoid singularity of acos function
 		omega = (Real) (int) omega;
 
 	omega=2*acos(omega);
@@ -880,7 +880,7 @@ double mathMethods::misorientationCubicCOReV2( double pa1, double Pa, double pa2
 	//these are the right fundamental quaternions of equivalent misorientations as shown by Grimmer, H 1974 Acta Cryst A30 685-688
 
 
-	Real omega=0.0;
+	Real omega=0.;
 
 	for(i=0;i<6;i++)
 		for( int j=0;j<4;j++ )
@@ -889,7 +889,7 @@ double mathMethods::misorientationCubicCOReV2( double pa1, double Pa, double pa2
 
 	QUICKASSERT( omega < 1.01 );
 
-	if( omega > 1.0 )
+	if( omega > 1. )
 		omega = (Real) (int) omega;
 
 	omega=2*acos(omega);
@@ -954,7 +954,7 @@ double mathMethods::misorientationCubicCorrectCOReV2InvertAndMult( double pa1, d
 	//these are the right fundamental quaternions of equivalent misorientations as shown by Grimmer, H 1974 Acta Cryst A30 685-688
 
 
-	Real omega=0.0;
+	Real omega=0.;
 
 	for(i=0;i<6;i++)
 		for( int j=0;j<4;j++ )
@@ -963,7 +963,7 @@ double mathMethods::misorientationCubicCorrectCOReV2InvertAndMult( double pa1, d
 
 	QUICKASSERT( omega < 1.01 );
 
-	if( omega > 1.0 )
+	if( omega > 1. )
 		omega = (Real) (int) omega;
 
 	omega=2*acos(omega);
@@ -979,7 +979,7 @@ void mathMethods::newOrientationFromReferenceFixedAngularCone(double * oriOri, d
         Real qr[4];
         Real ori[4], qideal[4];
 
-        Real _norm = 1.0 / sqrt(SQR(u)+SQR(v)+SQR(w));
+        Real _norm = 1. / sqrt(SQR(u)+SQR(v)+SQR(w));
 
         euler2quaternion( oriOri, qideal );
         Real qref[4] = { cos( 0.5* angle ), u * _norm * sin( 0.5 * angle ), v * _norm * sin( 0.5 * angle ), w * _norm * sin( 0.5 * angle ) };
@@ -998,7 +998,7 @@ void mathMethods::newOrientationFromReferenceFixedAngularCone(double * oriOri, d
 void mathMethods::rotateOrientation( double *oriOri, double angle, double u, double v, double w, double *newOri ) //Angle in radians
 {
         Real ori[4], qideal[4];
-        Real _norm = 1.0 / sqrt(SQR(u)+SQR(v)+SQR(w));
+        Real _norm = 1. / sqrt(SQR(u)+SQR(v)+SQR(w));
 
         euler2quaternion( oriOri, qideal );
 
@@ -1085,9 +1085,9 @@ void mathMethods::quaternion2Euler( const double * quat, double * euler )
 	}
 	
 	//without additional sample and crystal symmetry the Euler space is symmetric to 0 <= phi1 <= 2*_PI_ , 0 <= PHI <= _PI_, 0 <= phi2 <= 2*_PI_
-	if (phi1 < 0.0)
+	if (phi1 < 0.)
 		phi1 += 2 * _PI_;
-	if (phi2 < 0.0)
+	if (phi2 < 0.)
 		phi2 += 2 * _PI_;
 
 	euler[2] = phi2; //following the notation order used in Diebel, James 2006
@@ -1141,7 +1141,7 @@ void mathMethods::newOrientationFromReference( double *bunge, double deviation, 
 
 void mathMethods::devtorefEuler2RGB ( double *bunge, double *ideal, double maxDev, unsigned char *rgb)
 {
-	//blue channel stretch from 0.0 to maxDev in radian, all other orientations white
+	//blue channel stretch from 0. to maxDev in radian, all other orientations white
 	rgb[0] = RGBRANGE;
 	rgb[1] = RGBRANGE;
 	rgb[2] = RGBRANGE;
@@ -1149,7 +1149,7 @@ void mathMethods::devtorefEuler2RGB ( double *bunge, double *ideal, double maxDe
 
 void mathMethods::devtoaxisEuler2RGB( double *bunge, double *uvw, double maxDev, unsigned char *rgb)
 {
-	//blue channel stretch from 0.0 to maxDev in radian, disorientation to axis of misorientation
+	//blue channel stretch from 0. to maxDev in radian, disorientation to axis of misorientation
 	rgb[0] = RGBRANGE;
 	rgb[1] = RGBRANGE;
 	rgb[2] = RGBRANGE;
@@ -1176,7 +1176,7 @@ void mathMethods::patalaQuat2RGB ( double *q, unsigned char *rgb)
 	p[1] = q[1] / qnorm;
 	p[2] = q[2] / qnorm;
 	p[3] = q[3] / qnorm;
-	double _pnorm123 = (1.0 / sqrt ( 1.0 - SQR(p[0]) ) );
+	double _pnorm123 = (1. / sqrt ( 1. - SQR(p[0]) ) );
 	
 	double omega = 2*acos(p[0]); //no singularities in arccos(angle)
 	n[X] = p[1] * _pnorm123;
@@ -1192,13 +1192,13 @@ void mathMethods::patalaQuat2RGB ( double *q, unsigned char *rgb)
 	
 	//step 2
 	double xyz1[3];
-	QUICKASSERT ( xyz[X] > 0.0 );
-	QUICKASSERT ( xyz[Y] > 0.0 );
+	QUICKASSERT ( xyz[X] > 0. );
+	QUICKASSERT ( xyz[Y] > 0. );
 	//check boundness of yz
-	if ( ( xyz[X] >= (1.0 / 3.0) ) && ( tan(xyz[Z] / xyz[Y]) >= ( ( 1 - 2*xyz[X] ) / xyz[X] ) ) {
+	if ( ( xyz[X] >= (1. / 3.0) ) && ( tan(xyz[Z] / xyz[Y]) >= ( ( 1 - 2*xyz[X] ) / xyz[X] ) ) {
 		xyz1[X] = xyz[X]; 	
-		xyz1[Y] = ( ( xyz[X] * (xyz[Y] + xyz[Z]) ) / (1.0 - xyz[X]) );
-		xyz1[Z] = ( ( xyz[X] * xyz[Z] * (xyz[Y] + xyz[Z]) ) / ( xyz[Y] * (1.0 - xyz[X]) ) );
+		xyz1[Y] = ( ( xyz[X] * (xyz[Y] + xyz[Z]) ) / (1. - xyz[X]) );
+		xyz1[Z] = ( ( xyz[X] * xyz[Z] * (xyz[Y] + xyz[Z]) ) / ( xyz[Y] * (1. - xyz[X]) ) );
 	}
 	else {
 		xyz1[X] = xyz[X];

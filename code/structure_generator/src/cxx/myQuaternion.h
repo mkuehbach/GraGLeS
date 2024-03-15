@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -33,7 +33,7 @@
 
 
 //IPFZ Coloring
-#define FAIL_MYMATH_NUMERIC		(-1.0)
+#define FAIL_MYMATH_NUMERIC		(-1.)
 #define EPS_PROXIMITY_IPFZ		(0.01)
 #define IPF_COLOR_STRETCH_R		(0.5)
 #define IPF_COLOR_STRETCH_G		(0.5)
@@ -85,7 +85,7 @@ public:
 	double* Quaternion2Euler(void);
 	void randomOriShoemakeQuat(randomClass& r);
 	double misorientationCubicQxQ(myQuaternion* p);
-	myQuaternion* specificallyDisorientednewOriFromReference(
+	myQuaternion* DisorientedFromReference(
 			double sigma_rayl_dis2bunge, randomClass& mymath);
 	//myQuaternion* newOrientationFromReference( randomClass& mymath);
 	myQuaternion* randomMisorientationShoemake( double theta, randomClass& thernd );

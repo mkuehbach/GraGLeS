@@ -28,50 +28,45 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-	Settings::ResultsFileName = "StructureGenerator.Results.SimID." + to_string(Settings::SimID) + ".nxs";
-	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
-	if( h5w.nexus_create() != MYHDF5_SUCCESS ) { return 0; }
-
-	Settings::StatusHealthy = true;
-	try {
-		if (argc > 1)
-			Settings::readXML(argv[1]);
-		else
-			Settings::readXML();
-	} catch (exception& e) { 
-		cout << "Unable to parse parameters file! Details:" << endl << e.what() << endl << "Simulation will now halt!" << endl; return 0;
+	if ( argc != 3 ) {
+		cout << "Command line call has to be <<app>> <<simid>> <<configfile>>" << "\n";
+		return 0;
 	}
-	if (Settings::StatusHealthy == false ) { cout << "Parameter set inconsistency!" << endl << "Simulation will now halt!" << endl; return 0; }
+	Settings::SimulationId = std::stoul(argv[1]);
+	Settings::ConfigFileName = argv[2];
+	Settings::ResultsFileName = "StructureGenerator.Results.SimID." 
+		+ to_string(Settings::SimulationId) + ".nxs";
+	
+	Settings::ReadXmlConfig(Settings::ConfigFileName);
+	if (Settings::StatusHealthy == false ) {
+		cout << "Loading configuration " << Settings::ConfigFileName << " failed or is invalid!" << "\n";
+		return 0;
+	}
 
-	microStructureHdl myHdl;
-	myHdl.initEnvironment();
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) { 
+		cout << "Creating results NeXus/HDF5 file " << Settings::ResultsFileName << " failed!" << "\n";
+		return 0;
+	}
+
+	microStructureHdl myHdl = microStructureHdl();
+	myHdl.InitEnvironment();
 	myHdl.ReadAdditionalInputFiles();
-	if (Settings::StatusHealthy == false) { cout << "Simulation will now halt!" << endl; return 0; }
-
+	myHdl.ReportConfig();
+	if (Settings::StatusHealthy == false) {
+		cout << "Configuring the tool failed!" << "\n"; return 0;
+	}
 	myHdl.GeneratePolycrystallineStructureOfGrains();
-	myHdl.DistributeGrainOriAndSEE();
+	myHdl.DistributeGrainOriAndSee();
 	myHdl.GenerateSubgrainStructureInEachGrain();
 	myHdl.DistributeSubgrainOrientations();
-	myHdl.DistributeSubgrainSEE();
+	myHdl.DistributeSubgrainSee();
 
-	myHdl.RehashGrainIDs();
+	myHdl.RehashGrainIds();
 	myHdl.BreakPeriodicity();
 	//from now on all sub-grains and grains have a contiguous numbering
-
 	myHdl.SaveNeXus();
-	/*
-	myHdl.SaveDataGraGeLeS();
-	myHdl.SaveDataDAMASK();
-	myHdl.SaveDetailedDiagnosticsASCII();
-	//deprecated I/O functions
-	//myHdl.SaveDetailedDiagnosticsBINARY();
-	//myHdl.SaveParenthood();
-	//myHdl.DebugHDF5();
-	myHdl.Plot3DVolume(); //#output too small?
-	//myHdl.SaveHDF5();
-	myHdl.PlotIPF2DSection();
-	*/
-	
+
 	myHdl.ReportProfile();
 	cout << "structure_generator finished successfully.";
 	return 0;

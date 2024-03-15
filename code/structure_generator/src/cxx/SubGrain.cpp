@@ -91,7 +91,7 @@ SubGrain::SubGrain(int _id, vector<double> cellcoordinates, double volume,
 
 	if (m_zmax < (Settings::NumberOfGridpoints - 2.))
 		m_zmax++;
-	m_SEE = 0.0;
+	m_SEE = 0.;
 
 	int x_min = Settings::NumberOfGridpoints, x_max = 0, y_min =
 			Settings::NumberOfGridpoints, y_max = 0, z_min =

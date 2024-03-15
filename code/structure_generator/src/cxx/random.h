@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -35,13 +35,13 @@
 //Park Miller constants
 #define IA 16807
 #define IM 2147483647
-#define AM (1.0/IM)
+#define AM (1./IM)
 #define IQ 127773
 #define IR 2836
 #define NTAB 32
 #define NDIV (1+(IM-1)/NTAB)
 #define EPS 1.2e-7
-#define RNMX (1.0-EPS)
+#define RNMX (1.-EPS)
 
 
 #define _PI_ 3.1415926535897932384626433832795
@@ -78,7 +78,7 @@
 #define TEMPERING_SHIFT_T(y) (y << 15)
 #define TEMPERING_SHIFT_L(y) (y >> 18)
 
-#define RANDMAX (1.0-DBL_EPSILON)
+#define RANDMAX (1.-DBL_EPSILON)
 
 class randomClass
 {
@@ -103,7 +103,7 @@ public:
 	double MersenneTwister( void );
 	void sgenrand( void );
 	void warmupMT( unsigned int n ) {
-		double toss = 0.0;
+		double toss = 0.;
 		for ( unsigned int r = 0; r < n; r++ ) {toss = this->MersenneTwister();}
 	};
 

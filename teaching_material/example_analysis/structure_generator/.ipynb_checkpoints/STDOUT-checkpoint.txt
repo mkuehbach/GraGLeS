@@ -1,0 +1,95 @@
+ReadXmlConfig
+2D, NumberOfGridpoints 1681
+m_h 0.000594884
+InitEnvironment
+InitNumaBinding
+We are allowed to used node 0
+Will bind thread 12 to node 12, success
+Will bind thread 5 to node 5, success
+Will bind thread 3 to node 3, success
+Will bind thread 0 to node 0, success
+Will bind thread 1 to node 1, success
+Will bind thread 8 to node 8, success
+Will bind thread 10 to node 10, success
+Will bind thread 4 to node 4, success
+Will bind thread 7 to node 7, success
+Will bind thread 6 to node 6, success
+Will bind thread 2 to node 2, success
+Will bind thread 14 to node 14, success
+Will bind thread 15 to node 15, success
+Will bind thread 16 to node 16, success
+Will bind thread 28 to node 28, success
+Will bind thread 19 to node 19, success
+Will bind thread 17 to node 17, success
+Will bind thread 18 to node 18, success
+Will bind thread 9 to node 9, success
+Will bind thread 20 to node 20, success
+Will bind thread 23 to node 23, success
+Will bind thread 21 to node 21, success
+Will bind thread 22 to node 22, success
+Will bind thread 11 to node 11, success
+Will bind thread 24 to node 24, success
+Will bind thread 25 to node 25, success
+Will bind thread 26 to node 26, success
+Will bind thread 27 to node 27, success
+Will bind thread 13 to node 13, success
+Will bind thread 29 to node 29, success
+Will bind thread 30 to node 30, success
+Will bind thread 31 to node 31, success
+ReadDiscreteOrientationSet
+ParticleFile read successfully with m_OrientationSpace.size 5000
+ReportConfig
+SimulationId 10
+NumberOfGrains 8
+NumberOfSubgrains 1000
+NumberOfPointsPerSubGrain 15
+PhysEdgeLengthMatPoint 1e-07
+NumberOfGridpoints 1681
+MaximumNumberOfThreads 32
+SubgrainOriScatter 5
+StoredElasticEnergyMin 1.08e+15
+StoredElasticEnergyMax 1.08e+15
+StoredElasticScatterGrain 4e+14
+StoredElasticScatterSubgrain 8e+13
+DefGrainRelDimensionX 1
+DefGrainRelDimensionY 0.05
+DefGrainRelDimensionZ 1
+RandomnessX 0
+RandomnessY 0
+RandomnessZ 0
+VoronoiPeriodic 0
+ExecuteInParallel 1
+StatusHealthy 1
+BreakPerX 0
+BreakPerY 0
+BreakPerZ 0
+MicroGenMode 0
+CrystalStructure 0
+TextureSampling 0
+TextureGen 0
+Dimensionality 2
+GrainAggregation 2
+GrainShape 1
+ConfigFileName parameters.xml
+ReadFromFilename CR70FeSi.Rogge.MTEX.vpsc.odf.5000.txt
+AdditionalFilename PreferenceOrientations.txt
+ResultsFileName StructureGenerator.Results.SimID.0.nxs
+GeneratePolycrystallineStructureOfGrains
+GeneratorVoro
+JitterGrid FlatGrainMorphology Nx/Ny/Nz = 0;14;0---1.35721;0.0678604;1.35721
+1;0.678604;0.0339302;0.678604
+2;0.678604;0.101791;0.678604
+3;0.678604;0.169651;0.678604
+4;0.678604;0.237512;0.678604
+5;0.678604;0.305372;0.678604
+6;0.678604;0.373232;0.678604
+7;0.678604;0.441093;0.678604
+8;0.678604;0.508953;0.678604
+9;0.678604;0.576814;0.678604
+10;0.678604;0.644674;0.678604
+11;0.678604;0.712535;0.678604
+12;0.678604;0.780395;0.678604
+13;0.678604;0.848256;0.678604
+14;0.678604;0.916116;0.678604
+15;0.678604;0.983976;0.678604
+JitterGrid-FlatGrainMorphology - I am resetting the number of grains to N/NumberOfGrains = 15;15

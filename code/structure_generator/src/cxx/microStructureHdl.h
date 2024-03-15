@@ -43,21 +43,8 @@ class myQuaternion;
 struct myPreferenceOri;
 class randomClass;
 
-
-#define REDCHAN						0
-#define GREENCHAN					1
-#define BLUECHAN					2
-#define ALPHACHAN					3
-#define UCHAR_RANGE_MIN				0
-#define UCHAR_RANGE_MAX				255
-#define IPFZMAPPING_MAXSIZE			12000	//http://stackoverflow.com/questions/25490332/lodepng-crashes-when-encoding-png-files-with-size-greater-than-15000-15000-pix
-
-#define AIR_GRAIN_XM				1
-#define AIR_GRAIN_XP				2
-#define AIR_GRAIN_YM				3
-#define AIR_GRAIN_YP				4
-#define AIR_GRAIN_ZM				5
-#define AIR_GRAIN_ZP				6
+#define WHY_TWENTY_SEVEN				27  //TODO::why 27 ?
+#define WHY_NINE						9  //TODO::why 9, likely empirical allocation demand see C. Mießen PhD for details
 
 
 struct RGB
@@ -102,54 +89,54 @@ struct BinDiagData {
 
 	double parent_stored_sgrsc;		//...for sub-grain
 	double parent_size_sc;			//size scaler
-	BinDiagData() : id(-1.0), x(-1.0), y(-1.0), z(-1.0), xmi(-1.0), xmx(-1.0), ymi(-1.0), ymx(-1.0), zmi(-1.0), zmx(-1.0), parentid(-1.0), bunge1(-1.0), bunge2(-1.0), bunge3(-1.0),
-		volume(-1.0), stored(-1.0), dis2parent_meas(-1.0), dis2parent_targ(-1.0), parent_bunge1(-1.0), parent_bunge2(-1.0), parent_bunge3(-1.0), parent_stored(-1.0),
-		parent_stored_grsc(-1.0), parent_stored_sgrsc(-1.0), parent_size_sc(-1.0) {}
+	BinDiagData() : id(-1.), x(-1.), y(-1.), z(-1.), xmi(-1.), xmx(-1.), ymi(-1.), ymx(-1.), zmi(-1.), zmx(-1.), parentid(-1.), bunge1(-1.), bunge2(-1.), bunge3(-1.),
+		volume(-1.), stored(-1.), dis2parent_meas(-1.), dis2parent_targ(-1.), parent_bunge1(-1.), parent_bunge2(-1.), parent_bunge3(-1.), parent_stored(-1.),
+		parent_stored_grsc(-1.), parent_stored_sgrsc(-1.), parent_size_sc(-1.) {}
 
 	void ClearingForSubgrains( void ) { //make sure that again default negative values are shown to identify errors in the dataset as not physical quantity studied here makes sense to be negative
-		id = -1.0;
-		x = -1.0;
-		y = -1.0;
-		z = -1.0;
-		xmi = -1.0;
-		xmx = -1.0;
-		ymi = -1.0;
-		ymx = -1.0;
-		zmi = -1.0;
-		zmx = -1.0;
-		bunge1 = -1.0;
-		bunge2 = -1.0;
-		bunge3 = -1.0;
-		volume = -1.0;
-		stored = -1.0;
+		id = -1.;
+		x = -1.;
+		y = -1.;
+		z = -1.;
+		xmi = -1.;
+		xmx = -1.;
+		ymi = -1.;
+		ymx = -1.;
+		zmi = -1.;
+		zmx = -1.;
+		bunge1 = -1.;
+		bunge2 = -1.;
+		bunge3 = -1.;
+		volume = -1.;
+		stored = -1.;
 		//MK::other data do not need clearing!
 	}
 	void ClearingComplete( void ) {
-		id = -1.0;
-		x = -1.0;
-		y = -1.0;
-		z = -1.0;
-		xmi = -1.0;
-		xmx = -1.0;
-		ymi = -1.0;
-		ymx = -1.0;
-		zmi = -1.0;
-		zmx = -1.0;
-		parentid = -1.0;
-		bunge1 = -1.0;
-		bunge2 = -1.0;
-		bunge3 = -1.0;
-		volume = -1.0;
-		stored = -1.0;
-		dis2parent_meas = -1.0;
-		dis2parent_targ = -1.0;
-		parent_bunge1 = -1.0;
-		parent_bunge2 = -1.0;
-		parent_bunge3 = -1.0;
-		parent_stored = -1.0;
-		parent_stored_grsc = -1.0;
-		parent_stored_sgrsc = -1.0;
-		parent_size_sc = -1.0;
+		id = -1.;
+		x = -1.;
+		y = -1.;
+		z = -1.;
+		xmi = -1.;
+		xmx = -1.;
+		ymi = -1.;
+		ymx = -1.;
+		zmi = -1.;
+		zmx = -1.;
+		parentid = -1.;
+		bunge1 = -1.;
+		bunge2 = -1.;
+		bunge3 = -1.;
+		volume = -1.;
+		stored = -1.;
+		dis2parent_meas = -1.;
+		dis2parent_targ = -1.;
+		parent_bunge1 = -1.;
+		parent_bunge2 = -1.;
+		parent_bunge3 = -1.;
+		parent_stored = -1.;
+		parent_stored_grsc = -1.;
+		parent_stored_sgrsc = -1.;
+		parent_size_sc = -1.;
 	}
 };
 
@@ -237,36 +224,34 @@ public:
 	microStructureHdl();
 	virtual ~microStructureHdl();
 	void ReadAdditionalInputFiles();
-	void readPreferenceOrientationFromFile();
+	void ReadPreferenceOrientationFromFile();
 	void GeneratePolycrystallineStructureOfGrains();
 	void GenerateSubgrainStructureInEachGrain();
-	void VoroGEN();
-	void readParticleFile();
-	void VoroGenPseudoPeriodic();
-	void initializeGrains(vector<vector<Eigen::Vector3d>> hulls, vector<double> grainVolume);
-	void find_neighbors();
-	void updateGlobalVoxelContainer();
-	void Execute_SubgrainConstruction();
-	void DistributeGrainOriAndSEE();
+	void GeneratorVoro();
+	void ReadDiscreteOrientationSet();
+	myPreferenceOri FindNextPreferenceOrientation( myQuaternion ori);
+	void InitializeGrains(vector<vector<Eigen::Vector3d>> hulls, vector<double> grainVolume);
+	void FindNeighbors();
+	void ConstructSubgrains();
+	void DistributeGrainOriAndSee();
 	void DistributeSubgrainOrientations();
-	myPreferenceOri findNextPreferenceOrientation(myQuaternion ori);
-	void DistributeSubgrainSEE();
+	void DistributeSubgrainSee();
 	unsigned int CountNumberOfSubgrains();
-	void RehashGrainIDs();
+	void RehashGrainIds();
 	void BreakPeriodicity();
 	void SaveNeXus();
-	void SaveDetailedDiagnosticsASCII();
 	void ReportProfile();
-	void initEnvironment();
-	void initNUMABindings();
-	void copyContainer();
-	void testprng( unsigned int n, double mu, double sigma );
+	void ReportConfig();
+	void InitEnvironment();
+	void InitNumaBinding();
+	void CopyContainer();
 
 	//getter setter
-	unsigned long get_first_id(){ return first_id; }
-	void set_first_id(bool add, unsigned long val ) {
+	unsigned long GetFirstId(){ return first_id; }
+	void SetFirstId(bool add, unsigned long val ) {
 		if ( add == true ) first_id += val;
 	}
+	bool healthy;
 
 private:
 	DimensionalBuffer<unsigned int>* m_container;

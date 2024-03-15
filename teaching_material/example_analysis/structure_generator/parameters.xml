@@ -1,58 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Parameters>
-
 <SimulationID>10</SimulationID>
+<Dimensionality>2</Dimensionality><!--2 or 3-->
 <NumberOfGrains>8</NumberOfGrains>
 <NumberOfSubgrains>1000</NumberOfSubgrains>
 <NumberOfPointsPerSubGrain>15</NumberOfPointsPerSubGrains>
-
-<MicroGenMode>0</MicroGenMode>
-<TextureGEN>1</TextureGEN>
-<!--<UseOrientationSpace>1</UseOrientationSpace>-->
-
-<StoredElasticEnergyMax>10.8e14</StoredElasticEnergyMax>
+<PhysicalEdgeLengthPerMaterialPoint>0.1e-6</PhysicalEdgeLengthPerMaterialPoint>
+<CrystalStructure>0</CrystalStructure><!--0 fcc, 1 bcc, 2 hcp-->
 <StoredElasticEnergyMin>10.8e14</StoredElasticEnergyMin>
-<!-- truncating to lower values at 1.0e12-->
-<StoredElasticScatterGrain>4.0e14</StoredElasticScatterGrain>
-<StoredElasticScatterSubgrain>0.8e14</StoredElasticScatterSubgrain>
-<SubgrainOriScatter>5.0</SubgrainOriScatter>
+<StoredElasticEnergyMax>10.8e14</StoredElasticEnergyMax>
+<StoredElasticEnergyScatterGrain>4.e14</StoredElasticEnergyScatterGrain>
+<StoredElasticEnergyScatterSubgrain>0.8e14</StoredElasticEnergyScatterSubgrain>
+<OrientationScatterSubgrain>5.</OrientationScatterSubgrain>
+<GrainShape>1</GrainShape><!--0 globulitic, 1, flat-->
+<DefGrainRelDimensionY>0.05</DefGrainRelDimensionY>
+<DefGrainRelDimensionZ>1.</DefGrainRelDimensionZ>
+<RandomnessX>0.</RandomnessX>
+<RandomnessY>0.</RandomnessY>
+<UseMultithreading>1</UseMultithreading>
 <ReadFromFilename>CR70FeSi.Rogge.MTEX.vpsc.odf.5000.txt</ReadFromFilename>
 <AdditionalFilename>PreferenceOrientations.txt</AdditionalFilename>	
-<CrystalStructure>1</CrystalStructure>
-<!-- USAGE:
-   	(	O		E_HCP,	)
-		1		E_FCC, 
-	(	2		E_BCC,		)
-	(	3		E_DEFAULT_STRUCTURE,	)
--->
-
-<PlotDimension>1</PlotDimension>
-<!-- USAGE:
-   	(	O		E_3D,	)
-		1		E_2D, 
-	(	2		E_DEFAULT_DIMENSION,		)
--->
-
-<GrainShape>1</GrainShape>
-<!-- USAGE:
-	( 0 		E_GLOBULITIC )
-	( 1			E_FLAT )
--->
-<DefGrainRelDimensionY>0.05</DefGrainRelDimensionY>
-<DefGrainRelDimensionZ>1.0</DefGrainRelDimensionZ>
-<RandomnessX>0.00</RandomnessX>
-<RandomnessY>0.00</RandomnessY>
-<!-- in the case of MicroGenMode 0 (E_VORONOI) this sets dimensions of the average 0.1/0.2
-deformed grain relative to its dimensions in x which is 1.0, randomness controls how the seed points are misplaced -->
-
-<ExecuteInParallel>1</ExecuteInParallel>
-
-<PlotIPF2DSection>1</PlotIPF2DSection>
-<PlotWindowXMin>0.00</PlotWindowXMin>
-<PlotWindowXMax>1.00</PlotWindowXMax>
-<PlotWindowYMin>0.00</PlotWindowYMin>
-<PlotWindowYMax>1.00</PlotWindowYMax>
-<!--IPF plotting renders a plane-parallel section in the NXNY coordinates
-	but, as the 2D domain may become very large a window can be cut
--->
 </Parameters>

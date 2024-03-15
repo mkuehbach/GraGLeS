@@ -7,12 +7,14 @@ code/thirdparty/optional/
 code/structure_generator/build/
 code/twod_obc_solver/build/
 
+teaching_material/example_analysis/structure_generator/.ipynb_checkpoints/
 teaching_material/example_analysis/structure_generator/*.raw
 teaching_material/example_analysis/structure_generator/*.png
 teaching_material/example_analysis/structure_generator/*.uds
 teaching_material/example_analysis/structure_generator/*.STDOUT.txt
 teaching_material/example_analysis/structure_generator/*.STDERR.txt
 
+teaching_material/example_analysis/twod_obc_solver/.ipynb_checkpoints/
 teaching_material/example_analysis/twod_obc_solver/*.raw
 teaching_material/example_analysis/twod_obc_solver/*.uds
 teaching_material/example_analysis/twod_obc_solver/NETWORK_NONAME_TIMESTEP*.dat

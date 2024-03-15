@@ -61,7 +61,7 @@ bool debug_hdf5()
 	if ( h5w.nexus_write( dsnm, program_name, anno ) != MYHDF5_SUCCESS ) { return false; }
 
 	dsnm = grpnm + "/analysis_identifier";
-	unsigned int identifier = Settings::SimID;
+	unsigned int identifier = Settings::SimulationId;
 	anno = ioAttributes();
 	//anno.add( "unit", string("NX_UNITLESS") );
 	if ( h5w.nexus_write( dsnm, identifier, anno ) != MYHDF5_SUCCESS ) { return false; }
@@ -119,10 +119,9 @@ bool debug_hdf5()
 }
 
 
-
 int main(int argc, char *argv[]) {
 
-	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimID) + ".nxs";
+	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimulationId) + ".nxs";
 	int status = debug_hdf5();
 
 	if (argc > 1)

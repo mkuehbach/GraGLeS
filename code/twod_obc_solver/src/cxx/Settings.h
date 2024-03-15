@@ -69,7 +69,7 @@ enum E_GRAIN_SCHEDULER {
 class Settings {
 public:
 	static unsigned long StartTime;
-	static unsigned int SimID;
+	static unsigned int SimulationId;
 	static unsigned int NumberOfParticles;
 	static unsigned long NumberOfPointsPerGrain;
 	static unsigned long NumberOfTimesteps;

@@ -62,7 +62,8 @@ double Settings::RandomnessZ = 0.;
 bool Settings::VoronoiPeriodic = false;
 bool Settings::ExecuteInParallel = false;
 bool Settings::StatusHealthy = true;
-bool Settings::BreakPerX = false; //by default domains are periodic
+//by default domains are not periodic because the twod_obc solver cannot account for it but the 3D solver TODO::reintroduce if needed
+bool Settings::BreakPerX = false; 
 bool Settings::BreakPerY = false;
 bool Settings::BreakPerZ = false;
 E_CRYSTAL_STRUCTURE Settings::CrystalStructure = E_FCC;
@@ -253,6 +254,8 @@ void Settings::ReadXmlConfig(string filename)
 			StatusHealthy = false; return;
 		}
 	}
+
+	/*
 	key = "BreakPeriodicityX";
 	if (0 != rootNode->first_node(key.c_str())) {
 		BreakPerX = (bool) std::stoul(rootNode->first_node(key.c_str())->value());
@@ -275,6 +278,8 @@ void Settings::ReadXmlConfig(string filename)
 			StatusHealthy = false; return;
 		}
 	}
+	*/
+
 	//*****************************************************************************************************************************
 	key = "ReadFromFilename";
 	if (0 != rootNode->first_node(key.c_str())) {

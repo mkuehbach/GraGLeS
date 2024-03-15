@@ -110,7 +110,9 @@ Grains::~Grains()
 		delete m_PrefOri;
 	}
 	for ( vector<SubGrain*>::iterator itS = m_SubGrains.begin(); itS != m_SubGrains.end(); itS++ ) {
-		delete *itS;
+		if ((*itS) != NULL ) {
+			delete *itS;
+		}
 	}
 }
 
@@ -141,12 +143,14 @@ void Grains::computeDirectNeighbours(
 }
 
 void Grains::copyVoxelData(DimensionalBuffer<unsigned int> *container) {
-	for (int k = getMinZ(); k < getMaxZ(); k++)
-		for (int j = getMinY(); j < getMaxY(); j++)
+	for (int k = getMinZ(); k < getMaxZ(); k++) {
+		for (int j = getMinY(); j < getMaxY(); j++) {
 			for (int i = getMinX(); i < getMaxX(); i++) {
 				unsigned int value = container->getValueAt(j, i, k);
 				m_localContainer->setValueAt(j, i, k, value);
 			}
+		}
+	}
 }
 
 
@@ -155,23 +159,28 @@ int Grains::copySubgrainsToGlobalContainer(
 	unsigned int newOffset = 0;
 	if (m_SubGrains.size() > 1) {
 		newOffset = rehashAllSubGrains(offset);
-		for (int k = getMinZ(); k < getMaxZ(); k++)
+		for (int k = getMinZ(); k < getMaxZ(); k++) {
 			for (int j = getMinY(); j < getMaxY(); j++) {
-				for (int i = getMinX(); i < getMaxX(); i++)
-					if (m_localContainer->getValueAt(j, i, k) > 0)
-						container->setValueAt(j, i, k,
-								(unsigned int) offset
-										+ m_localContainer->getValueAt(j, i,
-												k));
+				for (int i = getMinX(); i < getMaxX(); i++) {
+					if (m_localContainer->getValueAt(j, i, k) > 0) {
+						container->setValueAt(
+							j, i, k, (unsigned int) offset + m_localContainer->getValueAt(j, i, k));
+					}
+				}
 			}
-	} else {
+		}
+	} 
+	else {
 		newOffset = offset + 1;
-		for (int k = getMinZ(); k < getMaxZ(); k++)
+		for (int k = getMinZ(); k < getMaxZ(); k++) {
 			for (int j = getMinY(); j < getMaxY(); j++) {
-				for (int i = getMinX(); i < getMaxX(); i++)
-					if (m_localContainer->getValueAt(j, i, k) == m_ID)
+				for (int i = getMinX(); i < getMaxX(); i++) {
+					if (m_localContainer->getValueAt(j, i, k) == m_ID) {
 						container->setValueAt(j, i, k, (unsigned int) newOffset);
+					}
+				}
 			}
+		}
 		m_ID = newOffset; //but the m_oldID is not overwritten to allow identifying the parent grain
 	}
 	return newOffset;

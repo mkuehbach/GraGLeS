@@ -108,7 +108,6 @@ public:
 	static bool VoronoiPeriodic;
 	static bool ExecuteInParallel; //Activate the execution in parallel
 	static bool StatusHealthy;	//global indication of successful and consistent parameter file
-
 	static bool BreakPerX;
 	static bool BreakPerY;
 	static bool BreakPerZ;

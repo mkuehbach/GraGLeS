@@ -32,6 +32,7 @@ int main(int argc, char *argv[]) {
 		cout << "Command line call has to be <<app>> <<simid>> <<configfile>>" << "\n";
 		return 0;
 	}
+	double gtic = omp_get_wtime();
 	Settings::SimulationId = std::stoul(argv[1]);
 	Settings::ConfigFileName = argv[2];
 	Settings::ResultsFileName = "StructureGenerator.Results.SimID." 
@@ -56,19 +57,18 @@ int main(int argc, char *argv[]) {
 	if (Settings::StatusHealthy == false) {
 		cout << "Configuring the tool failed!" << "\n"; return 0;
 	}
-	myHdl.GeneratePolycrystallineStructureOfGrains();
+	myHdl.GenerateGrainStructureAsParentGrains();
 	myHdl.DistributeGrainOriAndSee();
 	myHdl.GenerateSubgrainStructureInEachGrain();
 	myHdl.DistributeSubgrainOrientations();
 	myHdl.DistributeSubgrainSee();
-
 	myHdl.RehashGrainIds();
-	myHdl.BreakPeriodicity();
+	//myHdl.BreakPeriodicity();
 	//from now on all sub-grains and grains have a contiguous numbering
 	myHdl.SaveNeXus();
 
 	myHdl.ReportProfile();
-	cout << "structure_generator finished successfully.";
+	cout << "structure_generator finished successfully in " << (omp_get_wtime() - gtic) << " seconds" << endl;
 	return 0;
 }
 

@@ -225,7 +225,7 @@ public:
 	virtual ~microStructureHdl();
 	void ReadAdditionalInputFiles();
 	void ReadPreferenceOrientationFromFile();
-	void GeneratePolycrystallineStructureOfGrains();
+	void GenerateGrainStructureAsParentGrains();
 	void GenerateSubgrainStructureInEachGrain();
 	void GeneratorVoro();
 	void ReadDiscreteOrientationSet();
@@ -238,26 +238,19 @@ public:
 	void DistributeSubgrainSee();
 	unsigned int CountNumberOfSubgrains();
 	void RehashGrainIds();
-	void BreakPeriodicity();
+	//see 2017 version about periodicity breaking
 	void SaveNeXus();
 	void ReportProfile();
 	void ReportConfig();
 	void InitEnvironment();
 	void InitNumaBinding();
 	void CopyContainer();
-
-	//getter setter
-	unsigned long GetFirstId(){ return first_id; }
-	void SetFirstId(bool add, unsigned long val ) {
-		if ( add == true ) first_id += val;
-	}
 	bool healthy;
 
 private:
 	DimensionalBuffer<unsigned int>* m_container;
 	vector<Grains*> m_grains;
 	double m_h;
-	unsigned long first_id;
 	IterativeGrainScheduler* m_grainScheduler;
 	vector<myQuaternion>* m_OrientationSpace;
 	vector<Vector3d>* m_ParticlesPositions;

@@ -27,7 +27,7 @@ using namespace rapidxml;
 
 //Initializing the static setting variables
 unsigned long Settings::StartTime = 0;
-unsigned int Settings::SimID = 0;
+unsigned int Settings::SimulationId = 0;
 unsigned int Settings::NumberOfParticles = 0;
 unsigned long Settings::NumberOfPointsPerGrain = 0;
 unsigned long Settings::BreakupNumber = 0;

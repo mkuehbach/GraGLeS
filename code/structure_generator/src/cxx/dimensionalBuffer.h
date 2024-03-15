@@ -271,7 +271,7 @@ public:
 	/*!
 	* \brief This method returns number of data entries stored in the buffer.
 	*/
-	inline size_t getSize()
+	inline size_t getSize() const
 	{return m_values.size();}
 
 

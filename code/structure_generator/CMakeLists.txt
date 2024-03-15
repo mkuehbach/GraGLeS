@@ -69,7 +69,6 @@ endif()
 add_executable(${MYPROJECTNAME}
 	# ${MYTOOLSRCPATH}/allocator.cpp
 	${MYTOOLSRCPATH}/../../../utils/src/cxx/PARAPROBE_HDF5Core.cpp
-	${MYTOOLSRCPATH}/lodepng.cpp
 	${MYTOOLSRCPATH}/newMicrostructureGenerator.cpp
 	${MYTOOLSRCPATH}/microStructureHdl.cpp
 	${MYTOOLSRCPATH}/Grains.cpp

@@ -38,9 +38,6 @@
 #include "SubGrain.h"
 #include "random.h"
 #include <iomanip>
-#include "lodepng.h"
-//#include "hdf5.h"
-
 
 using namespace voro;
 using namespace std;
@@ -74,6 +71,7 @@ unsigned int timeLogger::get_entries( void )
 
 microStructureHdl::microStructureHdl()
 {
+	cout << __func__ << "\n";
 	healthy = true;
 	m_container = NULL;
 	m_grainScheduler = NULL;
@@ -111,14 +109,14 @@ microStructureHdl::microStructureHdl()
 
 	m_h = 1. / Settings::NumberOfGridpoints;
 	cout << "m_h " << m_h << "\n";
-	first_id = 0 + 1;
 
 	m_seqRND = new randomClass( -3000 );
 	//vector<randomClass*>* m_threadlocalRND = new vector<randomClass*> [omp_get_max_threads() - 1];
 }
 
 
-microStructureHdl::~microStructureHdl() {
+microStructureHdl::~microStructureHdl()
+{
 	delete m_container;
 	delete m_grainScheduler;
 	delete m_OrientationSpace;
@@ -127,40 +125,55 @@ microStructureHdl::~microStructureHdl() {
 }
 
 
-void microStructureHdl::GeneratePolycrystallineStructureOfGrains()
+void microStructureHdl::GenerateGrainStructureAsParentGrains()
 {
 	cout << __func__ << "\n";
 	double tic = omp_get_wtime();
 
 	switch (Settings::MicroGenMode) {
-		case E_VORONOI: {
-			GeneratorVoro();
-			break;
+		case E_VORONOI:
+		{
+			GeneratorVoro(); break;
 		}
-		default: {
+		default:
+		{
 			break;
 		}
 	}
 	CopyContainer();
 
-	myprofiler.logev( "GenerateGrainHull", (omp_get_wtime() - tic) );
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
 void microStructureHdl::GenerateSubgrainStructureInEachGrain()
 {
-	cout << "GenerateSubgrainStructureInEachGrain..." << "\n";
+	cout << __func__ << "\n";
 	double tic = omp_get_wtime();
 
-	ConstructSubgrains();
-
-	myprofiler.logev( "GenerateSubgrainStructureInEachGrain", (omp_get_wtime() - tic) );
+	#pragma omp parallel
+	{
+		randomClass* threadlocalRNG = new randomClass();
+		//threadlocalRNG->initPM(-1 * (omp_get_thread_num()) - 1);
+		uint32_t overflowint = (uint32_t) pow(2.0, 31);
+		threadlocalRNG->initMT( overflowint - omp_get_thread_num() - 1 );
+		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
+				omp_get_thread_num());
+		for (auto id : workload) {
+			if (id <= Settings::NumberOfGrains) {
+				m_grains[id]->SubGrainConstructor(*threadlocalRNG);
+			}
+		}
+		delete threadlocalRNG;
+	}
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
-void microStructureHdl::ReadDiscreteOrientationSet() {
+void microStructureHdl::ReadDiscreteOrientationSet()
+{
 	cout << __func__ << "\n";
-	double tic = omp_get_wtime();
+	//double tic = omp_get_wtime();
 
 	FILE * OriFromFile = NULL;
 	OriFromFile = fopen(Settings::ReadFromFilename.c_str(), "r");
@@ -209,14 +222,16 @@ void microStructureHdl::ReadDiscreteOrientationSet() {
 		else {}
 	}
 	fclose(OriFromFile);
-	
 	cout << "ParticleFile read successfully with m_OrientationSpace.size "  << m_OrientationSpace->size() << "\n";
 	//for ( unsigned int j = 0; j < m_OrientationSpace->size(); j++ ) cout << (*m_OrientationSpace)[j].get_q0() << ";" <<  (*m_OrientationSpace)[j].get_q1() << endl;
+	//myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
-void microStructureHdl::GeneratorVoro() {
+void microStructureHdl::GeneratorVoro()
+{
 	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
 
 	bool is_periodic = false; // bei false ist der container halb offen?! d.h. gitterwert mit 1 werden keinem partikel zugeordnet
 
@@ -333,7 +348,7 @@ void microStructureHdl::GeneratorVoro() {
 
 	/**********************************************************/
 
-	vector<vector<Eigen::Vector3d> > initialHulls;
+	vector<vector<Eigen::Vector3d>> initialHulls;
 	vector<double> grainVolume;
 	vector<double> cellCoordinates;
 	if (vl.start()) {
@@ -384,34 +399,13 @@ void microStructureHdl::GeneratorVoro() {
 
 	//generate grainboxes by evaluating the initial hulls objects
 	InitializeGrains(initialHulls, grainVolume);
-
-	cout << "Parent grain geometry constructed " << endl;
-}
-
-
-void microStructureHdl::ConstructSubgrains()
-{
-	cout << __func__ << "\n";
-	#pragma omp parallel
-	{
-		randomClass* threadlocalRNG = new randomClass();
-		//threadlocalRNG->initPM(-1 * (omp_get_thread_num()) - 1);
-		uint32_t overflowint = (uint32_t) pow(2.0, 31);
-		threadlocalRNG->initMT( overflowint - omp_get_thread_num() - 1 );
-		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
-				omp_get_thread_num());
-		for (auto id : workload) {
-			if (id <= Settings::NumberOfGrains) {
-				m_grains[id]->SubGrainConstructor(*threadlocalRNG);
-			}
-		}
-		delete threadlocalRNG;
-	}
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
 void microStructureHdl::CopyContainer()
 {
+	cout << __func__ << "\n";
 	for (auto it : m_grains) {
 		if (it != NULL) {
 			it->copyContainerToGrain(m_container);
@@ -422,6 +416,9 @@ void microStructureHdl::CopyContainer()
 
 void microStructureHdl::FindNeighbors()
 {
+	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
+
 	RTree<unsigned int, int, 3, float> tree;
 	int min[3], max[3];
 	for (unsigned int i = 1; i <= Settings::NumberOfGrains; i++) {
@@ -438,6 +435,7 @@ void microStructureHdl::FindNeighbors()
 	for (unsigned int id = 1; id <= Settings::NumberOfGrains; id++) {
 		m_grains[id]->computeDirectNeighbours(tree);
 	}
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
@@ -447,41 +445,40 @@ void microStructureHdl::DistributeGrainOriAndSee()
 	double tic = omp_get_wtime();
 
 	//TODO::readPreferenceOrientationFromFile();
-	for (vector<Grains*>::iterator it = ++m_grains.begin(); it != m_grains.end(); it++) {
-		myQuaternion ori;
-		if (Settings::MicroGenMode == E_VORONOI) {
-			if (Settings::TextureSampling == E_PICK_RANDOMLY) {
-				unsigned int mOrientations = m_OrientationSpace->size();
-				unsigned int randomOri = m_OrientationSpace->size();
-				while ( randomOri >= mOrientations ) {
-					randomOri = m_seqRND->MersenneTwister() * m_OrientationSpace->size();
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			myQuaternion ori;
+			if (Settings::MicroGenMode == E_VORONOI) {
+				if (Settings::TextureSampling == E_PICK_RANDOMLY) {
+					unsigned int mOrientations = m_OrientationSpace->size();
+					unsigned int randomOri = m_OrientationSpace->size();
+					while ( randomOri >= mOrientations ) {
+						randomOri = m_seqRND->MersenneTwister() * m_OrientationSpace->size();
+					}
+					ori = (*m_OrientationSpace)[randomOri]; 								//pick randomly from list of predefined orientations
+					cout << "Grain " << (*itG)->get_ID() << " becomes mapped on randomly picked UserDefinedOrientation " << randomOri << endl;
+					//ori.randomOriShoemakeQuat(*m_seqRND);
 				}
-				ori = (*m_OrientationSpace)[randomOri]; 								//pick randomly from list of predefined orientations
-				cout << "Grain " << (*it)->get_ID() << " becomes mapped on randomly picked UserDefinedOrientation " << randomOri << endl;
-				//ori.randomOriShoemakeQuat(*m_seqRND);
+				else { //##MK::at the moment equivalent to == E_DEFAULT_SAMPLING
+					unsigned int mOrientations = m_OrientationSpace->size();
+					unsigned int linearOri = (*itG)->get_ID() % mOrientations;
+					ori = (*m_OrientationSpace)[linearOri];
+					cout << "Grain " << (*itG)->get_ID() << " becomes mapped on linearly identified UserDefinedOrientation " << linearOri << endl;
+				}
 			}
-			else { //##MK::at the moment equivalent to == E_DEFAULT_SAMPLING
-				unsigned int mOrientations = m_OrientationSpace->size();
-				unsigned int linearOri = (*it)->get_ID() % mOrientations;
-				ori = (*m_OrientationSpace)[linearOri];
-				cout << "Grain " << (*it)->get_ID() << " becomes mapped on linearly identified UserDefinedOrientation " << linearOri << endl;
+			else {
+				ori.randomOriShoemakeQuat(*m_seqRND); //random orientations
 			}
-		}
-		else {
-			ori.randomOriShoemakeQuat(*m_seqRND); //random orientations
-		}
 
-		//assign grain the orientation and scattering properties
-		(*it)->set_Orientation(ori);
-		(*it)->set_PreforiProperties( FindNextPreferenceOrientation(ori) );
-		double gr_see_mu = (*it)->get_SEEFromPrefori();
-		double gr_see_sig = (*it)->get_SEEGrainScatterFromPrefOri();
-		//cout << "Grain = " << (*it)->get_ID() << " prefori mu/sig/orisig = " << gr_see_mu << ";" << gr_see_sig << ";" << (*it)->get_OriScatterFromPrefOri() << "----prefori q0 " <<  (*it)->get_PrefOriQuatQ0() << ";" << (*it)->get_PrefOriQuatQ1() << ";" << (*it)->get_PrefOriQuatQ2() << ";" << (*it)->get_PrefOriQuatQ3() << endl;
-		(*it)->set_SEE( m_seqRND->r4_nor(gr_see_mu, gr_see_sig) ); //set stored elastic energy of grain to a specific value from a normal distribution
+			//assign grain the orientation and scattering properties
+			(*itG)->set_Orientation(ori);
+			(*itG)->set_PreforiProperties( FindNextPreferenceOrientation(ori) );
+			double gr_see_mu = (*itG)->get_SEEFromPrefori();
+			double gr_see_sig = (*itG)->get_SEEGrainScatterFromPrefOri();
+			(*itG)->set_SEE( m_seqRND->r4_nor(gr_see_mu, gr_see_sig) ); //set stored elastic energy of grain to a specific value from a normal distribution
+		}
 	}
-	cout << "Sample sub-grain orientation from reference orientation of grain" << "\n";
-
-	myprofiler.logev("DistriGrainPrefOris", (omp_get_wtime() - tic));
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
@@ -507,17 +504,19 @@ void microStructureHdl::DistributeSubgrainOrientations()
 		delete threadlocalRNG;
 	}
 
-	myprofiler.logev("DistrSubgrainOris", (omp_get_wtime() - tic) );
+	myprofiler.logev(__func__, (omp_get_wtime() - tic) );
 }
 
 
-void microStructureHdl::ReadAdditionalInputFiles() {
+void microStructureHdl::ReadAdditionalInputFiles()
+{
+	cout << __func__ << "\n";
 	double tic = omp_get_wtime();
 
 	ReadDiscreteOrientationSet();
 	ReadPreferenceOrientationFromFile();
 
-	myprofiler.logev("ReadAdditionalInput", (omp_get_wtime() - tic));
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
@@ -562,7 +561,11 @@ void microStructureHdl::ReportConfig()
 }
 
 
-void microStructureHdl::ReadPreferenceOrientationFromFile() {
+void microStructureHdl::ReadPreferenceOrientationFromFile()
+{
+	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
+
 	FILE* file = NULL;
 	file = fopen(Settings::AdditionalFilename.c_str(), "r");
 	if ( file == NULL ) {
@@ -596,11 +599,12 @@ void microStructureHdl::ReadPreferenceOrientationFromFile() {
 	}
 	fclose(file);
 	//cout << "PrefRefDefault = " << Settings::SubgrainOriScatter << ";" << (Settings::StoredElasticEnergyMax+Settings::StoredElasticEnergyMin)*0.5 << ";" << Settings::StoredElasticScatterGrain << ";" << 1. << endl;
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
-myPreferenceOri microStructureHdl::FindNextPreferenceOrientation(
-		myQuaternion ori) {
+myPreferenceOri microStructureHdl::FindNextPreferenceOrientation(myQuaternion ori)
+{
 	if (Settings::TextureGen == E_USE_PREFERENCEORI) {
 		double min = DEG2RAD(15.);
 		unsigned int idx = 0;
@@ -628,10 +632,13 @@ myPreferenceOri microStructureHdl::FindNextPreferenceOrientation(
 	}
 }
 
-void microStructureHdl::DistributeSubgrainSee() {
-	double gtime = omp_get_wtime();
-	cout << "Sample Stored Elastic Energy" << endl;
-#pragma omp parallel
+
+void microStructureHdl::DistributeSubgrainSee()
+{
+	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
+
+	#pragma omp parallel
 	{
 		randomClass* threadlocalRNG = new randomClass();
 		//threadlocalRNG->initPM(-1 * (omp_get_thread_num()) - 1);
@@ -651,133 +658,41 @@ void microStructureHdl::DistributeSubgrainSee() {
 		delete threadlocalRNG;
 	}
 
-	myprofiler.logev("DistrStoredElasticEnergy", (omp_get_wtime() - gtime) );
+	myprofiler.logev(__func__, (omp_get_wtime() - tic) );
 }
 
 
-void microStructureHdl::RehashGrainIds() {
-	double timer = omp_get_wtime();
-	cout << ">Rehashing grain IDs" << endl;
-
+void microStructureHdl::RehashGrainIds()
+{
+	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
 	//classical (Mie\ss{}en and K\"uhbach 2015,2016,2017 grain IDs start with 1
 	int offset = 0;
 
 	//MK::consider a potential breaking of the periodicity by adding pair(s) of "air" grains 1,2,3,4,5,6
-	if ( Settings::BreakPerX == true )	offset += 2;
-	if ( Settings::BreakPerY == true )	offset += 2;
-	if ( Settings::BreakPerZ == true )	offset += 2;
+	if ( Settings::BreakPerX == true ) { offset += 2; }
+	if ( Settings::BreakPerY == true ) { offset += 2; }
+	if ( Settings::BreakPerZ == true ) { offset += 2; }
 
 	int newoffset = 0;
 	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
-		if ((Settings::NumberOfSubgrains != 0) && (*itG)->m_SubGrains.size() > 1) {
-			newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset); // implicit rehashing of all ID's
-			offset = --newoffset;
-		}
-		else {
-			newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset);
-			offset = newoffset;
-		}
-	}
-
-	myprofiler.logev("RehashingIDs", (omp_get_wtime() - timer) );
-}
-
-
-void microStructureHdl::BreakPeriodicity() {
-	cout << __func__ << "\n";
-	double timer = omp_get_wtime();
-	//add "air" grain pair at the boundary to break the symmetry of the domain
-	unsigned int offset = 1;
-
-	if ( Settings::BreakPerX == true ) {
-		SetFirstId( true, 2 );
-		offset += 2;
-		unsigned int x1 = m_container->getMaxX() - 1; //getMaxI are exclusive...
-		unsigned int x2 = m_container->getMaxX() - 2;
-		//reset all m_container values to "air" grain 1 at (x=0,y,z)
-		for ( unsigned int z = m_container->getMinZ(); z < m_container->getMaxZ(); ++z ) {
-			for ( unsigned int y = m_container->getMinY(); y < m_container->getMaxY(); ++y ) {
-				m_container->setValueAt( y, 0, z, offset-2 );
-				m_container->setValueAt( y, 1, z, offset-2 );
-				m_container->setValueAt( y, x2, z, offset-1 );
-				m_container->setValueAt( y, x1, z, offset-1 );
-			}
-		}
-	}
-	if ( Settings::BreakPerY == true ) {
-		SetFirstId( true, 2 );
-		offset += 2;
-		unsigned int y1 = m_container->getMaxY() - 1;
-		unsigned int y2 = m_container->getMaxY() - 2;
-		for ( unsigned int z = m_container->getMinZ(); z < m_container->getMaxZ(); ++z ) {
-			for ( unsigned int x = m_container->getMinX(); x < m_container->getMaxX(); ++x ) {
-				m_container->setValueAt( 0, x, z, offset-2 );
-				m_container->setValueAt( 1, x, z, offset-2 );
-				m_container->setValueAt( y2, x, z, offset-1 );
-				m_container->setValueAt( y1, x, z, offset-1 );
-			}
-		}
-	}
-	if ( Settings::BreakPerZ == true ) {
-		SetFirstId( true, 2 );
-		offset += 2;
-		unsigned int z1 = m_container->getMaxZ() - 1;
-		unsigned int z2 = m_container->getMaxZ() - 2;
-		for ( unsigned int y = m_container->getMinY(); y < m_container->getMaxY(); ++y ) {
-			for ( unsigned int x = m_container->getMinX(); x < m_container->getMaxX(); ++x ) {
-				m_container->setValueAt( y, x, 0, offset-2 );
-				m_container->setValueAt( y, x, 1, offset-2 );
-				m_container->setValueAt( y, x, z2, offset-1 );
-				m_container->setValueAt( y, x, z1, offset-1 );
-			}
-		}
-	}
-
-	if ( Settings::BreakPerX == true || Settings::BreakPerY == true || Settings::BreakPerZ == true ) {
-		//update subgrain volume
-		vector<Grains*>::iterator itG;
-		for (itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
 			if ((Settings::NumberOfSubgrains != 0) && (*itG)->m_SubGrains.size() > 1) {
-				vector<SubGrain*>::iterator it;
-				for (it = ++((*itG)->m_SubGrains.begin()); it != (*itG)->m_SubGrains.end(); it++) {
-					double oldVolume = (*it)->get_Volume();
-					double newVolume = 0.;
-					unsigned int cand = (*it)->get_ID();
-					for ( int z = (*it)->getMinZ(); z < (*it)->getMaxZ(); z++ ) { //##MK::could be improved by just scanning changed boundary cells..
-						for ( int y = (*it)->getMinY(); y < (*it)->getMaxY(); y++ ) {
-							for ( int x = (*it)->getMinX(); x < (*it)->getMinX(); x++ ) {
-								if ( m_container->getValueAt( y, x, z ) == cand )
-									newVolume++;
-							}
-						}
-					}
-					//##implement setter!
-					std::cout << "Sub-grain " << (*it)->get_ID() << " old volume " << oldVolume << " new " << newVolume << endl;
-				}
-			} else {
-				double oldVolume = (*itG)->get_Volume();
-				double newVolume = 0.;
-				unsigned int cand = (*itG)->get_ID();
-				for ( int z = (*itG)->getMinZ(); z < (*itG)->getMaxZ(); z++ ) { //##MK::could be improve by just scanning changed boundary cells..
-					for ( int y = (*itG)->getMinY(); y < (*itG)->getMaxY(); y++ ) {
-						for ( int x = (*itG)->getMinX(); x < (*itG)->getMinX(); x++ ) {
-							if ( m_container->getValueAt( y, x, z ) == cand )
-								newVolume++;
-						}
-					}
-				}
-				//##implement setter!
-				std::cout << "Grain w/o subgrain " << (*itG)->get_ID() << " old volume " << oldVolume << " new " << newVolume << endl;
+				newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset); // implicit rehashing of all ID's
+				offset = --newoffset;
+			}
+			else {
+				newoffset = (*itG)->copySubgrainsToGlobalContainer(m_container, offset);
+				offset = newoffset;
 			}
 		}
 	}
-	//nothing to do otherwise
-
-	myprofiler.logev( "BreakPeriodicity", (omp_get_wtime() - timer) );
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
-void microStructureHdl::SaveNeXus() {
+void microStructureHdl::SaveNeXus()
+{
 	cout << __func__ << "\n";
 	double tic = omp_get_wtime();
 
@@ -809,13 +724,8 @@ void microStructureHdl::SaveNeXus() {
 	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
 	*/
 
-	dsnm = grpnm + "/unknown_offset";
-	unsigned long idoff = this->GetFirstId(); //for grains or cells?
-	anno = ioAttributes();
-	if ( h5w.nexus_write( dsnm, idoff, anno ) != MYHDF5_SUCCESS ) { return; }
-
 	dsnm = grpnm + "/average_subgrain_discretization";
-	u32 = vector<unsigned int>( Settings::Dimensionality, Settings::NumberOfPointsPerSubGrain);
+	u32 = vector<unsigned int>( (size_t) Settings::Dimensionality, Settings::NumberOfPointsPerSubGrain);
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -823,8 +733,8 @@ void microStructureHdl::SaveNeXus() {
 		u32, anno ) != MYHDF5_SUCCESS ) { return; }
 	u32 = vector<unsigned int>();
 
-	dsnm = grpnm + "/extent"; //real extent ?
-	u32 = vector<unsigned int>( Settings::Dimensionality, Settings::NumberOfGridpoints);
+	dsnm = grpnm + "/extent";
+	u32 = vector<unsigned int>( (size_t) Settings::Dimensionality, Settings::NumberOfGridpoints);
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
@@ -887,26 +797,26 @@ void microStructureHdl::SaveNeXus() {
 		if ((*itG) != NULL) {
 			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
 				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
-					if ((*itS) != NULL ) {
-						f64.push_back((((*itS)->getMaxX() - (*itS)->getMinX()) / 2 + (*itS)->getMinX()));
-						f64.push_back((((*itS)->getMaxY() - (*itS)->getMinY()) / 2 + (*itS)->getMinY()));
+					if ((*itS) != NULL) {
+						f64.push_back((((*itS)->getMaxX() - (*itS)->getMinX()) / 2. + (*itS)->getMinX()));
+						f64.push_back((((*itS)->getMaxY() - (*itS)->getMinY()) / 2. + (*itS)->getMinY()));
 						if (Settings::Dimensionality == E_3D) {
-							f64.push_back((((*itS)->getMaxZ() - (*itS)->getMinZ()) / 2 + (*itS)->getMinZ()));
+							f64.push_back((((*itS)->getMaxZ() - (*itS)->getMinZ()) / 2. + (*itS)->getMinZ()));
 						}
 					}
 				}
 			}
 			else {
-				f64.push_back((((*itG)->getMaxX() - (*itG)->getMinX()) / 2 + (*itG)->getMinX()));
-				f64.push_back((((*itG)->getMaxY() - (*itG)->getMinY()) / 2 + (*itG)->getMinY()));
+				f64.push_back((((*itG)->getMaxX() - (*itG)->getMinX()) / 2. + (*itG)->getMinX()));
+				f64.push_back((((*itG)->getMaxY() - (*itG)->getMinY()) / 2. + (*itG)->getMinY()));
 				if (Settings::Dimensionality == E_3D) {
-					f64.push_back((((*itG)->getMaxZ() - (*itG)->getMinZ()) / 2 + (*itG)->getMinZ()));
+					f64.push_back((((*itG)->getMaxZ() - (*itG)->getMinZ()) / 2. + (*itG)->getMinZ()));
 				}
 			}
 		}
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("m ?????") );
+	//dimensionless, anno.add( "unit", string("") );
 	size_t n_cols = (Settings::Dimensionality == E_3D) ? 3 : 2;
 	if ( h5w.nexus_write(
 		dsnm,
@@ -979,51 +889,7 @@ void microStructureHdl::SaveNeXus() {
 		i32, anno ) != MYHDF5_SUCCESS ) { return; }
 	i32 = vector<int>();
 
-	dsnm = grpnm + "/grain_size";
-	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
-		if ((*itG) != NULL) {
-			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
-				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
-					if ((*itS) != NULL) {
-						double vol = (*itS)->get_Volume();
-						double divisor = (Settings::Dimensionality == E_3D ) ? (m_h * m_h * m_h) : (m_h * m_h);
-						if ( divisor > DBL_EPSILON ) {
-							f64.push_back(vol / divisor);
-						}
-						else {
-							cerr << "Division by zero!" << "\n";
-						}
-					}
-				}
-			}
-			else {
-				double vol = (*itG)->get_Volume();
-				double divisor = (Settings::Dimensionality == E_3D) ? (m_h * m_h * m_h) : (m_h * m_h);
-				if ( divisor > DBL_EPSILON ) {
-					f64.push_back( vol / divisor );
-				}
-				else {
-					cerr << "Division by zero!" << "\n";
-				}
-			}
-		}
-	}
-	anno = ioAttributes();
-	/*
-	if (Settings::Dimensionality == E_3D ) {
-		anno.add( "unit", string("m^3 ?????") );
-	}
-	else {
-		anno.add( "unit", string("m^2 ?????") );
-	}
-	*/
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		f64, anno ) != MYHDF5_SUCCESS ) { return; }
-	f64 = vector<double>();
-	
-	dsnm = grpnm + "/stored_elastic_energy";
+	dsnm = grpnm + "/grain_dislocation_density";
 	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
 		if ( (*itG) != NULL ) {
 			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
@@ -1039,10 +905,10 @@ void microStructureHdl::SaveNeXus() {
 		}
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("1/m^2 ?????") );
+	anno.add( "unit", string("1/m^2") );
 	if ( h5w.nexus_write( 
 		dsnm,
-		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
 		f64, anno ) != MYHDF5_SUCCESS ) { return; }
 	f64 = vector<double>();
 
@@ -1076,17 +942,17 @@ void microStructureHdl::SaveNeXus() {
 				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
 					if ((*itS) != NULL ) {
 						myQuaternion* ori = (*itS)->get_Orientation();
-						f64.push_back(parentori.misorientationCubicQxQ(ori));
+						f64.push_back(RAD2DEG(parentori.misorientationCubicQxQ(ori)));
 					}
 				}
 			}
 			else {
-				f64.push_back(0.);
+				f64.push_back(RAD2DEG(0.));
 			}
 		}
 	}
 	anno = ioAttributes();
-	anno.add( "unit", string("° ?????") );
+	anno.add( "unit", string("°") );
 	if ( h5w.nexus_write( 
 		dsnm,
 		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
@@ -1111,59 +977,114 @@ void microStructureHdl::SaveNeXus() {
 			}
 		}
 	}
-	//###
+	//TODO::implement
 	*/
 
-	dsnm = grpnm + "/grain_identifier";
-	//##MK::write m_container->getRawData() in-place
-	u32 = m_container->getCopy();
-	cout << "u32.size() " << u32.size() << "\n";
+	vector<unsigned int> grain_discrete_size = vector<unsigned int>(n_subgr + 1, 0);
+	cout << "grain_discrete_size.size() " << grain_discrete_size.size() << "\n";
+	dsnm = grpnm + "/subgrain_structure";
+	int z_limit = Settings::NumberOfGridpoints;
+	if (Settings::Dimensionality == E_3D) {
+		u32 = vector<unsigned int>(CUBE(Settings::NumberOfGridpoints), UINT32_MAX);
+	}
+	else {
+		u32 = vector<unsigned int>(SQR(Settings::NumberOfGridpoints), UINT32_MAX);
+		z_limit = 1;
+	}
+	for (int k = 0; k < z_limit; k++) {
+		unsigned int zoff = k * SQR(Settings::NumberOfGridpoints);
+		for (int j = 0; j < Settings::NumberOfGridpoints; j++) {
+			unsigned yzoff = zoff + (j * Settings::NumberOfGridpoints);
+			for (int i = 0; i < Settings::NumberOfGridpoints; i++) {
+				//x = i, y = j, z = k
+				//if ( i+yzoff >= m_container->getSize() ) { cerr << ">>>>>>>>> " << k << ";" << j << ";" << i << "\n"; }
+				unsigned int value = m_container->getValueAt(j, i, k);
+				u32[i+yzoff] = value;
+				//if ( value >= grain_discrete_size.size() ) { cerr << ">>>>>>>>> " << value << "\n"; }
+				grain_discrete_size[value]++;
+			}
+		}
+	}
 	anno = ioAttributes();
 	if ( h5w.nexus_write(
 		dsnm,
-		io_info({m_container->getSize()}, {m_container->getSize()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
 		u32, anno ) != MYHDF5_SUCCESS ) { return; }
 	u32 = vector<unsigned int>();
 
-	double toc = omp_get_wtime();
-	myprofiler.logev("WritingNeXus", (toc - tic));
+	dsnm = grpnm + "/grain_size";
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ((*itG) != NULL) {
+			if (Settings::NumberOfSubgrains != 0 && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ((*itS) != NULL) {
+						u32.push_back(grain_discrete_size[(*itS)->get_ID()]);
+					}
+				}
+			}
+			else {
+				u32.push_back(grain_discrete_size[(*itG)->get_ID()]);
+			}
+		}
+	}
+	anno = ioAttributes();
+	//dimensionless
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32, anno ) != MYHDF5_SUCCESS ) { return; }
+	u32 = vector<unsigned int>();
+	grain_discrete_size = vector<unsigned int>();
+
+	myprofiler.logev("WritingNeXus", (omp_get_wtime() - tic));
 }
 
 
-unsigned int microStructureHdl::CountNumberOfSubgrains() {
+unsigned int microStructureHdl::CountNumberOfSubgrains()
+{
 	cout << __func__ << "\n";
-	unsigned int NumberOfSubgrains = 0;
-	vector<Grains*>::iterator itG;
-	for (itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
-		if ((Settings::NumberOfSubgrains != 0) && (*itG)->m_SubGrains.size() > 1) {
-			vector<SubGrain*>::iterator it;
-			for (it = ++((*itG)->m_SubGrains.begin()); it != (*itG)->m_SubGrains.end(); it++)
-				NumberOfSubgrains++;
+	double tic = omp_get_wtime();
 
-		} else {
-			NumberOfSubgrains++;
+	unsigned int NumberOfSubgrains = 0;
+	for (vector<Grains*>::iterator itG = ++m_grains.begin(); itG != m_grains.end(); itG++) {
+		if ( (*itG) != NULL ) {
+			if ((Settings::NumberOfSubgrains != 0) && (*itG)->m_SubGrains.size() > 1) {
+				for (vector<SubGrain*>::iterator itS = ++((*itG)->m_SubGrains.begin()); itS != (*itG)->m_SubGrains.end(); itS++) {
+					if ( (*itS) != NULL ) {
+						NumberOfSubgrains++;
+					}
+				}
+			}
+			else {
+				NumberOfSubgrains++;
+			}
 		}
 	}
-	cout << "Total number of subgrains " << NumberOfSubgrains << endl;
+	cout << "Total number of subgrains " << NumberOfSubgrains << "\n";
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 	return NumberOfSubgrains;
 }
 
 
-void microStructureHdl::ReportProfile() {
-	cout << endl << "Approximate OpenMP omp_get_wtime report (seconds)" << endl;
+void microStructureHdl::ReportProfile()
+{
+	cout << endl << "Approximate OpenMP omp_get_wtime report (in seconds)" << endl;
 	for ( unsigned int e = 0; e < myprofiler.get_entries(); e++ ) {
-		cout << myprofiler.titles[e] << ";" << setprecision(6) << myprofiler.times[e] << endl; //separator was "\t\t\t\t"
+		cout << myprofiler.titles[e] << ";" << setprecision(6) << myprofiler.times[e] << "\n";
 	}
+	cout << endl;
 }
 
 
-struct NUMANode {
+struct NUMANode
+{
 	int num_cpus;
 	int numa_cpus[MYMAX_NUMA_NODES];
 };
 
 
-unsigned int my_numa_bitmask_weight(const struct bitmask *mask) {
+unsigned int my_numa_bitmask_weight(const struct bitmask *mask)
+{
 	unsigned int weight = 0;
 	for (unsigned int j = 0; j < mask->size; j++) {
 		if (numa_bitmask_isbitset(mask, j)) {
@@ -1177,6 +1098,8 @@ unsigned int my_numa_bitmask_weight(const struct bitmask *mask) {
 void microStructureHdl::InitEnvironment()
 {
 	cout << __func__ << "\n";
+	double tic = omp_get_wtime();
+
 	if (Settings::ExecuteInParallel) {
 		Settings::MaximumNumberOfThreads = omp_get_max_threads();
 	}
@@ -1188,6 +1111,7 @@ void microStructureHdl::InitEnvironment()
 			Settings::MaximumNumberOfThreads, Settings::NumberOfGrains);
 
 	InitNumaBinding();
+	myprofiler.logev(__func__, (omp_get_wtime() - tic));
 }
 
 
@@ -1251,8 +1175,7 @@ void microStructureHdl::InitNumaBinding()
 }
 
 
-void microStructureHdl::InitializeGrains(
-	vector<vector<Eigen::Vector3d>> hulls, vector<double> grainVolume)
+void microStructureHdl::InitializeGrains(vector<vector<Eigen::Vector3d>> hulls, vector<double> grainVolume)
 {
 	cout << __func__ << "\n";
 	m_grainScheduler->buildThreadWorkloads(hulls, Settings::NumberOfGridpoints);
@@ -1263,15 +1186,12 @@ void microStructureHdl::InitializeGrains(
 
 	#pragma omp parallel
 	{
-		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
-				omp_get_thread_num());
+		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
 		for (auto id : workload) {
 			if (id <= Settings::NumberOfGrains) {
 				try {
-					Grains* newGrain = new Grains(id, hulls[id], m_container,
-							grainVolume[id]);
+					Grains* newGrain = new Grains(id, hulls[id], m_container, grainVolume[id]);
 					m_grains[id] = newGrain;
-
 				}
 				catch (exception& e) {
 					#pragma omp critical

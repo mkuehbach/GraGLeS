@@ -115,12 +115,14 @@ public:
 	void setResearchAdjustments(E_RESEARCH_PROJECT project);
 	void setSimulationParameter();
 	void read_HeaderCPG();
+	void read_header_from_nexusfile();
 
 	void VOROMicrostructure();
 	void readMicrostructureFromVertex();
 	void readMicrostructure();
 	void save_Full_Microstructure_for_Restart();
 	void read_voxelized_microstructure();
+	void read_microstructure_from_nexusfile();
 
 	void createParamsForSim(const char* param_filename,
 			const char* vertex_dum_filename = NULL);
@@ -230,6 +232,8 @@ protected:
 			vector<double>& q2, vector<double>& q3, vector<double>& q4);
 	void buildBoxVectors(int* ID, vector<vector<SPoint>>& contours,
 			Quaternion* Quaternionen, double* StoredElasticEnergy);
+	void buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
+			vector<double> & q, vector<double> & see );
 	int m_ThreadPoolCount;
 	vector<ExpandingVector<char> > m_ThreadMemPool;
 };

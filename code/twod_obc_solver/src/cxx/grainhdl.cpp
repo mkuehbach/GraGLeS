@@ -70,7 +70,8 @@ void grainhdl::setSimulationParameter() {
 		fclose(getNumber);
 	} else if (Settings::MicrostructureGenMode
 			== E_READ_VOXELIZED_MICROSTRUCTURE) {
-		read_HeaderCPG();
+		//read_HeaderCPG();
+		read_header_from_nexusfile();
 	} else {
 		ngrains = Settings::NumberOfParticles;
 		currentNrGrains = ngrains;
@@ -164,7 +165,8 @@ void grainhdl::setSimulationParameter() {
 	}
 	case E_READ_VOXELIZED_MICROSTRUCTURE: {
 		cout << "Starting to read microstructure input files" << endl;
-		read_voxelized_microstructure();
+		//read_voxelized_microstructure();
+		read_microstructure_from_nexusfile();
 		cout << "Read microstructure input files successfully" << endl;
 		break;
 	}
@@ -322,6 +324,29 @@ void grainhdl::read_HeaderCPG() {
 	// half open container of VORO++
 	fclose(compressedGrainInfo);
 }
+
+
+void grainhdl::read_header_from_nexusfile()
+{
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	string grpnm = "/entry1/ms";
+	string dsnm = "";
+
+	//key quantities relevant to define the discretization of the simulated VE
+	dsnm = grpnm + "/extent";
+	vector<unsigned int> nxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, nxy) != MYHDF5_SUCCESS ) { return; }
+	realDomainSize = nxy[0];
+
+	dsnm = grpnm + "/number_of_subgrains";
+	unsigned int n_subgr = 0;
+	if ( h5r.nexus_read(dsnm, n_subgr) != MYHDF5_SUCCESS ) { return; }
+	Settings::NumberOfParticles = n_subgr;
+	ngrains = Settings::NumberOfParticles;
+	currentNrGrains = ngrains;
+	Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+}
+
 
 void grainhdl::read_voxelized_microstructure() {
 	FILE * compressedGrainInfo;
@@ -499,6 +524,146 @@ void grainhdl::read_voxelized_microstructure() {
 		delete[] StoredElasticEnergy;
 	}
 }
+
+
+void grainhdl::read_microstructure_from_nexusfile()
+{
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	string grpnm = "/entry1/ms";
+	string dsnm = "";
+
+	//key quantities relevant to define the discretization of the simulated VE
+	dsnm = grpnm + "/average_subgrain_discretization";
+	vector<unsigned int> dxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, dxy) != MYHDF5_SUCCESS ) { return; }
+	dsnm = grpnm + "/extent";
+	vector<unsigned int> nxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, nxy) != MYHDF5_SUCCESS ) { return; }
+	dsnm = grpnm + "/number_of_subgrains";
+	unsigned int n_subgr = 0;
+	if ( h5r.nexus_read(dsnm, n_subgr) != MYHDF5_SUCCESS ) { return; }
+
+	//grain-specific quantities
+	dsnm = grpnm + "/grain_size";
+	vector<double> sz;
+	if ( h5r.nexus_read(dsnm, sz) != MYHDF5_SUCCESS ) { return; }
+	vector<int> counts = vector<int>(n_subgr + 1, 0);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		counts[i] = (int) sz[i-1];
+	}
+	sz = vector<double>();
+
+	int id_offset = 1;
+	dsnm = grpnm + "/grain_identifier";
+	vector<int> id_tmp;
+	if ( h5r.nexus_read(dsnm, id_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<int> ID = vector<int>(n_subgr + 1, -1);
+	//grains with zero count or other problems are marked with -1
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		if ( counts[i] > 0 ) {
+			ID[i] = id_tmp[i-1] - (id_offset - 1);
+		}
+	}
+	id_tmp = vector<int>();
+
+	dsnm = grpnm + "/grain_aabb";
+	vector<int> aabb_tmp;
+	if ( h5r.nexus_read(dsnm, aabb_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<vector<SPoint>> vertices;
+	vertices.resize(n_subgr + 1);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		int xmi = aabb_tmp[4*(i-1)+0];
+		int xmx = aabb_tmp[4*(i-1)+1];
+		int ymi = aabb_tmp[4*(i-1)+2];
+		int ymx = aabb_tmp[4*(i-1)+3];
+		vertices[i].push_back(SPoint(xmi, ymi, 0, 0));
+		vertices[i].push_back(SPoint(xmi, ymx, 0, 0));
+		vertices[i].push_back(SPoint(xmx, ymi, 0, 0));
+		vertices[i].push_back(SPoint(xmx, ymx, 0, 0));
+	}
+	aabb_tmp = vector<int>();
+
+	dsnm = grpnm + "/grain_barycentre_naive";
+	vector<double> xy_tmp;
+	if ( h5r.nexus_read(dsnm, xy_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<double> xy = vector<double>( 2*(n_subgr + 1), -1);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		for ( unsigned int j = 0; j < 2; j++ ) {
+			xy[(2*i)+j] = (int) xy_tmp[2*(i-1)+j];
+		}
+	}
+	xy_tmp = vector<double>(); //TODO::int ????
+
+	dsnm = grpnm + "/grain_orientation";
+	vector<double> q4_tmp;
+	if ( h5r.nexus_read(dsnm, q4_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<double> quat = vector<double>(4*(n_subgr + 1), 0.); //scalar, vector???
+	for ( unsigned int i = 1; i <= n_subgr; i++ ) {
+		for( unsigned int j = 0; j < 4; j++ ) {
+			quat[(4*i)+j] = q4_tmp[4*(i-1)+j];
+		}
+	}
+	q4_tmp = vector<double>();
+
+	pair<double, double> see_mimx = pair<double, double>(1.e20, 0.);
+	vector<double> stored_elastic_energy = vector<double>( n_subgr + 1, 0.);
+	if (Settings::UseStoredElasticEnergy) {
+		dsnm = grpnm + "/grain_dislocation_density";
+		vector<double> see_tmp;
+		if ( h5r.nexus_read(dsnm, see_tmp) != MYHDF5_SUCCESS ) { return; }
+		for( unsigned int i = 1; i <= n_subgr; i++ ) {
+			stored_elastic_energy[i] = see_tmp[i-1];
+			if ( see_tmp[i-1] <= see_mimx.first ) {
+				see_mimx.first = see_tmp[i-1];
+			}
+			if ( see_tmp[i-1] >= see_mimx.second ) {
+				see_mimx.second = see_tmp[i-1];
+			}
+		}
+		see_tmp = vector<double>();
+	}
+
+	double real_time_scaling = 1. / Settings::DislocEnPerM * Settings::HAGB_Energy / Settings::Physical_Domain_Size;
+	//1/((N/m^2)*m^2)*(J/m^2)/m = (1/N)*Nm/m = 1
+	// find maximum Velocity driven exclusively by Stored Elastic Energy
+	// adapt timestep with
+	if (Settings::UseStoredElasticEnergy) {
+		see_mimx.first = see_mimx.first * real_time_scaling;
+		see_mimx.second = see_mimx.second * real_time_scaling;
+		if (ngrains == 1) {
+			see_mimx.first = 0.;
+		}
+		m_Energy_deltaMAX = Settings::DislocEnPerM * (see_mimx.second - see_mimx.first) / Settings::HAGB_Energy * Settings::Physical_Domain_Size;
+	}
+
+	dsnm = grpnm + "/subgrain_structure";
+	vector<unsigned int> tmp;
+	if( h5r.nexus_read( dsnm, tmp ) != MYHDF5_SUCCESS ) { return; }
+
+	IDField = new DimensionalBuffer<int> (0, 0, ngridpoints, ngridpoints);
+	for (int j = 0; j < ngridpoints; j++) { //TODO::nxy[1] ??
+		unsigned int yoff = (unsigned int) j * nxy[0];
+		for (int i = 0; i < ngridpoints; i++) { //TODO::nxy[0] ??
+			if (i < grid_blowup || j < grid_blowup || i >= ngridpoints
+					- grid_blowup || j >= ngridpoints - grid_blowup) {
+				IDField->setValueAt(j, i, 0);
+			}
+			else {
+				unsigned int ixy = ((unsigned int) i) + yoff;
+				int box_id = (int) tmp[ixy];
+				box_id = box_id - (id_offset - 1);
+				if (box_id < 0) {
+					box_id = 0;
+				}
+				IDField->setValueAt(j, i, box_id);
+			}
+		}
+	}
+	tmp = vector<unsigned int>();
+
+	buildBoxVectors(ID, vertices, quat, stored_elastic_energy);
+}
+
 
 void grainhdl::VOROMicrostructure() {
 
@@ -2007,7 +2172,7 @@ void grainhdl::initNUMABindings() {
 	bitmask* cpus = numa_allocate_cpumask();
 	for (unsigned int j = 0; j < mask->size; j++) {
 		if (numa_bitmask_isbitset(mask, j)) {
-			printf("We are allowed to used node %d\n", j);
+			cout << "We are allowed to used node " << j << "\n";
 			NUMANode node;
 			memset(&node, 0xFF, sizeof(node));
 			numa_node_to_cpus(j, cpus);
@@ -2025,21 +2190,25 @@ void grainhdl::initNUMABindings() {
 		}
 	}
 	numa_free_cpumask(cpus);
-#pragma omp parallel
+	#pragma omp parallel
 	{
 		int threadID = omp_get_thread_num();
 		for (unsigned int i = 0; i < nodes.size(); i++) {
 			if (threadID < nodes.at(i).num_cpus) {
-#pragma omp critical
+				#pragma omp critical
 				{
-					printf("Will bind thread %d to cpu %d\n",
-							omp_get_thread_num(),
-							nodes.at(i).numa_cpus[threadID]);
+					cout << "Will bind thread " << omp_get_thread_num() << " to CPU " << nodes.at(i).numa_cpus[threadID];
 					cpu_set_t set;
 					CPU_ZERO(&set);
 					CPU_SET(nodes.at(i).numa_cpus[threadID], &set);
 					int res = sched_setaffinity(0, sizeof(set), &set);
-					printf(res == 0 ? "Successful\n" : "Failed\n");
+					if ( res == 0 ) {
+						cout << ", success";
+					}
+					else {
+						cout << ", failed!";
+					}
+					cout << "\n";
 				}
 				break;
 			}
@@ -2113,6 +2282,34 @@ for	(auto id : workload) {
 	}
 }
 }
+
+
+void grainhdl::buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
+	vector<double> & q, vector<double> & see )
+{
+	m_grainScheduler->buildGrainWorkloads(contours, ngridpoints);
+	cout << "Construct LSbox objects" << endl;
+	#pragma omp parallel
+	{
+		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
+		for	(auto id : workload) {
+			if (id <= Settings::NumberOfParticles) {
+				if (ID[id] == -1) {
+					grains[id] = NULL;
+					continue;
+				}
+				LSbox* grain;
+				double stored_elastic_energy = (Settings::UseStoredElasticEnergy) ? see[id] : 0.;
+				vector<double> qt;
+				for( unsigned int i = 0; i < 4; i++ ) { qt.push_back(q[(4*id)+i]); }
+				
+				grain = new LSbox(ID[id], contours[id], qt, stored_elastic_energy, this);
+				grains[id] = grain;
+			}
+		}
+	}
+}
+
 
 void grainhdl::set_h(double hn) {
 	h = hn;

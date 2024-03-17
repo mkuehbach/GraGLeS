@@ -22,7 +22,7 @@
 		4		E_READ_VOXELIZED_MICROSTRUCTURE
    -->
    <ReadFromFilename>Microstructure.SimID.10.GrainIDs.2D.1188.raw</ReadFromFilename>
-   <AdditionalFilename>Microstructure.SimID.10.uds</AdditionalFilename>
+   <AdditionalFilename>StructureGenerator.Results.SimID.0.nxs</AdditionalFilename>
    <LatticeType>0</LatticeType>
 	   <!-- USAGE:
 	   	O		E_CUBIC,

@@ -123,6 +123,9 @@ public:
 			double phi2, grainhdl* owner);
 	LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 			double StoredElasticEnergy, grainhdl* owner);
+	LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion,
+			const double StoredElasticEnergy, grainhdl* owner);
+	
 	//Dtors
 	~LSbox();
 	void calculateDistanceFunction();

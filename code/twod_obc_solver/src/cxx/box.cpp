@@ -216,6 +216,66 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
 }
 
+
+LSbox::LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion, 
+		const double StoredElasticEnergy, grainhdl* owner) :
+		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
+				true), m_intersectsBoundaryGrain(false), m_volume(0), m_energy(
+				0), m_perimeter(0), m_StoredElasticEnergy(StoredElasticEnergy) {
+	m_orientationQuat = new Quaternion(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
+	if (Settings::UseMagneticField) {
+		calculateMagneticEnergy();
+	}
+	if (Settings::UseStoredElasticEnergy) {
+		//real time scaling
+		m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy
+				* Settings::Physical_Domain_Size;
+	}
+	int grid_blowup = m_grainHandler->get_grid_blowup();
+	// determine size of grain
+	int xmax = 0;
+	int xmin = m_grainHandler->get_ngridpoints();
+	int ymax = 0;
+	int ymin = xmin;
+
+	double y, x;
+	for (int k = 0; k < vertices.size(); k++) {
+		y = vertices[k].y;
+		x = vertices[k].x;
+		if (y < ymin)
+			ymin = y;
+		if (y > ymax)
+			ymax = y;
+		if (x < xmin)
+			xmin = x;
+		if (x > xmax)
+			xmax = x;
+	}
+	xmax += 2 * grid_blowup;
+	ymax += 2 * grid_blowup;
+
+	if (ymax > m_grainHandler->get_ngridpoints())
+		ymax = m_grainHandler->get_ngridpoints();
+	if (xmax > m_grainHandler->get_ngridpoints())
+		xmax = m_grainHandler->get_ngridpoints();
+	if (ymin < 0)
+		ymin = 0;
+	if (xmin < 0)
+		xmin = 0;
+	//	cout << "constructed a box with size: "<< xmin << "  " << xmax << "  " << ymin << "  " << xmax << "  " << endl;
+
+	m_inputDistance = new DimensionalBufferReal(xmin, ymin, xmax, ymax);
+	m_outputDistance = new DimensionalBufferReal(xmin, ymin, xmax, ymax);
+	m_inputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
+	m_outputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
+	//	inputDistance->clearValues(0.0);
+	//	outputDistance->clearValues(0.0);
+
+	reizeIDLocalToDistanceBuffer();
+	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
+}
+
+
 LSbox::LSbox(int id, int nedges, double* edges, double phi1, double PHI,
 		double phi2, grainhdl* owner) :
 		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(

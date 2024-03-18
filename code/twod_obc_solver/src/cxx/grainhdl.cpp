@@ -90,22 +90,22 @@ void grainhdl::setSimulationParameter() {
 	switch (Settings::ConvolutionMode) {
 	case E_LAPLACE: {
 		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 		TimeSlope = 0.8482;
 		break;
 	}
 	case E_LAPLACE_RITCHARDSON: {
 		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 		TimeSlope = 0.8202;
 		break;
 	}
 	case E_GAUSSIAN: {
 		dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 		if(Settings::DecoupleGrains == 1) {
 			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-			* Settings::UserDefNumberOfPointsPerGrain / 2 / 5.0; //MK factor 2 to translate diameter in radius, factor 5.0
+			* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
 		}
 		TimeSlope = 0.8359;
 		//##overwrite to user timeslope
@@ -328,6 +328,7 @@ void grainhdl::read_HeaderCPG() {
 
 void grainhdl::read_header_from_nexusfile()
 {
+	cout << __func__ << "\n";
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
 	string grpnm = "/entry1/ms";
 	string dsnm = "";
@@ -344,7 +345,12 @@ void grainhdl::read_header_from_nexusfile()
 	Settings::NumberOfParticles = n_subgr;
 	ngrains = Settings::NumberOfParticles;
 	currentNrGrains = ngrains;
-	Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+	//Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+	dsnm = grpnm + "/average_subgrain_discretization";
+	vector<unsigned int> dxy;
+	if ( h5r.nexus_read( dsnm, dxy) != MYHDF5_SUCCESS ) { return; }
+	Settings::NumberOfPointsPerGrain = dxy.at(0);
+	cout << "NumberOfPointsPerGrain " << Settings::NumberOfPointsPerGrain << "\n";
 }
 
 
@@ -528,6 +534,7 @@ void grainhdl::read_voxelized_microstructure() {
 
 void grainhdl::read_microstructure_from_nexusfile()
 {
+	cout << __func__ << "\n";
 	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
 	string grpnm = "/entry1/ms";
 	string dsnm = "";
@@ -1255,53 +1262,55 @@ bool grainhdl::save_NeXus()
 		anno ) != MYHDF5_SUCCESS ) { return false; }
 	u8 = vector<unsigned char>();
 
-	vector<double> f64_vrts;
-	//should be implemented with incrementally writing i.e.
-	//first a probe_nexus_grain_boundary to find the bounds
-	dsnm = grpnm + "/grain_boundary_vertices";
-	get_nexus_grain_boundary_vertices( f64_vrts );
-	anno = ioAttributes();
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({f64_vrts.size() / 2, 2}, {f64_vrts.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		f64_vrts,
-		anno ) != MYHDF5_SUCCESS ) { return false; }
-	f64_vrts = vector<double>();
+	if ( (loop - Settings::StartTime) % Settings::NetworkExport == 0) {
+		vector<double> f64_vrts;
+		//should be implemented with incrementally writing i.e.
+		//first a probe_nexus_grain_boundary to find the bounds
+		dsnm = grpnm + "/grain_boundary_vertices";
+		get_nexus_grain_boundary_vertices( f64_vrts );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64_vrts.size() / 2, 2}, {f64_vrts.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64_vrts,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64_vrts = vector<double>();
 
-	vector<unsigned int> u32_xdmf_topo;
-	dsnm = grpnm + "/grain_boundary_xdmf_topology";
-	get_nexus_grain_boundary_xdmf_topology( u32_xdmf_topo );
-	anno = ioAttributes();
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({u32_xdmf_topo.size()}, {u32_xdmf_topo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		u32_xdmf_topo,
-		anno ) != MYHDF5_SUCCESS ) { return false; }
-	u32_xdmf_topo = vector<unsigned int>();
+		vector<unsigned int> u32_xdmf_topo;
+		dsnm = grpnm + "/grain_boundary_xdmf_topology";
+		get_nexus_grain_boundary_xdmf_topology( u32_xdmf_topo );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({u32_xdmf_topo.size()}, {u32_xdmf_topo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			u32_xdmf_topo,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		u32_xdmf_topo = vector<unsigned int>();
 
-	dsnm = grpnm + "/grain_boundary_xdmf_grain_id";
-	get_nexus_grain_boundary_xdmf_grain_indices( u32 );
-	anno = ioAttributes();
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		u32,
-		anno ) != MYHDF5_SUCCESS ) { return false; }
-	u32 = vector<unsigned int>();
+		dsnm = grpnm + "/grain_boundary_xdmf_grain_id";
+		get_nexus_grain_boundary_xdmf_grain_indices( u32 );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			u32,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		u32 = vector<unsigned int>();
 
-	/*
-	vector<double> f64_ifo;
-	dsnm = grpnm + "/grain_boundary_energy_times_mobility";
-	get_nexus_grain_boundary_info( f64_ifo );
-	anno = ioAttributes();
-	//anno.add( "unit", string("(J/m^2)*(m^4/J/s)") );
-	if ( h5w.nexus_write(
-		dsnm,
-		io_info({f64_ifo.size()}, {f64_ifo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
-		f64_ifo,
-		anno ) != MYHDF5_SUCCESS ) { return false; }
-	f64_ifo = vector<double>();
-	*/
+		/*
+		vector<double> f64_ifo;
+		dsnm = grpnm + "/grain_boundary_energy_times_mobility";
+		get_nexus_grain_boundary_info( f64_ifo );
+		anno = ioAttributes();
+		//anno.add( "unit", string("(J/m^2)*(m^4/J/s)") );
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64_ifo.size()}, {f64_ifo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64_ifo,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64_ifo = vector<double>();
+		*/
+	}
 
 	return true;
 }
@@ -1596,7 +1605,7 @@ void grainhdl::run_sim() {
 		//		switchDistancebuffer();
 		if (((loop - Settings::StartTime) % int(Settings::AnalysisTimestep))
 				== 0 || loop == Settings::NumberOfTimesteps) {
-			if ( ((loop - Settings::StartTime) % ( int(Settings::PlotInterval * Settings::AnalysisTimestep) ) == 0) && loop != 0 ) {
+			if ( ((loop - Settings::StartTime) % ( int(Settings::NetworkExport * Settings::AnalysisTimestep) ) == 0) && loop != 0 ) {
 				//##MK::for debug purposes still do plotting of network
 				//save_NetworkPlot();
 				/*
@@ -1611,7 +1620,7 @@ void grainhdl::run_sim() {
 			if ( save_NeXus() == true ) {
 				cout << "Writing snapshot data for loop " << loop << " into NeXus file success." << "\n";
 			}
-			{
+			else {
 				cerr << "Writing snapshot data for loop " << loop << " into NeXus file failed!" << "\n";
 			}
 			/*
@@ -2053,12 +2062,12 @@ for		(auto id : workload) {
 	switch (Settings::ConvolutionMode) {
 		case E_LAPLACE: {
 			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 			break;
 		}
 		case E_LAPLACE_RITCHARDSON: {
 			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 			break;
 		}
 		case E_GAUSSIAN: {
@@ -2066,10 +2075,10 @@ for		(auto id : workload) {
 			//dt = 0.8 / double(realDomainSize * realDomainSize)
 			//	* Settings::NumberOfPointsPerGrain / 2; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 			if(Settings::DecoupleGrains == 1) {
 				dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-					* Settings::UserDefNumberOfPointsPerGrain / 2 / 5.0; //MK factor 2 to translate diameter in radius, factor 5.0
+					* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
 			}
 			break;
 		}

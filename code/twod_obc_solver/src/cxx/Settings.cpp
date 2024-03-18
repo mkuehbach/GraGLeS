@@ -33,7 +33,7 @@ unsigned long Settings::NumberOfPointsPerGrain = 0;
 unsigned long Settings::BreakupNumber = 0;
 unsigned long Settings::NumberOfTimesteps = 0;
 unsigned long Settings::AnalysisTimestep = 0;
-unsigned long Settings::PlotInterval = 0;
+unsigned long Settings::NetworkExport = 0;
 unsigned long Settings::DiscreteSamplingRate = 0;
 unsigned long Settings::DomainBorderSize = 0;
 unsigned long Settings::MaximumNumberOfThreads = 0;
@@ -81,18 +81,15 @@ double Settings::C_Value = 0.0;
 double Settings::GaussianKernelUserDefTimeSlope = 0.8359; //###E_GAUSSIAN DEFAULT TIMESLOPE
 double Settings::GaussianKernelTimeStepFactor = 0.8;
 double Settings::BoxDefaultStoredElasticEnergy = 0.0;
-unsigned long Settings::UserDefNumberOfPointsPerGrain = 0;
+bool Settings::StatusHealthy = true;
 
 
-
-void Settings::initializeParameters(string filename) {
-	if (0 == filename.compare(""))
-		filename = string("parameters.xml");
+void Settings::initializeParameters(string filename)
+{
+	cout << __func__ << "\n";
 	ifstream file(filename);
 	if (file.fail()) {
-		cout << "Unable to locate simulations parameters. Will now halt !"
-				<< endl;
-		exit(2);
+		throw runtime_error(string("Unable to locate file ") + filename);
 	}
 	stringstream contents;
 	contents << file.rdbuf();
@@ -119,17 +116,18 @@ void Settings::initializeParameters(string filename) {
 		NumberOfParticles = std::stoul(
 				rootNode->first_node("NumberOfParticles")->value());
 	}
+	/*
 	if (0 != rootNode->first_node("NumberOfPointsPerGrain")) {
 		NumberOfPointsPerGrain = std::stoul(
 				rootNode->first_node("NumberOfPointsPerGrain")->value());
 	}
-	UserDefNumberOfPointsPerGrain = NumberOfPointsPerGrain;
+	*/
 	if (0 != rootNode->first_node("AnalysisTimestep")) {
 		AnalysisTimestep = std::stoul(
 				rootNode->first_node("AnalysisTimestep")->value());
 	}
 	if (0 != rootNode->first_node("PlotInterval")) {
-		PlotInterval
+		NetworkExport
 				= std::stoul(rootNode->first_node("PlotInterval")->value());
 	}
 	if (0 != rootNode->first_node("NumberOfTimesteps")) {
@@ -284,14 +282,11 @@ void Settings::initializeParameters(string filename) {
 	if (0 != rootNode->first_node("BoxDefaultStoredElasticEnergy")) {
 		BoxDefaultStoredElasticEnergy = std::stod(rootNode->first_node("BoxDefaultStoredElasticEnergy")->value());
 	}
-	if (0 != rootNode->first_node("UserDefNumberOfPointsPerGrain")) {
-		UserDefNumberOfPointsPerGrain = std::stoul(rootNode->first_node("UserDefNumberOfPointsPerGrain")->value());
-	}
-
 	file.close();
 
-	if (UseMagneticField == 1)
-			readMagneticFieldParams(MagneticParams.c_str());
+	if (UseMagneticField == 1) {
+		readMagneticFieldParams(MagneticParams.c_str());
+	}
 }
 
 void Settings::readMagneticFieldParams(string filename) {
@@ -375,7 +370,7 @@ xml_node<>* Settings::generateXMLParametersNode(xml_document<>* root,
 	PUSH_VALUE(NumberOfParticles, grains);
 	PUSH_PARAM(NumberOfPointsPerGrain);
 	PUSH_PARAM(AnalysisTimestep);
-	PUSH_PARAM(PlotInterval);
+	PUSH_PARAM(NetworkExport);
 	PUSH_PARAM(NumberOfTimesteps);
 	PUSH_PARAM(BreakupNumber);
 	PUSH_PARAM(DiscreteSamplingRate);

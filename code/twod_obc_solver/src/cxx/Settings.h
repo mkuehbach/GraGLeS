@@ -75,7 +75,7 @@ public:
 	static unsigned long NumberOfTimesteps;
 	static unsigned long BreakupNumber;
 	static unsigned long AnalysisTimestep;
-	static unsigned long PlotInterval;
+	static unsigned long NetworkExport;
 	static unsigned long DiscreteSamplingRate;
 	static unsigned long DomainBorderSize;
 	static unsigned long GrainScheduler;
@@ -121,7 +121,7 @@ public:
 	static double GaussianKernelUserDefTimeSlope;
 	static double GaussianKernelTimeStepFactor;
 	static double BoxDefaultStoredElasticEnergy;
-	static unsigned long UserDefNumberOfPointsPerGrain;
+	static bool StatusHealthy;
 
 	static void initializeParameters(std::string filename = "");
 	static void readMagneticFieldParams(std::string filename);

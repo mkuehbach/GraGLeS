@@ -320,7 +320,7 @@ void grainhdl::read_HeaderCPG() {
 	}
 	ngrains = Settings::NumberOfParticles;
 	currentNrGrains = ngrains;
-	Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+	//Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
 	// half open container of VORO++
 	fclose(compressedGrainInfo);
 }
@@ -583,6 +583,7 @@ void grainhdl::read_microstructure_from_nexusfile()
 	}
 	aabb_tmp = vector<int>();
 
+	/*
 	dsnm = grpnm + "/grain_barycentre_naive";
 	vector<double> xy_tmp;
 	if ( h5r.nexus_read(dsnm, xy_tmp) != MYHDF5_SUCCESS ) { return; }
@@ -593,6 +594,7 @@ void grainhdl::read_microstructure_from_nexusfile()
 		}
 	}
 	xy_tmp = vector<double>(); //TODO::int ????
+	*/
 
 	dsnm = grpnm + "/grain_orientation";
 	vector<double> q4_tmp;
@@ -641,25 +643,32 @@ void grainhdl::read_microstructure_from_nexusfile()
 	if( h5r.nexus_read( dsnm, tmp ) != MYHDF5_SUCCESS ) { return; }
 
 	IDField = new DimensionalBuffer<int> (0, 0, ngridpoints, ngridpoints);
-	for (int j = 0; j < ngridpoints; j++) { //TODO::nxy[1] ??
-		unsigned int yoff = (unsigned int) j * nxy[0];
-		for (int i = 0; i < ngridpoints; i++) { //TODO::nxy[0] ??
-			if (i < grid_blowup || j < grid_blowup || i >= ngridpoints
-					- grid_blowup || j >= ngridpoints - grid_blowup) {
-				IDField->setValueAt(j, i, 0);
+	cout << "ngridpoints " << ngridpoints << "\n";
+	cout << "grid_blowup " << grid_blowup << "\n";
+	for (int j = 0; j < ngridpoints; j++) {
+		for (int i = 0; i < ngridpoints; i++) {
+			IDField->setValueAt(j, i, 0);
+		}
+	}
+
+	for (int j = grid_blowup; j < (ngridpoints - grid_blowup); j++) {
+		int yoff = (j - grid_blowup) * nxy[0];
+		for (int i = grid_blowup; i < (ngridpoints - grid_blowup); i++) {
+			int ixy = (i - grid_blowup) + yoff;
+			if ( ixy >= tmp.size() ) {
+				cout << "j, i " << j << "\t\t" << i << "\t\t" << ixy << "\n";
 			}
-			else {
-				unsigned int ixy = ((unsigned int) i) + yoff;
-				int box_id = (int) tmp[ixy];
-				box_id = box_id - (id_offset - 1);
-				if (box_id < 0) {
-					box_id = 0;
-				}
-				IDField->setValueAt(j, i, box_id);
+			int box_id = (int) tmp.at(ixy);
+			box_id = box_id - (id_offset - 1);
+			if (box_id < 0) {
+				box_id = 0;
 			}
+			IDField->setValueAt(j, i, box_id);
 		}
 	}
 	tmp = vector<unsigned int>();
+
+	cout << "Build boxes..." << "\n";
 
 	buildBoxVectors(ID, vertices, quat, stored_elastic_energy);
 }
@@ -2302,7 +2311,7 @@ void grainhdl::buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contou
 				double stored_elastic_energy = (Settings::UseStoredElasticEnergy) ? see[id] : 0.;
 				vector<double> qt;
 				for( unsigned int i = 0; i < 4; i++ ) { qt.push_back(q[(4*id)+i]); }
-				
+
 				grain = new LSbox(ID[id], contours[id], qt, stored_elastic_energy, this);
 				grains[id] = grain;
 			}

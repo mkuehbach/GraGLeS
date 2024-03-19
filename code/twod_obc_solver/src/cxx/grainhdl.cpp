@@ -1171,6 +1171,14 @@ void grainhdl::get_nexus_grain_boundary_xdmf_grain_indices( vector<unsigned int>
 
 void grainhdl::get_nexus_grain_boundary_info( vector<double> & ifo )
 {
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> i_ifo;
+			grains[i]->get_contour_xdmf_info( i_ifo );
+			ifo.insert( ifo.end(), i_ifo.begin(), i_ifo.end() );
+			i_ifo = vector<double>();
+		}
+	}
 }
 
 
@@ -1297,7 +1305,6 @@ bool grainhdl::save_NeXus()
 			anno ) != MYHDF5_SUCCESS ) { return false; }
 		u32 = vector<unsigned int>();
 
-		/*
 		vector<double> f64_ifo;
 		dsnm = grpnm + "/grain_boundary_energy_times_mobility";
 		get_nexus_grain_boundary_info( f64_ifo );
@@ -1309,7 +1316,6 @@ bool grainhdl::save_NeXus()
 			f64_ifo,
 			anno ) != MYHDF5_SUCCESS ) { return false; }
 		f64_ifo = vector<double>();
-		*/
 	}
 
 	return true;

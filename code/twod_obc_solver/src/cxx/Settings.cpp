@@ -65,25 +65,13 @@ bool Settings::ResearchMode = false;
 double Settings::ConstantSectorRadius = 0.0;
 double Settings::InterpolatingSectorRadius = 0.0;
 unsigned long Settings::NeighbourTracking = 0;
-bool Settings::UseStoredElasticEnergy = 0;
-
+bool Settings::UseStoredElasticEnergy = false;
 bool Settings::UseMagneticField = false;
-string Settings::MagneticParams;
-double Settings::VacuumPermeability = 0.0;
-double Settings::MagneticVector_x = 0.0;
-double Settings::MagneticVector_y = 0.0;
-double Settings::MagneticVector_z = 0.0;
-double Settings::deltaMagSys = 0.0;
-double Settings::MagneticForceField = 0.0;
-double Settings::A_Value = 0.0;
-double Settings::C_Value = 0.0;
-
+Magnetic Settings::MagneticParams = Magnetic();
 double Settings::UserDefTimeSlope = 0.8; //empirical was 0.8359;
-double Settings::BoxDefaultStoredElasticEnergy = 0.0;
-bool Settings::StatusHealthy = true;
 
 
-void Settings::initializeParameters(string filename)
+bool Settings::initializeParameters(string filename)
 {
 	cout << __func__ << "\n";
 	ifstream file(filename);
@@ -255,7 +243,7 @@ void Settings::initializeParameters(string filename)
 	}
 
 	if (0 != rootNode->first_node("UseStoredElasticEnergy")) {
-		UseStoredElasticEnergy = std::stoul(rootNode->first_node("UseStoredElasticEnergy")->value());
+		UseStoredElasticEnergy = (bool) std::stoul(rootNode->first_node("UseStoredElasticEnergy")->value());
 	}
 	if (0 != rootNode->first_node("GrainScheduler")) {
 		GrainScheduler = (E_GRAIN_SCHEDULER) std::stoi(rootNode->first_node("GrainScheduler")->value());
@@ -265,125 +253,8 @@ void Settings::initializeParameters(string filename)
 	if (0 != rootNode->first_node("UserDefTimeSlope")) {
 		UserDefTimeSlope = std::stod(rootNode->first_node("UserDefTimeSlope")->value());
 	}
-	if (0 != rootNode->first_node("BoxDefaultStoredElasticEnergy")) {
-		BoxDefaultStoredElasticEnergy = std::stod(rootNode->first_node("BoxDefaultStoredElasticEnergy")->value());
-	}
 	file.close();
 
-	if (UseMagneticField == 1) {
-		readMagneticFieldParams(MagneticParams.c_str());
-	}
+
+	return true;
 }
-
-void Settings::readMagneticFieldParams(string filename) {
-	ifstream file(filename);
-	if (file.fail()) {
-		cout << "Unable to locate simulations parameters for magnetic field. Will now halt !"
-				<< endl;
-		exit(2);
-	}
-	stringstream contents;
-	contents << file.rdbuf();
-	string xmlDocument(contents.str());
-
-	xml_document<> tree;
-	try {
-		tree.parse<0> (&xmlDocument[0]);
-	} catch (parse_error& Error) {
-		cout << filename.c_str() << "is not a valid XML!" << endl;
-		cout << "Exception is " << Error.what() << endl;
-	}
-	xml_node<>* rootNode = tree.first_node();
-	if (0 != strcmp(rootNode->name(), "Parameters")) {
-		cout << "Root node is not 'Parameters'! Will now halt!" << endl;
-		exit(2);
-	}
-
-	if (0 != rootNode->first_node("VacuumPermeability")) {
-		VacuumPermeability = std::stod(
-				rootNode->first_node("VacuumPermeability")->value());
-	}
-	if (0 != rootNode->first_node("MagneticVector_x")) {
-		MagneticVector_x = std::stod(
-				rootNode->first_node("MagneticVector_x")->value());
-	}
-	if (0 != rootNode->first_node("MagneticVector_y")) {
-		MagneticVector_y = std::stod(
-				rootNode->first_node("MagneticVector_y")->value());
-	}
-	if (0 != rootNode->first_node("MagneticVector_z")) {
-		MagneticVector_z = std::stod(
-				rootNode->first_node("MagneticVector_z")->value());
-	}
-	if (0 != rootNode->first_node("deltaMagSys")) {
-		deltaMagSys = std::stod(rootNode->first_node("deltaMagSys")->value());
-	}
-	if (0 != rootNode->first_node("MagneticForceField")) {
-		MagneticForceField = std::stod(
-				rootNode->first_node("MagneticForceField")->value());
-	}
-	if (0 != rootNode->first_node("C_Value")) {
-		C_Value = std::stod(rootNode->first_node("C_Value")->value());
-	}
-	if (0 != rootNode->first_node("A_Value")) {
-		A_Value = std::stod(rootNode->first_node("A_Value")->value());
-	}
-
-
-	file.close();
-}
-
-#define PUSH_PARAM(param_name) 	\
-		temp_string.str("");	\
-		temp_string << param_name ;	\
-		params->append_node(root->allocate_node(node_element,	\
-				root->allocate_string(#param_name),	\
-				root->allocate_string(temp_string.str().c_str()) ));
-
-#define PUSH_VALUE(param_name, value) 	\
-		temp_string.str("");	\
-		temp_string << value ;	\
-		params->append_node(root->allocate_node(node_element,	\
-				root->allocate_string(#param_name),	\
-				root->allocate_string(temp_string.str().c_str()) ));
-
-xml_node<>* Settings::generateXMLParametersNode(xml_document<>* root,
-		const char* filename, int loop, int grains) {
-	xml_node<>* params = root->allocate_node(node_element, "Parameters", "");
-	stringstream temp_string;
-
-	PUSH_VALUE(StartTime, loop);
-	PUSH_VALUE(NumberOfParticles, grains);
-	PUSH_PARAM(NumberOfPointsPerGrain);
-	PUSH_PARAM(AnalysisTimestep);
-	PUSH_PARAM(NetworkExport);
-	PUSH_PARAM(NumberOfTimesteps);
-	PUSH_PARAM(BreakupNumber);
-	PUSH_PARAM(DiscreteSamplingRate);
-	PUSH_PARAM(DomainBorderSize);
-	PUSH_VALUE(MicrostructureGenMode, 0);
-	PUSH_VALUE(ReadFromFilename, filename);
-	PUSH_PARAM(HAGB_Energy);
-	PUSH_PARAM(HAGB_Mobility);
-	PUSH_PARAM(Physical_Domain_Size);
-	PUSH_PARAM(TriplePointDrag);
-	PUSH_PARAM(UseMobilityModel);
-	PUSH_PARAM(IdentifyTwins);
-	PUSH_PARAM(IsIsotropicNetwork);
-	PUSH_PARAM(UseTexture);
-	PUSH_PARAM(ExecuteInParallel);
-	PUSH_PARAM(MaximumNumberOfThreads);
-	PUSH_PARAM(GridCoarsement);
-	PUSH_PARAM(GridCoarsementGradient);
-	PUSH_PARAM(ConvolutionMode);
-	PUSH_PARAM(ResearchMode);
-	PUSH_PARAM(ResearchProject);
-	PUSH_PARAM(ConstantSectorRadius);
-	PUSH_PARAM(InterpolatingSectorRadius);
-	PUSH_PARAM(NeighbourTracking);
-	PUSH_PARAM(UseStoredElasticEnergy);
-	PUSH_PARAM(GrainScheduler);
-	return params;
-}
-#undef PUSH_PARAM
-#undef PUSH_VALUE

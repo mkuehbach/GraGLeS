@@ -79,8 +79,6 @@ public:
 	bool loadCurvature;
 	unsigned int loadCurvatureLoop;
 	bool convolutionCorrection;
-	bool calcCentroid;
-	bool calcRegression;
 	E_RESEARCH_PROJECT project;
 	bool constantE;
 
@@ -187,13 +185,8 @@ public:
 protected:
 	void initEnvironment();
 	void initNUMABindings();
-	void buildBoxVectors(vector<vector<SPoint>>& contours);
-	void buildBoxVectors(vector<vector<SPoint>>& contours, vector<double>& q1,
-			vector<double>& q2, vector<double>& q3, vector<double>& q4);
-	void buildBoxVectors(int* ID, vector<vector<SPoint>>& contours,
-			Quaternion* Quaternionen, double* StoredElasticEnergy);
-	void buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
-			vector<double> & q, vector<double> & see );
+	void buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours, vector<double> & q, vector<double> & see );
+
 	int m_ThreadPoolCount;
 	vector<ExpandingVector<char> > m_ThreadMemPool;
 };

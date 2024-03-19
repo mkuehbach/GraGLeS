@@ -58,7 +58,29 @@ enum E_GRAIN_SCHEDULER {
  * \class Settings
  * \brief Class that holds all global settings that are simulation specific.
  */
-class Settings {
+
+struct Magnetic
+{
+	double VacuumPermeability;
+	double MagneticVector_x;
+	double MagneticVector_y;
+	double MagneticVector_z;
+	double deltaMagSys;
+	double MagneticForceField;
+	double C_Value;
+	double A_Value;
+	//values by C. Mießen
+	//https://github.com/GraGLeS/GraGLeS2D/blob/master/params/MagneticField.xml
+	Magnetic() :
+		VacuumPermeability(12.566e-7),
+		MagneticVector_x(0.), MagneticVector_y(0.848048096), MagneticVector_z(0.529919264),
+		deltaMagSys(1.18e-5), MagneticForceField(1.35e7),
+		C_Value(8.), A_Value(3.0) {};
+};
+
+
+class Settings
+{
 public:
 	static unsigned long StartTime;
 	static unsigned int SimulationId;
@@ -78,7 +100,8 @@ public:
 	static std::string ConfigFileName;
 	static std::string ResultsFileName;
 	static unsigned long LatticeType;
-	static double HAGB_Mobility;
+	static double HAGB_M
+	static std::string obility;
 	static double HAGB_Energy;
 	static double Physical_Domain_Size;
 	static double TriplePointDrag;
@@ -100,25 +123,10 @@ public:
 	static bool UseStoredElasticEnergy;
 	static bool UseMagneticField;
 	static bool DecoupleGrains;
-	static std::string MagneticParams;
-	static double VacuumPermeability;
-	static double MagneticVector_x;
-	static double MagneticVector_y;
-	static double MagneticVector_z;
-	static double deltaMagSys;
-	static double MagneticForceField;
-	static double C_Value;
-	static double A_Value;
-
+	static Magnetic MagneticParams;
 	static double UserDefTimeSlope;
-	static double BoxDefaultStoredElasticEnergy;
-	static bool StatusHealthy;
 
 	static void initializeParameters(std::string filename = "");
-	static void readMagneticFieldParams(std::string filename);
-	static rapidxml::xml_node<>* generateXMLParametersNode(
-			rapidxml::xml_document<>* root, const char* filename, int loop,
-			int grains);
 };
 
 #endif	//__SETTINGS_H__

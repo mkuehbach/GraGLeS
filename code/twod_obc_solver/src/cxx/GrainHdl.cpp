@@ -269,7 +269,7 @@ void grainhdl::read_microstructure_from_nexusfile()
 
 	pair<double, double> see_mimx = pair<double, double>(1.e20, 0.);
 	vector<double> stored_elastic_energy = vector<double>( n_subgr + 1, 0.);
-	if (Settings::UseStoredElasticEnergy) {
+	if (Settings::UseStoredElasticEnergy == true) {
 		dsnm = grpnm + "/grain_dislocation_density";
 		vector<double> see_tmp;
 		if ( h5r.nexus_read(dsnm, see_tmp) != MYHDF5_SUCCESS ) { return; }
@@ -289,7 +289,7 @@ void grainhdl::read_microstructure_from_nexusfile()
 	//1/((N/m^2)*m^2)*(J/m^2)/m = (1/N)*Nm/m = 1
 	// find maximum Velocity driven exclusively by Stored Elastic Energy
 	// adapt timestep with
-	if (Settings::UseStoredElasticEnergy) {
+	if (Settings::UseStoredElasticEnergy == true) {
 		see_mimx.first = see_mimx.first * real_time_scaling;
 		see_mimx.second = see_mimx.second * real_time_scaling;
 		if (ngrains == 1) {
@@ -1147,72 +1147,6 @@ void grainhdl::initNUMABindings() {
 	}
 }
 
-void grainhdl::buildBoxVectors(vector<vector<SPoint>>& contours) {
-	m_grainScheduler->buildGrainWorkloads(contours, ngridpoints);
-#pragma omp parallel
-	{
-		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
-				omp_get_thread_num());
-for	(auto id : workload) {
-		if (id <= Settings::NumberOfParticles) {
-			LSbox* grain = new LSbox(id, contours[id], this);
-			grains[id] = grain;
-		}
-	}
-}
-}
-
-void grainhdl::buildBoxVectors(vector<vector<SPoint>>& contours,
-		vector<double>& q1, vector<double>& q2, vector<double>& q3,
-		vector<double>& q4) {
-	m_grainScheduler->buildGrainWorkloads(contours, ngridpoints);
-#pragma omp parallel
-	{
-		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
-				omp_get_thread_num());
-for	(auto id : workload) {
-		if (id <= Settings::NumberOfParticles) {
-			//catch the grains with default q1 = -1000
-			if (q1[id] == -1000) {
-				grains[id] = NULL;
-				continue;
-			}
-			LSbox* grain = new LSbox(id, contours[id], q1[id], q2[id],
-					q3[id], q4[id], this);
-			grains[id] = grain;
-		}
-	}
-}
-}
-
-void grainhdl::buildBoxVectors(int* ID, vector<vector<SPoint>>& contours,
-		Quaternion* Quaternionen, double* StoredElasticEnergy) {
-	m_grainScheduler->buildGrainWorkloads(contours, ngridpoints);
-	cout << "Construct LSbox objects" << endl;
-#pragma omp parallel
-	{
-		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(
-				omp_get_thread_num());
-for	(auto id : workload) {
-		if (id <= Settings::NumberOfParticles) {
-			if (ID[id] == -1) {
-				grains[id] = NULL;
-				continue;
-			}
-			LSbox* grain;
-			if (Settings::UseStoredElasticEnergy) {
-				grain = new LSbox(ID[id], contours[id], Quaternionen[id],
-						StoredElasticEnergy[id], this);
-			} else {
-				grain = new LSbox(ID[id], contours[id], Quaternionen[id], 0,
-						this);
-			}
-			grains[id] = grain;
-		}
-	}
-}
-}
-
 
 void grainhdl::buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
 	vector<double> & q, vector<double> & see )
@@ -1229,7 +1163,7 @@ void grainhdl::buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contou
 					continue;
 				}
 				LSbox* grain;
-				double stored_elastic_energy = (Settings::UseStoredElasticEnergy) ? see[id] : 0.;
+				double stored_elastic_energy = (Settings::UseStoredElasticEnergy == true) ? see[id] : 0.;
 				vector<double> qt;
 				for( unsigned int i = 0; i < 4; i++ ) { qt.push_back(q[(4*id)+i]); }
 
@@ -1257,10 +1191,7 @@ void grainhdl::set_realDomainSize(int realDomainSizen)
 void grainhdl::setResearchAdjustments()
 {
 	//convolutionCorrection = true;
-	//! Calculate regression lines?
-	//calcRegression = false;
 	//! Calculate centroids?
-	//calcCentroid = false;
 	//! Is there a need to load curvature in the first timesteps?
 	//loadCurvature = false;
 	//! As the reference the observed values of the four-sided-grain case

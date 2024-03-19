@@ -37,9 +37,8 @@ LSbox::LSbox(int id, double phi1, double PHI, double phi2, grainhdl* owner) :
 	m_orientationQuat = new Quaternion();
 	double euler[3] = { phi1, PHI, phi2 };
 	m_orientationQuat->euler2quaternion(euler);
-	m_StoredElasticEnergy = Settings::BoxDefaultStoredElasticEnergy;
-	m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy
-				* Settings::Physical_Domain_Size; // normierung
+	m_StoredElasticEnergy = 0.;
+	m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy * Settings::Physical_Domain_Size; // normierung
 
 	m_inputDistance = new DimensionalBufferReal(0, 0, 0, 0);
 	m_outputDistance = new DimensionalBufferReal(0, 0, 0, 0);
@@ -168,7 +167,7 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 
 	if (Settings::UseMagneticField)
 		calculateMagneticEnergy();
-	if (Settings::UseStoredElasticEnergy)
+	if (Settings::UseStoredElasticEnergy == true)
 		m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy
 				* Settings::Physical_Domain_Size; // normierung
 	int grid_blowup = m_grainHandler->get_grid_blowup();
@@ -225,7 +224,7 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quat
 	if (Settings::UseMagneticField) {
 		calculateMagneticEnergy();
 	}
-	if (Settings::UseStoredElasticEnergy) {
+	if (Settings::UseStoredElasticEnergy == true) {
 		//real time scaling
 		m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy
 				* Settings::Physical_Domain_Size;
@@ -566,7 +565,7 @@ void LSbox::executeConvolution(ExpandingVector<char>& mem_pool) {
 					m_outputDistance->setValueAt(i, j, -m_grainHandler->delta);
 				}
 
-				if (Settings::UseStoredElasticEnergy) {
+				if (Settings::UseStoredElasticEnergy == true) {
 					double f_StoredElasticEnergy =
 							m_grainBoundary.get_f_StoredElasticEnergy(
 									m_IDLocal.getValueAt(i, j).grainID);
@@ -1170,8 +1169,7 @@ void LSbox::extractContour()
 		} while (isMotionRegular(old_contour_len, m_grainBoundary.getBoundarySegmentCount(), getVolume(), newVolume) == false);
 	}
 
-	if (Settings::ResearchMode && m_grainHandler->calcCentroid)
-		m_centroid = m_grainBoundary.calculateCentroid();
+	m_centroid = m_grainBoundary.calculateCentroid();
 	int m = m_grainHandler->get_ngridpoints();
 	bool out = false;
 	if (m_newXMin < 0) {
@@ -1203,7 +1201,6 @@ void LSbox::extractContour()
 	m_outputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
 
 	m_perimeter = m_grainBoundary.computePerimeter();
-
 	return;
 }
 
@@ -1720,8 +1717,7 @@ void LSbox::computeDirectNeighbours(
 	}
 }
 void LSbox::calculateMagneticEnergy() {
-	int i, j;
-	double ND[3] = { 0.0, 0.0, 1.0 };
+	double ND[3] = {0., 0., 1.};
 	double *euler = new double[3];
 	euler = m_orientationQuat->quaternion2Euler();
 	double p1 = euler[0];
@@ -1729,8 +1725,8 @@ void LSbox::calculateMagneticEnergy() {
 	double p2 = euler[2];
 	double cosine = 0;
 
-	double cAxis[3] = { //Rotated ND in order to represent the unit vector with c orientation
-			0.0, 0.0, 0.0 };
+	//Rotated ND in order to represent the unit vector with c orientation
+	double cAxis[3] = {0., 0., 0.};
 
 	double rotMatrix[9] = { cos(p1) * cos(p2) - sin(p1) * sin(p2) * cos(t), sin(
 			p1) * cos(p2) + cos(p1) * sin(p2) * cos(t), sin(p2) * sin(t), -cos(
@@ -1740,264 +1736,24 @@ void LSbox::calculateMagneticEnergy() {
 
 	double trans[3][3];
 
-	for (i = 0; i < 3; i++)
-		for (j = 0; j < 3; j++)
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
 			trans[j][i] = rotMatrix[i * 3 + j];
 
-	/*    for(i=0;i<3;i++)
-	 printf("%f\t%f\t%f\n",rotMatrix[i][0],rotMatrix[i][1],rotMatrix[i][2]);
-	 printf("\n");
-
-	 for(i=0;i<3;i++)
-	 printf("%f\t%f\t%f\n",trans[i][0],trans[i][1],trans[i][2]);
-	 printf("\n");   */
-
-	for (i = 0; i < 3; i++)
-		for (j = 0; j < 3; j++)
+	for (int i = 0; i < 3; i++)
+		for (int j = 0; j < 3; j++)
 			cAxis[i] += trans[i][j] * ND[j];
 
-	cosine = (Settings::MagneticVector_x * cAxis[0])
-			+ (Settings::MagneticVector_y * cAxis[1])
-			+ (Settings::MagneticVector_z * cAxis[2]);
-	if (cosine > 1)
-		cosine = 1.0;
-//Both vectors are unit vectors no need to normalize
-//QUICKASSERT(fabs(cosine) <= 1);
-//if different from cosine should be RANDOMCOLOR;
-//See the setColor function for more information
-//printf("cosine=%lf\n",cosine);
-//getchar();
-	m_magneticEnergy = 0.5 * Settings::VacuumPermeability
-			* Settings::deltaMagSys * Settings::MagneticForceField
-			* Settings::MagneticForceField * cosine * cosine;
-	m_magneticEnergy = m_magneticEnergy / Settings::HAGB_Energy
-			* Settings::Physical_Domain_Size;
+	cosine = (Settings::MagneticParams.MagneticVector_x * cAxis[0])
+			+ (Settings::MagneticParams.MagneticVector_y * cAxis[1])
+			+ (Settings::MagneticParams.MagneticVector_z * cAxis[2]);
+	if (cosine > 1.) {
+		cerr << "cosine > 1 in calculate magneticEnergy" << "\n";
+	}
+	m_magneticEnergy = 0.5 * Settings::MagneticParams.VacuumPermeability * Settings::MagneticParams.deltaMagSys
+			* SQR(Settings::MagneticParams.MagneticForceField) * SQR(cosine);
+	m_magneticEnergy = m_magneticEnergy / Settings::HAGB_Energy * Settings::Physical_Domain_Size;
 	delete[] euler;
-}
-
-
-/*
-#include "thirdparty/Eigen/Dense"
-using namespace Eigen;
-*/
-
-/*
-//instead make use of MKL library
-#include "mkl_lapacke.h"
-#define MY_N 3
-#define MY_NRHS 1
-#define MY_LDA MY_N
-#define MY_LDB MY_NRHS
-*/
-
-void LSbox::approximateCurvature( int gridblowup ) {
-	m_curvapprx = wghtd_imcurv_res();
-	return;
-
-	/*
-	std::vector<GBContourPoint> cp;
-
-	double hh = this->get_h();
-	//we do not need the copy of the first point
-	//GBContourPoint firstp( I_DONT_KNOW_YET, I_DONT_KNOW_YET,  I_DONT_KNOW_YET, I_DONT_KNOW_YET, 0, 0 ); //MK::in GraGLeS grain 0 is boundary/domain
-	double xx, yy;
-
-	for ( unsigned int k = 0; k < this->m_grainBoundary.getRawBoundary().size() - 1; k++ ) {
-		double px = this->m_grainBoundary.getRawBoundary()[k].x;
-		double py = this->m_grainBoundary.getRawBoundary()[k].y;
-		int pxGrid = int(px);
-		int pyGrid = int(py);
-		LSbox* candidate = NULL;
-		// evaluate the ID at a outer point -> there must be one, we are at the boundary
-		try {
-			if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-				pxGrid = int(px + 1);
-				if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-					pyGrid = int(py + 1);
-					if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-						pxGrid = int(px);
-					}
-				}
-			}
-			candidate = this->getNeighbourAt( pyGrid, pxGrid );
-			if (candidate == NULL)
-				throw std::out_of_range("candidate neighbour is null");
-		}
-		catch (const std::out_of_range& oor) { return; }
-
-		xx = CLAMP( (px - gridblowup)*hh );
-		yy = CLAMP( (py - gridblowup)*hh );
-
-		//relative length into real world micron-scaled values
-		xx *= METER2MICRON(Settings::Physical_Domain_Size);
-		yy *= METER2MICRON(Settings::Physical_Domain_Size);
-
-		//##MK::consider buffer and pipe all for the entire grain at once!
-		cp.push_back( GBContourPoint( xx, yy, m_grainBoundary.getRawBoundary()[k].energy, m_grainBoundary.getRawBoundary()[k].mob, this->getID(), candidate->getID()) );
-
-		//we do not need the copy of the first point
-	}
-
-	//we do not need the copy of the first point
-	//now that we have the contour lets approximate the curvature
-	//MK::assumes contour points are unique! and in particualr the last point duplicate was popped back already, i.e. no duplicates!
-	unsigned int ni = cp.size();
-	unsigned int pre; //contour point indices: preceeding, ...
-	unsigned int curr;
-	unsigned int post;
-	unsigned int pre_nbid; //utilize change in neighbor id to detect proximity to triple point and therefore exclusion from the dataset
-	unsigned int curr_nbid;
-	unsigned int post_nbid;
-
-	//point not next to triple line
-	unsigned int nallvertices = 0;
-	unsigned int nvirtualvertices = 0;
-	double clen_curr = 0.0; //current segment length
-	double wlen_total = 0.0;
-	double imcurv = 0.0; //only integral mean curvature for the grain kappa * clen_curr
-	double pcurv = 0.0;
-	double vcurv = 0.0;
-
-	//follow the path of contour points and approximate integral mean curvature by pointwise fitting of circle to cp not at junctions
-	bool success = true; //can we compute values for all points or get other inconsistencies?
-	for ( unsigned int i = 0; i < ni; i++ ) { //access to ni is faulty!
-		pre = (i > 0) ? i-1 : ni-1;
-		curr = i;
-		post = (i < ni-1) ? i+1 : 0;
-
-		//get local conditions at points 0,1,2 follow along contour
-		double p0x = cp.at(pre).x;
-		double p0y = cp.at(pre).y;
-		pre_nbid = cp.at(pre).nborid;
-		double p1x = cp.at(curr).x;
-		double p1y = cp.at(curr).y;
-		curr_nbid = cp.at(curr).nborid;
-		double p2x = cp.at(post).x;
-		double p2y = cp.at(post).y;
-		post_nbid = cp.at(post).nborid;
-		//weighting by normalized energy and mobility
-		//maximum weight in case of maximum mobility or energy (driving force p) or both (speed v)
-		double erg = cp.at(curr).energy; // * Settings::HAGB_Energy; //J/m^2
-		double mob = cp.at(curr).mobility; // * Settings::HAGB_Mobility; //m^4/Js,internally normalized to maximum physical value
-
-		//compute length of bisector pre-curr and curr_post
-		double pre_curr = 0.5 * sqrt(SQR(p1x-p0x) + SQR(p1y-p0y));  //##MK::optimization for sure possible, aka reutilization of values, etc...
-		double curr_post = 0.5 * sqrt(SQR(p2x-p1x) + SQR(p2y-p1y));
-
-		//effective segment length on which local curvature is assumed acting
-		clen_curr = pre_curr + curr_post;
-
-		//compute local curvature by fitting circle to p0,p1,p2 to obtain principal curvature radius approximation, solve equation system with Eigen
-		double kappa = 0.0;
-
-		//solve the linear equation system with the MKL LAPACK library
-		MKL_INT n = MY_N, nrhs = MY_NRHS, lda = MY_LDA, ldb = MY_LDB, info;
-		MKL_INT ipiv[MY_N];
-		double a[MY_LDA*MY_N] = {
-			p0x, p0y, 1.0,
-			p1x, p1y, 1.0,
-			p2x, p2y, 1.0
-		};
-		double b[MY_LDB*MY_N] = {
-			-1.0*( SQR(p0x)+SQR(p0y) ),
-			-1.0*( SQR(p1x)+SQR(p1y) ),
-			-1.0*( SQR(p2x)+SQR(p2y) )
-		};
-
-		//Solve A*X = B
-		info = LAPACKE_dgesv( LAPACK_ROW_MAJOR, n, nrhs, a, lda, ipiv, b, ldb );
-
-		//the Eigen kind of way of solving the equation system...
-		//Matrix3d A; A << p0x, p0y, 1.0, p1x, p1y, 1.0, p2x, p2y, 1.0;
-		//Vector3d b; b << -1.0*( SQR(p0x)+SQR(p0y) ), -1.0*( SQR(p1x)+SQR(p1y) ), -1.0*( SQR(p2x)+SQR(p2y) );
-		//Vector3d x; x << A.jacobiSvd(ComputeFullU|ComputeFullV).solve(b);
-		//vector<double> v2; v2.resize(x.size());
-		//VectorXd::Map(&v2[0],x.size()) = x;
-
-		//only take into account if computation of integral mean curvature is possible
-		if ( info > 0 ) {
-			//potential flaw in the computation of the curvature, hence, better send error value
-			nallvertices = 0;				nvirtualvertices = 0;		clen_curr = 0.0;
-			wlen_total = 0.0;
-			imcurv = 0.0;
-			pcurv = 0.0;
-			vcurv = 0.0;
-			success = false;
-			break;
-		}
-		else {
-			double v2[3] = { b[0*ldb+0], b[1*ldb+0], b[2*ldb+0] };
-
-			if ( std::isnan(v2[0]) == false && std::isnan(v2[1]) == false && std::isnan(v2[2]) == false ) { //all values are not NaN, most likely
-				double test = (SQR(v2[0])+SQR(v2[1]))/4.0 - v2[2];
-
-				if ( test > 1.0e-14 ) { //sqrt(test) numerically safe, if small sqrt(test)--> 0.0 anyway so curvature diverge to INFTY
-					kappa = fabs(1.0 / sqrt(test)); //always positive
-
-					//identify local concavity via sign of detO
-					double detO = +1.0*(p1x*p2y - p2x*p1y) -1.0*(p0x*p2y - p2x*p0y) +1.0*(p0x*p1y - p1x*p0y);
-
-					//MK::GraGLeS clockwise, i.e. if det[(1,xf,yf,xg,yg,xh,yh)^T] < 0.0 segment at xg,yg is convex, if == 0, collinear, if > 0.0 concave
-					//we consider capillary driving forces that assuming them positive when they cause the grain to shrink
-					//i.e. approximating a circle as an n-fold regular polyhrdron with opening angles n/(2pi) the circle
-					//experiences a positive driving force causing its shrinkage, hence for the clockwise defined n-fold polyhedron
-					//at all points we are convex, i.e. det < 0.0, thus, if detO < 0.0, as GraGLeS runs clockwise
-					//we count the segment to be convex experiencing positive driving force
-					//instead if detO is > 0.0 driving force is counted for as positive
-					if ( detO > 0.0 ) { //opposite local concavity as clockwise counting (detO < 0.0, convex, positive force)
-						//so segment locally concave --> driving force negative
-						kappa *= -1.0;
-					}
-				}
-				else { //##MK::technically curvature INFINTE, do not consider and dont worry about concav convex...
-					//leave kappa zero, as initialized
-					kappa = 0.0;
-				}
-
-				//we now have a local curvature so we can add it but have to distinguish whether or not considering the vertex to be close to tjp or not
-				nallvertices++;
-				if ( pre_nbid == curr_nbid && curr_nbid == post_nbid ) { //contour point is a "virtual vertex" discretizing curvature sufficiently far from junction
-					nvirtualvertices++;
-					wlen_total = wlen_total + clen_curr;
-					imcurv = imcurv + (kappa * clen_curr); //[kappa] = 1/micron, [clen_curr] = micron, i.e.
-					pcurv = pcurv + (erg * kappa * clen_curr);
-					vcurv = vcurv + (mob * erg * kappa * clen_curr);
-				}
-			}
-			else { //potential flaw in the computation of the curvature, hence, better send error value
-				nallvertices = 0;				nvirtualvertices = 0;		clen_curr = 0.0;
-				wlen_total = 0.0;
-				imcurv = 0.0;
-				pcurv = 0.0;
-				vcurv = 0.0;
-				success = false;
-				break;
-			}
-		}
-	} //analyze next contour pointnext virtual vertex
-
-	//are values for both WITH_TJP and WITHOUT_TJP computable at all?
-	if ( nallvertices == 0 || nvirtualvertices == 0 || wlen_total <= DBL_EPSILON )
-		success = false;
-
-	wghtd_imcurv_res ar; //set with values from default constructor, hence extreme large curvature value and ZERO_GRAIN as error flags
-
-	if ( success == true ) {
-		ar.imcurv_without_tjp = imcurv / wlen_total; //segment-length averaged curvature values
-		ar.p_without_tjp = pcurv / wlen_total;
-		ar.v_without_tjp = vcurv / wlen_total;
-		ar.cp_with_tjp = nallvertices;
-		ar.cp_without_tjp = nvirtualvertices;
-		ar.gID = this->getID();
-	}
-
-	//only write successful results to file
-	//fwrite( &ar, sizeof(wghtd_imcurv_res), 1, externalfh );
-	//store value for combined writing to file
-	m_curvapprx = ar;
-
-	//cp vector automatically destroys as it is on stack
-	*/
 }
 
 

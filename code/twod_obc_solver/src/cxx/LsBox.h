@@ -193,7 +193,6 @@ public:
 	bool isNeighbour(LSbox* candidate);
 	bool BoundaryIntersection();
 	void calculateMagneticEnergy();
-	void approximateCurvature( int gridblowup );
 
 	double MisoriToTwinBoundary(LSbox* candidate);
 	double GbEnergyModel(double theta, LSbox* candidate);

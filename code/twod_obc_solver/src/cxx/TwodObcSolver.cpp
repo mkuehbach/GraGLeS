@@ -124,11 +124,9 @@ int main(int argc, char *argv[])
 	double gtic = omp_get_wtime();
 	Settings::SimulationId = std::stoul(argv[1]);
 	Settings::ConfigFileName = argv[2];
-	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID."
-		+ to_string(Settings::SimulationId) + ".nxs";
+	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimulationId) + ".nxs";
 
-	Settings::initializeParameters(Settings::ConfigFileName);
-	if (Settings::StatusHealthy == false ) {
+	if ( Settings::initializeParameters(Settings::ConfigFileName) == false ) {
 		cout << "Loading configuration " << Settings::ConfigFileName << " failed or is invalid!" << "\n";
 		return 0;
 	}

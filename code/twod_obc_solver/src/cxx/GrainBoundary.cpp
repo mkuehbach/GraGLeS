@@ -56,8 +56,7 @@ bool ExplicitGrainBoundary::extractBoundaryAndJunctions(DimensionalBufferReal& d
 	//Project all found grain junctions to the grain boundary
 	double lambda;
 	for (unsigned int i = 0; i < m_grainJunctions.size(); i++) {
-		int segment = projectToGrainBondary(m_grainJunctions[i].coordinates,
-				lambda);
+		int segment = projectToGrainBondary(m_grainJunctions[i].coordinates, lambda);
 		m_grainJunctions[i].coordinates = m_grainBoundary[segment]
 				+ (m_grainBoundary[PERIODIC(segment + 1)]
 						- m_grainBoundary[segment]) * lambda;

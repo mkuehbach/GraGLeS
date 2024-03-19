@@ -118,8 +118,7 @@ public:
 	static double C_Value;
 	static double A_Value;
 
-	static double GaussianKernelUserDefTimeSlope;
-	static double GaussianKernelTimeStepFactor;
+	static double UserDefTimeSlope;
 	static double BoxDefaultStoredElasticEnergy;
 	static bool StatusHealthy;
 

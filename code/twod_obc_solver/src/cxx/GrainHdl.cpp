@@ -87,38 +87,33 @@ void grainhdl::setSimulationParameter() {
 
 	// this fancy choose of the timestep ensures that the interface of spherical grain with the fastest mobility
 	// and radius 5 moves maximum the distance of 1 gridpoint per timestep
-	switch (Settings::ConvolutionMode) {
-	case E_LAPLACE: {
-		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.;
-		TimeSlope = 0.8482;
-		break;
-	}
-	case E_LAPLACE_RITCHARDSON: {
-		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.;
-		TimeSlope = 0.8202;
-		break;
-	}
-	case E_GAUSSIAN: {
-		dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
-		if(Settings::DecoupleGrains == 1) {
-			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-			* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
+	switch (Settings::ConvolutionMode)
+	{
+		case E_LAPLACE: {
+			dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.;
+			TimeSlope = 0.8482;
+			break;
 		}
-		TimeSlope = 0.8359;
-		//##overwrite to user timeslope
-		TimeSlope = Settings::GaussianKernelUserDefTimeSlope;
-		break;
-	}
-	default:
-		break;
+		case E_LAPLACE_RITCHARDSON: {
+			dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.;
+			TimeSlope = 0.8202;
+			break;
+		}
+		case E_GAUSSIAN: {
+			//CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+			dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.; 
+			TimeSlope = 0.8359;
+			break;
+		}
+		default:
+		{
+			break;
+		}
 	}
 	h = 1.0 / double(realDomainSize);
 
 	//Recalculate the setting parameters for the sector radiuses
-	Settings::ConstantSectorRadius *= h;
+	Settings::ConstantSectorRadius *= h; //TODO::use public non-static Settings!
 	Settings::InterpolatingSectorRadius *= h;
 
 	delta = Settings::DomainBorderSize * 1 / double(realDomainSize);
@@ -126,9 +121,7 @@ void grainhdl::setSimulationParameter() {
 	BoundaryGrainTube = grid_blowup;
 	ngridpoints = realDomainSize + (2 * grid_blowup);
 	boundary = new LSbox(0, 0, 0, 0, this);
-	// 	(*boundary).plot_box(false,2,"no.gnu");
-	//!grains.resize(Settings::NumberOfParticles + 1);
-	grains.resize(Settings::NumberOfParticles + 1);
+	grains.resize(Settings::NumberOfParticles + 1); //TODO::use actual number of grains!
 
 	switch (Settings::MicrostructureGenMode) {
 	case E_GENERATE_WITH_VORONOY: {
@@ -2041,90 +2034,80 @@ for	(auto id : workload) {
 }
 
 void grainhdl::gridCoarsement() {
-	if ((double) currentNrGrains / (double) ngrains
-			< Settings::GridCoarsementGradient && loop != 0
-			&& Settings::GridCoarsement) {
-		int newSize = sqrt(currentNrGrains) * Settings::NumberOfPointsPerGrain;
-		cout << "coarsing the current grid in Timestep: " << loop << endl;
-		cout << "newSize :" << newSize << endl << endl;
-#pragma omp parallel
+	int newSize = pow((double) currentNrGrains, (1./3.)) * pow(PI * 4./3., 1./3.) / 2. * Settings::NumberOfPointsPerGrain;
+	double population_reduction = (double) currentNrGrains / (double) ngrains;
+	if (Settings::GridCoarsement == true && loop != 0 && population_reduction < Settings::GridCoarsementGradient ) {
+		//int newSize = sqrt(currentNrGrains) * Settings::NumberOfPointsPerGrain;
+		cout << "Coarsing the current grid in step " << loop << " to newSize " << newSize << "\n";
+		#pragma omp parallel
 		{
-			vector<unsigned int>& workload =
-					m_grainScheduler->getThreadWorkload(omp_get_thread_num());
-for		(auto id : workload) {
-			if (id <= Settings::NumberOfParticles) {
-				if (grains[id] == NULL)
-				continue;
-				grains[id]->resizeGrid(newSize);
-			}
-		}
-	}
-	realDomainSize = newSize;
-	delta = Settings::DomainBorderSize * 1 / double(realDomainSize);
-	ngridpoints = realDomainSize + 2 * grid_blowup;
-	h = 1.0 / realDomainSize;
-	//! DISCREPANCY: Compare to the application of dt in the convolution, time decreasing factor 0.8
-
-	switch (Settings::ConvolutionMode) {
-		case E_LAPLACE: {
-			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.;
-			break;
-		}
-		case E_LAPLACE_RITCHARDSON: {
-			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.;
-			break;
-		}
-		case E_GAUSSIAN: {
-			//dt = 0.8 / double( realDomainSize * realDomainSize )
-			//dt = 0.8 / double(realDomainSize * realDomainSize)
-			//	* Settings::NumberOfPointsPerGrain / 2; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
-			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
-			if(Settings::DecoupleGrains == 1) {
-				dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-					* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
-			}
-			break;
-		}
-
-		default:
-		break;
-	}
-	double m_dt_Correction = 0.5 / realDomainSize / m_Energy_deltaMAX / dt;
-	if (m_dt_Correction > 1.0)
-	m_dt_Correction = 1.0;
-	dt *= m_dt_Correction;
-	ngrains = currentNrGrains;
-#pragma omp parallel
-	{
-		vector<unsigned int>& workload =
-		m_grainScheduler->getThreadWorkload(omp_get_thread_num());
-		for (auto id : workload) {
-			if (id <= Settings::NumberOfParticles) {
-				if (grains[id] == NULL)
-				continue;
-				grains[id]->recalculateIDLocal();
-			}
-		}
-	}
-#pragma omp parallel
-	{
-		vector<unsigned int>& workload =
-		m_grainScheduler->getThreadWorkload(omp_get_thread_num());
-		for (auto id : workload) {
-			if (id <= Settings::NumberOfParticles) {
-				if (grains[id] == NULL)
-				continue;
-				grains[id]->extractContour();
+			vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
+			for (auto id : workload) {
+				//if (id <= Settings::NumberOfParticles) {
+				if (grains[id] != NULL) {
+					grains[id]->resizeGrid(newSize);
+				}
+				//}
 			}
 		}
 
+		realDomainSize = newSize;
+		delta = Settings::DomainBorderSize * 1 / double(realDomainSize);
+		ngridpoints = realDomainSize + 2 * grid_blowup;
+		h = 1.0 / realDomainSize;
+		//! DISCREPANCY: Compare to the application of dt in the convolution, time decreasing factor 0.8
+
+		switch (Settings::ConvolutionMode) {
+			case E_LAPLACE: {
+				dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.;
+				break;
+			}
+			case E_LAPLACE_RITCHARDSON: {
+				dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.;
+				break;
+			}
+			//CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+			case E_GAUSSIAN: {
+				dt = 0.8 / ((double) SQR(realDomainSize)) * Settings::NumberOfPointsPerGrain / 2. / 5.;
+				break;
+			}
+			default: {
+				break;
+			}
+		}
+		double m_dt_Correction = 0.5 / realDomainSize / m_Energy_deltaMAX / dt;
+		if (m_dt_Correction > 1.0) {
+			cerr << "Why is m_dt_Correction > 1.0 ?" << "\n";
+		}
+		dt *= m_dt_Correction;
+		ngrains = currentNrGrains;
+
+		#pragma omp parallel
+		{
+			vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
+			for (auto id : workload) {
+				if (id <= Settings::NumberOfParticles) {
+					if (grains[id] == NULL)
+					continue;
+					grains[id]->recalculateIDLocal();
+				}
+			}
+		}
+		#pragma omp parallel
+		{
+			vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
+			for (auto id : workload) {
+				if (id <= Settings::NumberOfParticles) {
+					if (grains[id] == NULL)
+					continue;
+					grains[id]->extractContour();
+				}
+			}
+		}
 	}
-} else {
-	switchDistancebuffer();
-}
+	else {
+		switchDistancebuffer();
+	}
 }
 
 void grainhdl::clear_mem() {

@@ -78,8 +78,7 @@ double Settings::MagneticForceField = 0.0;
 double Settings::A_Value = 0.0;
 double Settings::C_Value = 0.0;
 
-double Settings::GaussianKernelUserDefTimeSlope = 0.8359; //###E_GAUSSIAN DEFAULT TIMESLOPE
-double Settings::GaussianKernelTimeStepFactor = 0.8;
+double Settings::UserDefTimeSlope = 0.8359; //empirical was 0.8;
 double Settings::BoxDefaultStoredElasticEnergy = 0.0;
 bool Settings::StatusHealthy = true;
 
@@ -272,12 +271,8 @@ void Settings::initializeParameters(string filename)
 		DecoupleGrains = (bool) std::stoul(
 				rootNode->first_node("DecoupleGrains")->value());
 	}
-
-	if (0 != rootNode->first_node("GaussianKernelTimeStepFactor")) {
-		GaussianKernelTimeStepFactor = std::stod(rootNode->first_node("GaussianKernelTimeStepFactor")->value());
-	}
 	if (0 != rootNode->first_node("GaussianKernelUserDefTimeSlope")) {
-		GaussianKernelUserDefTimeSlope = std::stod(rootNode->first_node("GaussianKernelUserDefTimeSlope")->value());
+		UserDefTimeSlope = std::stod(rootNode->first_node("GaussianKernelUserDefTimeSlope")->value());
 	}
 	if (0 != rootNode->first_node("BoxDefaultStoredElasticEnergy")) {
 		BoxDefaultStoredElasticEnergy = std::stod(rootNode->first_node("BoxDefaultStoredElasticEnergy")->value());

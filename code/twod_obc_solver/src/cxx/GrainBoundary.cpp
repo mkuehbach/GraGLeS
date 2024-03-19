@@ -16,8 +16,8 @@
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "grainBoundary.h"
-#include "marchingSquares.h"
+#include "GrainBoundary.h"
+#include "MarchingSquares.h"
 #include "Settings.h"
 #include <fstream>
 #include <sstream>

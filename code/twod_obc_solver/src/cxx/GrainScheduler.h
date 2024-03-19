@@ -1,20 +1,21 @@
-#ifndef		__IGRAIN_SCHEDULER__
-#define		__IGRAIN_SCHEDULER__
+#ifndef __GRAIN_SCHEDULER__
+#define	__GRAIN_SCHEDULER__
 
 #include <vector>
-#include "spoint.h"
+#include "Spoint.h"
 
 
 using namespace std;
 
 struct SPoint;
-class IGrainScheduler
+
+class GrainScheduler
 {
 public:
-	IGrainScheduler(){}
-	virtual ~IGrainScheduler(){}
+	GrainScheduler(){}
+	virtual ~GrainScheduler(){}
 	virtual void buildGrainWorkloads(vector<vector<SPoint>>&, int) = 0;
 	virtual std::vector<unsigned int>&	getThreadWorkload(int threadID) = 0;
 };
 
-#endif		//__IGRAIN_SCHEDULER__
+#endif

@@ -18,18 +18,17 @@
 #ifndef BOX_H
 #define BOX_H
 
-#include "ggLS.h"
-#include "dimensionalBufferIDLocal.h"
-#include "dimensionalBufferReal.h"
-#include "junction.h"
-#include "dimensionalBuffer.h"
+#include "TwodObcSolver.h"
+#include "DimensionalBufferIdLocal.h"
+#include "DimensionalBufferReal.h"
+#include "Junction.h"
+#include "DimensionalBuffer.h"
 #include "pooledDimensionalBufferDouble.h"
-#include "spoint.h"
+#include "Spoint.h"
 #include "Curvapprx.h"
-#include "contourSector.h"
-#include "minimalisticBoundary.h"
-#include "grainBoundary.h"
-#include "charasteristic.h"
+#include "ContourSector.h"
+#include "GrainBoundary.h"
+#include "BoundaryInfo.h"
 #include "RTree.h"
 #include "Quaternion.h"
 
@@ -92,7 +91,6 @@ private:
 	SPoint m_centroid;
 	vector<SPoint> m_regressionPoints;
 	vector<SPoint> m_triangleCetroid;
-	MinimalisticBoundary m_minimalBoundary;
 	DimensionalBufferReal* m_inputDistance;
 	DimensionalBufferReal* m_outputDistance;
 
@@ -153,7 +151,7 @@ public:
 	double GBmobilityModel(double thetaMis, LSbox* candidate);
 	double getWeigthFromHandler(int i, int j);
 	void constructBoundarySectors();
-	double getWeight(int i, int j, bool minimal = false);
+	double getWeight(int i, int j);
 
 	void marchingSquares(DimensionalBufferReal* which);
 	vector<int> getDirectNeighbourIDs();

@@ -15,8 +15,8 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef		__DIMENSIONAL_BUFFER__
-#define		__DIMENSIONAL_BUFFER__
+#ifndef __DIMENSIONAL_BUFFER__
+#define __DIMENSIONAL_BUFFER__
 
 #include <vector>
 #include <iostream>

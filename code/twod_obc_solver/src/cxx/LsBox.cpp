@@ -15,14 +15,13 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "box.h"
+#include "LsBox.h"
 #include "Settings.h"
-#include "dimensionalBufferReal.h"
+#include "DimensionalBufferReal.h"
 #include "pooledDimensionalBufferReal.h"
-#include "contourSector.h"
-#include "grahamScan.h"
-#include "minimalisticBoundary.h"
-#include "utilities.h"
+#include "ContourSector.h"
+#include "GrahamScan.h"
+#include "Utilities.h"
 #include <cstdlib>
 #include <algorithm>
 #include <cmath>
@@ -1937,12 +1936,8 @@ void LSbox::constructBoundarySectors() {
 	m_grainBoundary.buildBoundarySectors(m_IDLocal);
 }
 
-double LSbox::getWeight(int i, int j, bool minimal) {
-	if (!minimal) {
-		return m_grainBoundary.getWeight(i, j, m_IDLocal);
-	} else {
-		return m_minimalBoundary.getWeight(i, j, this);
-	}
+double LSbox::getWeight(int i, int j) {
+	return m_grainBoundary.getWeight(i, j, m_IDLocal);
 }
 
 void LSbox::clearContourGrainArea() {

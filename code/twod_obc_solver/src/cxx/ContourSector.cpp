@@ -15,10 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "contourSector.h"
-#include "grahamScan.h"
-#include "box.h"
-#include "spoint.h"
+#include "ContourSector.h"
+#include "GrahamScan.h"
+#include "LsBox.h"
+#include "Spoint.h"
 #include "Settings.h"
 
 ContourSector::ContourSector(GrainJunction* initialJunction) :

@@ -22,7 +22,7 @@
 #include <map>
 #include <iostream>
 
-#include "dimensionalBuffer.h"
+#include "DimensionalBuffer.h"
 using namespace std;
 
 #define ID_MAX_CHUNK_COUNT 1

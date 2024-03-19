@@ -1,5 +1,5 @@
-#include "random.h"
-#include "mymath.h"
+#include "MyRandom.h"
+#include "MyMath.h"
 
 randomClass::randomClass(long sd)
 {

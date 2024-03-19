@@ -53,13 +53,13 @@
 // g++ -I/home/user/bin/R-devel/include -L/home/user/bin/R-devel/lib -lR embed.cpp
 
 #include "../../../thirdparty/mandatory/voroxx/voro/src/voro++.hh"
-#include "dataPrecision.h"
-#include "box.h"
-#include "grainhdl.h"
-#include "mymath.h"
+#include "Numerics.h"
+#include "LsBox.h"
+#include "GrainHdl.h"
+#include "MyMath.h"
 #include "SCORE_Random.h"
-#include "dimensionalBuffer.h"
-#include "marchingSquares.h"
+#include "DimensionalBuffer.h"
+#include "MarchingSquares.h"
 #include "Quaternion.h"
 
 

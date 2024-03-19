@@ -16,10 +16,10 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef		__GRAHAM_SCAN_ALGORITHM__
-#define		__GRAHAM_SCAN_ALGORITHM__
+#ifndef __GRAHAM_SCAN_ALGORITHM__
+#define __GRAHAM_SCAN_ALGORITHM__
 #include "../../../thirdparty/mandatory/voroxx/voro/src/voro++.hh"
-#include "spoint.h"
+#include "Spoint.h"
 #include <vector>
 using namespace std;
 

@@ -19,14 +19,14 @@
 #ifndef GRAINHDL_h
 #define GRAINHDL_h
 
-#include "ggLS.h"
+#include "TwodObcSolver.h"
 #include "ExpandingVector.h"
-#include "spoint.h"
+#include "Spoint.h"
 #include "Settings.h"
 #include <omp.h>
-#include "misorientation.h"
-#include "IGrainScheduler.h"
-#include "dimensionalBuffer.h"
+#include "Misorientation.h"
+#include "GrainScheduler.h"
+#include "DimensionalBuffer.h"
 #include "../../../utils/src/cxx/PARAPROBE_HDF5Core.h"
 
 #define xsect(p1,p2) (h[p2]*xh[p1]-h[p1]*xh[p2])/(h[p2]-h[p1])
@@ -69,7 +69,7 @@ protected:
 	int grid_blowup;
 
 	int Mode;
-	IGrainScheduler* m_grainScheduler;
+	GrainScheduler* m_grainScheduler;
 
 public:
 	unsigned int currentNrGrains;

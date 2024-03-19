@@ -15,10 +15,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef utilities_h
-#define utilities_h
+#ifndef __UTILITIES_H__
+#define __UTILITIES_H__
 
-#include "ggLS.h"
+#include "TwodObcSolver.h"
 
 
 

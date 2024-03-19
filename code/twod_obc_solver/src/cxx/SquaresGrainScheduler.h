@@ -1,19 +1,12 @@
-/*
- * SquaresGrainScheduler.h
- *
- *  Created on: Dec 14, 2015
- *      Author: cm654063
- */
+#ifndef __SQUARESGRAINSCHEDULER_H__
+#define __SQUARESGRAINSCHEDULER_H__
 
-#ifndef SQUARESGRAINSCHEDULER_H_
-#define SQUARESGRAINSCHEDULER_H_
-
-#include "IGrainScheduler.h"
+#include "GrainScheduler.h"
 using namespace std;
 
 struct SPoint;
 
-class SquaresGrainScheduler: public IGrainScheduler {
+class SquaresGrainScheduler: public GrainScheduler {
 public:
 	SquaresGrainScheduler(int numberOfThreads, int totalNumberOfGrains, int startIndex = 1);
 	~SquaresGrainScheduler();
@@ -31,4 +24,4 @@ private:
 	vector<vector<unsigned int> > m_threadWorkVectors;
 };
 
-#endif /* SQUARESGRAINSCHEDULER_H_ */
+#endif

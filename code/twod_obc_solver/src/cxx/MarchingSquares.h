@@ -19,12 +19,12 @@
 #define		__MARCHING_SQUARES_ALGORITHM__
 
  
-#include "dimensionalBufferReal.h"
-#include "dimensionalBufferIDLocal.h"
-#include "spoint.h"
-#include "junction.h"
-#include "dimensionalBuffer.h"
-#include "ggLS.h"
+#include "DimensionalBufferReal.h"
+#include "DimensionalBufferIdLocal.h"
+#include "Spoint.h"
+#include "Junction.h"
+#include "DimensionalBuffer.h"
+#include "TwodObcSolver.h"
 
 
 

@@ -1,9 +1,9 @@
-#ifndef		__ITERATIVE_GRAIN_SCHEDULER__
-#define		__ITERATIVE_GRAIN_SCHEDULER__
-#include "IGrainScheduler.h"
+#ifndef __ITERATIVE_GRAIN_SCHEDULER__
+#define	__ITERATIVE_GRAIN_SCHEDULER__
+#include "GrainScheduler.h"
 using namespace std;
 
-class IterativeGrainScheduler : public IGrainScheduler
+class IterativeGrainScheduler : public GrainScheduler
 {
 public:
 	IterativeGrainScheduler(int numberOfThreads, int totalNumberOfGrains, int startIndex = 1);
@@ -19,7 +19,7 @@ private:
 	vector<vector<unsigned int> >	m_threadWorkVectors;
 };
 
-#endif		//__ITERATIVE_GRAIN_SCHEDULER__
+#endif
 
 
 

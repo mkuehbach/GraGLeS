@@ -4,7 +4,7 @@
 #include<math.h>
 #include<assert.h>
 #include<iostream>
-#include"mymath.h"
+#include"MyMath.h"
 
 
 

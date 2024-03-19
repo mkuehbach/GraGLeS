@@ -15,12 +15,12 @@
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include "grainhdl.h"
+#include "GrainHdl.h"
 #include "Settings.h"
-#include "grahamScan.h"
-#include "spoint.h"
+#include "GrahamScan.h"
+#include "Spoint.h"
 #include "RTree.h"
-#include "utilities.h"
+#include "Utilities.h"
 //#include "stdafx.h"
 #include <sys/time.h>
 #include <numa.h>

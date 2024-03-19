@@ -18,7 +18,7 @@
 #ifndef		__GRAIN_JUNCTION__
 #define		__GRAIN_JUNCTION__
 
-#include "spoint.h"
+#include "Spoint.h"
 #include "Settings.h"
 
 /*!

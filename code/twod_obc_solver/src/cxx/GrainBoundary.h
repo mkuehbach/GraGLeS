@@ -19,12 +19,12 @@
 #ifndef		__GRAIN_BOUNDARY__
 #define		__GRAIN_BOUNDARY__
 
-#include "dimensionalBufferReal.h"
-#include "dimensionalBufferIDLocal.h"
-#include "contourSector.h"
-#include "junction.h"
-#include "spoint.h"
-#include "charasteristic.h"
+#include "DimensionalBufferReal.h"
+#include "DimensionalBufferIdLocal.h"
+#include "ContourSector.h"
+#include "Junction.h"
+#include "Spoint.h"
+#include "BoundaryInfo.h"
 
 #include <vector>
 #include <map>

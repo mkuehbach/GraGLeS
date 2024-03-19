@@ -5,7 +5,7 @@
  *      Author: miessen
  */
 
-#include "mymath.h"
+#include "MyMath.h"
 
 #ifndef QUATERNION_H_
 #define QUATERNION_H_

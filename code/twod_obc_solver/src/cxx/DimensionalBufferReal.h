@@ -18,8 +18,8 @@
 #ifndef		__DIMENSIONAL_BUFFER_REAL__
 #define		__DIMENSIONAL_BUFFER_REAL__
 
-#include "dimensionalBuffer.h"
-#include "dataPrecision.h"
+#include "DimensionalBuffer.h"
+#include "Numerics.h"
 
 /*!
  * \class DimensionalBufferReal

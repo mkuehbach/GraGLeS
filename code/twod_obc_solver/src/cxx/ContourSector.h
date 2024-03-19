@@ -17,8 +17,8 @@
 */
 #ifndef		__CONTOUR_SECTOR__
 #define		__CONTOUR_SECTOR__
-#include "junction.h"
-#include "dimensionalBufferIDLocal.h"
+#include "Junction.h"
+#include "DimensionalBufferIdLocal.h"
 #include <fstream>
 #include <vector>
 using namespace std;

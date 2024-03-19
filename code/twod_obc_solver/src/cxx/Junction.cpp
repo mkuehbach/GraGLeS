@@ -79,6 +79,7 @@ double GrainJunction::getWeight(LSbox* me)
 
 	// find the asociated weight
 	sigma = gamma[0] - gamma[1] + gamma[2];
+	/*
 	if (Settings::IsIsotropicNetwork == 0) {
 		if (Settings::UseMobilityModel > 0 && Settings::TriplePointDrag > 0) {
 			averageMobility /= 3;
@@ -88,6 +89,7 @@ double GrainJunction::getWeight(LSbox* me)
 			sigma *= drag;
 		}
 	}
+	*/
 
 	if (sigma < 0.01) {
 		//cout << "negative sigma " << endl;

@@ -497,22 +497,16 @@ map<int, double>& ExplicitGrainBoundary::getlocalMODF()
 void ExplicitGrainBoundary::calculateDiscreteEnergyDistribution()
 {
 	m_localMODF.clear();
-	double dh;
-	if (Settings::LatticeType == 0)
-		dh = 62.8 / (double) Settings::DiscreteSamplingRate;
-	else
-		dh = 92. / (double) Settings::DiscreteSamplingRate;
-
+	double dh = 1.;
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
-		int key = (int) ((m_directNeighbourhood[i].mis_ori * 180 / PI) / dh
-				- 0.5);
+		int key = (int) ((RAD2DEG(m_directNeighbourhood[i].mis_ori)) / dh - 0.5);
 		double length = m_directNeighbourhood[i].length;
 		map<int, double>::iterator it = m_localMODF.find(key);
 		if (it == m_localMODF.end()) {
 			m_localMODF.insert(make_pair(key, length));
-		} else {
+		}
+		else {
 			(*it).second += length;
-
 		}
 	}
 }

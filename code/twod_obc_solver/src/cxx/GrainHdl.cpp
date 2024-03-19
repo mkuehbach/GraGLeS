@@ -44,21 +44,29 @@
 using namespace rapidxml;
 
 grainhdl::grainhdl() :
-	m_ThreadPoolCount(0), loop(0), IDField(NULL) {
-}
-grainhdl::~grainhdl() {
-	delete mymath;
-	delete TwinBoundary;
-	if (Settings::LatticeType == E_HEXAGONAL)
-		delete m_misOriHdl;
+	m_ThreadPoolCount(0), loop(0), IDField(NULL)
+{
 }
 
-void grainhdl::setSimulationParameter() {
+
+grainhdl::~grainhdl()
+{
+	delete mymath;
+	delete TwinBoundary;
+	if (Settings::LatticeType == E_HCP) {
+		delete m_misOriHdl;
+	}
+}
+
+
+void grainhdl::setSimulationParameter()
+{
 	initEnvironment();
 	mymath = new mathMethods();
 
-	if (Settings::LatticeType == E_HEXAGONAL)
+	if (Settings::LatticeType == E_HCP) {
 		m_misOriHdl = new MisorientationHdl;
+	}
 
 	if (Settings::MicrostructureGenMode	== E_READ_VOXELIZED_MICROSTRUCTURE) {
 		read_header_from_nexusfile();
@@ -67,7 +75,7 @@ void grainhdl::setSimulationParameter() {
 		cerr << "Unsupported microstructureGenMode!" << "\n";
 	}
 
-	ds = (Settings::ConstantSectorRadius * 2 + Settings::InterpolatingSectorRadius * 2) / ((double) realDomainSize);
+	//ds = (Settings::ConstantSectorRadius * 2 + Settings::InterpolatingSectorRadius * 2) / ((double) realDomainSize);
 	TwinBoundary = new Quaternion(60 * PI / 180, 1.0, 1.0, 1.0, true);
 
 	// this fancy choose of the timestep ensures that the interface of spherical grain with the fastest mobility
@@ -130,7 +138,9 @@ void grainhdl::setSimulationParameter() {
 	cout << endl << "******* start simulation: *******" << endl << endl;
 }
 
-void grainhdl::find_correctTimestepSize() {
+
+void grainhdl::find_correctTimestepSize()
+{
 	double my_max = 0;
 	double my_min = 1000000;
 	if (Settings::UseMagneticField) {
@@ -160,7 +170,7 @@ void grainhdl::find_correctTimestepSize() {
 void grainhdl::read_header_from_nexusfile()
 {
 	cout << __func__ << "\n";
-	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::InputStructureFilename );
 	string grpnm = "/entry1/ms";
 	string dsnm = "";
 
@@ -188,7 +198,7 @@ void grainhdl::read_header_from_nexusfile()
 void grainhdl::read_microstructure_from_nexusfile()
 {
 	cout << __func__ << "\n";
-	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::InputStructureFilename );
 	string grpnm = "/entry1/ms";
 	string dsnm = "";
 
@@ -334,7 +344,8 @@ void grainhdl::read_microstructure_from_nexusfile()
 }
 
 
-void grainhdl::distanceInitialisation() {
+void grainhdl::distanceInitialisation()
+{
 	for (int ii = 0; ii < omp_get_max_threads(); ii++) {
 		vector<unsigned int>& workload =
 				m_grainScheduler->getThreadWorkload(ii);
@@ -356,9 +367,9 @@ for	(auto id : workload) {
 		grains[id]->calculateDistanceFunction();
 	}
 }
-if (IDField != NULL)
-delete IDField;
-
+	if (IDField != NULL) {
+		delete IDField;
+	}
 }
 
 void grainhdl::convolution(double& plan_overhead) {
@@ -845,8 +856,7 @@ void grainhdl::run_sim() {
 		gettimeofday(&time, NULL);
 		redistancing_time += time.tv_sec + time.tv_usec / 1000000.0 - timer;
 		//		switchDistancebuffer();
-		if (((loop - Settings::StartTime) % int(Settings::AnalysisTimestep))
-				== 0 || loop == Settings::NumberOfTimesteps) {
+		if ((loop - Settings::StartTime) % int(Settings::GrainExport) == 0 || loop == Settings::NumberOfTimesteps) {
 
 			if ( save_NeXus() == true ) {
 				cout << "Writing snapshot data for loop " << loop << " into NeXus file success." << "\n";
@@ -866,7 +876,7 @@ void grainhdl::run_sim() {
 				* Settings::HAGB_Energy * Settings::HAGB_Mobility)); //##MK correction ok?
 
 cout << "I am incrementing the real-time realTime/dt/PhysDomSize/realDomainSize/TimeSlope/Energy/Mobility/GridCoarsement = "
-	<< Realtime << ";" << dt << ";" << Settings::Physical_Domain_Size << ";" << realDomainSize << ";" << TimeSlope << ";" << Settings::HAGB_Energy << ";" << Settings::HAGB_Mobility << "--" << (int) Settings::GridCoarsement << endl;
+	<< Realtime << ";" << dt << ";" << Settings::Physical_Domain_Size << ";" << realDomainSize << ";" << TimeSlope << ";" << Settings::HAGB_Energy << ";" << Settings::HAGB_Mobility << "--" << (int) Settings::GridCoarsement << "\n";
 
 		get_biggestGrainVol();
 

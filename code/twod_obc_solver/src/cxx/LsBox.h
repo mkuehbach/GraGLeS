@@ -76,7 +76,6 @@ private:
 	bool m_isMotionRegular;
 	bool m_intersectsBoundaryGrain;
 	DimensionalBufferIDLocal m_IDLocal;
-	double m_meanDa;
 	Quaternion* m_orientationQuat;
 	double m_volume;
 	double m_energy;
@@ -113,6 +112,7 @@ protected:
 	ExplicitGrainBoundary m_grainBoundary;
 public:
 	//Constructors to document
+	/*
 	LSbox(int id, double phi1, double PHI, double phi2, grainhdl* owner);
 	LSbox(int id, const vector<SPoint>& vertices, double q1, double q2,
 			double q3, double q4, grainhdl* owner);
@@ -121,6 +121,7 @@ public:
 			double phi2, grainhdl* owner);
 	LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 			double StoredElasticEnergy, grainhdl* owner);
+	*/
 	LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion,
 			const double StoredElasticEnergy, grainhdl* owner);
 	
@@ -155,7 +156,6 @@ public:
 
 	void marchingSquares(DimensionalBufferReal* which);
 	vector<int> getDirectNeighbourIDs();
-	vector<double> getGBLengths();
 	map<int, double>& getlocalMODF() {
 		return m_grainBoundary.getlocalMODF();
 	}
@@ -198,15 +198,11 @@ public:
 	double GbEnergyModel(double theta, LSbox* candidate);
 	double get_h();
 
-	void outputMemoryUsage(ofstream& output);
 	size_t get_contour_vertices(vector<double> & vrts);
 	void get_contour_xdmf_topology(const unsigned int vrts_offset, vector<unsigned int> & fcts);
 	void get_contour_xdmf_info(vector<double> & info);
 	vector<double> get_quaternion();
 	vector<double> get_barycentre();
-	void writeGBCurvatureApprx( FILE *externalfh );
-	void writeGBContourPoints( FILE *externalfh, int gridblowup );
-	void writeGBJunctionPoints( FILE *externalfh, int gridblowup );
 
 	inline vector<Face>* get_Faces(){
 		return m_grainBoundary.getFaces();
@@ -243,15 +239,6 @@ public:
 	}
 	inline SPoint getCentroid() const {
 		return m_centroid;
-	}
-	inline double getMeanDa() const {
-		return m_meanDa;
-	}
-	inline double getMeanM() const {
-		return m_grainBoundary.getMeanM();
-	}
-	inline double getMeanA() const {
-		return m_grainBoundary.getMeanA();
 	}
 	inline const Quaternion* getOrientationQuat() {
 		return m_orientationQuat;

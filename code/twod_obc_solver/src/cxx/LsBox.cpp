@@ -46,6 +46,7 @@ LSbox::LSbox(int id, double phi1, double PHI, double phi2, grainhdl* owner) :
 		calculateMagneticEnergy();
 }
 
+/*
 LSbox::LSbox(int aID, vector<SPoint>& contour, grainhdl* owner) :
 		m_ID(aID), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
 				true), m_intersectsBoundaryGrain(false), m_volume(0), m_energy(
@@ -102,7 +103,9 @@ LSbox::LSbox(int aID, vector<SPoint>& contour, grainhdl* owner) :
 
 	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
 }
-//constructor for reead from file
+
+
+//constructor for read from file
 LSbox::LSbox(int id, const vector<SPoint>& vertices, double q1, double q2,
 		double q3, double q4, grainhdl* owner) :
 		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
@@ -213,6 +216,7 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 	reizeIDLocalToDistanceBuffer();
 	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
 }
+*/
 
 
 LSbox::LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion, 
@@ -274,6 +278,7 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quat
 }
 
 
+/*
 LSbox::LSbox(int id, int nedges, double* edges, double phi1, double PHI,
 		double phi2, grainhdl* owner) :
 		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
@@ -362,6 +367,7 @@ LSbox::LSbox(int id, int nedges, double* edges, double phi1, double PHI,
 	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
 
 }
+*/
 
 LSbox::~LSbox() {
 	if (m_orientationQuat != NULL)
@@ -1258,7 +1264,7 @@ void LSbox::computeVolumeAndEnergy() {
 	m_energy = 0;
 	vector<characteristics>::iterator it;
 
-	double newVolume = abs(computeVolume());
+	double newVolume = abs(computeVolume()); //getVolume()
 	m_grainBoundary.buildDirectNeighbours(*m_inputDistance, m_IDLocal);
 	m_energy = m_grainBoundary.computeEnergy();
 	//!
@@ -1268,16 +1274,7 @@ void LSbox::computeVolumeAndEnergy() {
 	//! The area variation is normalized by a factor coming from the
 	//! Neumann-Mullins equation.
 	//!
-
-	double dA = newVolume - getVolume();
-	dA = dA / m_grainHandler->get_dt();
-	dA = dA * (3 / PI);
 	m_volume = newVolume;
-	if ((m_grainHandler->loop - 1) % Settings::AnalysisTimestep == 0
-			|| m_grainHandler->loop == 0)
-		m_meanDa = 0;
-
-	m_meanDa += dA;
 }
 
 /**************************************/
@@ -1544,19 +1541,17 @@ void LSbox::recalculateIDLocal()
 
 
 double LSbox::computeMisorientation(LSbox* grain_2) {
-	double result = 0.0;
-
-	if (Settings::LatticeType == E_CUBIC) {
-		result = m_orientationQuat->misorientationCubicQxQ(
-				grain_2->m_orientationQuat);
-	} else if (Settings::LatticeType == E_HEXAGONAL) {
-		result = m_grainHandler->m_misOriHdl->calculateMisorientation_hexagonal(
-				m_orientationQuat, grain_2->m_orientationQuat);
+	double result = 0.;
+	if (Settings::LatticeType == 225 || Settings::LatticeType == 229 ) {
+		result = m_orientationQuat->misorientationCubicQxQ(grain_2->m_orientationQuat);
 	}
-	if (result > 1 * PI / 180.0)
+	if ( Settings::LatticeType == 194 ) {
+		result = m_grainHandler->m_misOriHdl->calculateMisorientation_hexagonal(m_orientationQuat, grain_2->m_orientationQuat);
+	}
+	if (result >= DEG2RAD(1.)) {
 		return result;
-	else
-		return 1 * PI / 180.0;
+	}
+	return DEG2RAD(1.);
 }
 
 
@@ -1570,62 +1565,41 @@ double LSbox::GbEnergyModel(double theta, LSbox* candidate)
 {
 	double gamma_hagb = 1.; //relative value
 	double theta_ref = DEG2RAD(15.);
-	if (Settings::ResearchMode == 0) {
-		if (Settings::IsIsotropicNetwork == false) {
-			if (theta > theta_ref) {
-				return gamma_hagb;
-			}
-			if (theta < DEG2RAD(1.)) {
-				theta = DEG2RAD(1.);
-			}
-			return gamma_hagb * (theta / theta_ref) * (1. - log(theta / theta_ref)); //TODO::catch NaN
+	if (Settings::IsIsotropicNetwork == false) {
+		if (theta > theta_ref) {
+			return gamma_hagb;
 		}
+		if (theta < DEG2RAD(1.)) {
+			theta = DEG2RAD(1.);
+		}
+		return gamma_hagb * (theta / theta_ref) * (1. - log(theta / theta_ref)); //TODO::catch NaN
 	}
 	return gamma_hagb;
 }
 
 
-double LSbox::GbMobilityModel(double thetaMis, LSbox* candidate) {
-	if (Settings::UseMobilityModel == 0 || Settings::IsIsotropicNetwork
-			|| Settings::ResearchMode != 0) {
-		return 1.0;
-	} else if (Settings::UseMobilityModel == 1) {
-		//check for twin boundary
-		// 8.66025 = Theta (15)* 1/ sqrt(SIGMA) here SiGMA is the number od coincidence points (3 for the Twinboundary)
+double LSbox::GbMobilityModel(double thetaMis, LSbox* candidate)
+{
+	if (Settings::IsIsotropicNetwork == false) {
+		//filter based on lattice typse// 8.66025 = 
 		// thus 8.66 is the permissible deviation from the perfect Twinboundary SIGMA 3
-		if (Settings::IdentifyTwins) {
-			if (MisoriToTwinBoundary(candidate) < 8.66025 * PI / 180.0)
+		if (Settings::IdentifyTwins == true) {
+			//Theta (15)* 1/ sqrt(SIGMA) here SiGMA is the number of coincidence points (3 for the Twinboundary)
+			//TODO::but not all boundaries are coherent twin boundaries like assumed here
+			if (MisoriToTwinBoundary(candidate) < DEG2RAD(8.66025)) {
 				return 0.01;
-			else
-				return 1
-						- (0.99
-								* exp(
-										-5.0
-												* (pow(
-														thetaMis
-																/ (15.0 * PI / 180.0),
-														9.0))));
-		} else
-			return 1 - (0.99 * exp(-5.0 * (pow(thetaMis / (15.0 * PI / 180.0), 9.0))));
-	} else if (Settings::UseMobilityModel == 2) {
-		if (thetaMis < 25 * PI / 180 || thetaMis > 33 * PI / 180)
-			return 0.1;
-		else
-			return (sin((thetaMis - 25 * PI / 180) / (8 * PI / 180) * PI) * 0.9)
-					+ 0.1;
-	} else if (Settings::UseMobilityModel == 3) {
-		double d1 = sqrt(m_volume);
-		double d2 = sqrt(candidate->getVolume());
-		double result = fabs(d2 - d1) / sqrt(m_grainHandler->get_maxVol());
-		if (result < 0.29)
-			return 0.29;
-		else if (result > 1.0)
-			return 1.0;
-		else
-			return result;
+			}
+			else {
+				return 1. - (0.99 * exp(-5.0 * (pow(thetaMis / DEG2RAD(15.), 9.))));
+			}
+		}
+		else {
+			return 1. - (0.99 * exp(-5.0 * (pow(thetaMis / DEG2RAD(15.), 9.))));
+		}
 	}
-	return 1.0;
+	return 1.;
 }
+
 
 bool LSbox::isNeighbour(LSbox* candidate) {
 	return m_grainBoundary.isBoxDirectNeighbour(candidate);
@@ -1842,81 +1816,3 @@ vector<double> LSbox::get_barycentre() {
 }
 
 #define I_DONT_KNOW_YET		(-100.0)
-
-
-
-void LSbox::writeGBCurvatureApprx( FILE *externalfh ) {
-
-	//estimate distribution of local curvature values along piecewise linear contour segments via fitting circle
-	//first get all grain boundary points find grain neighboring as exercised in computeVolumeEnergy buildDirectNeighbors
-	struct wghtd_imcurv_res tmp = get_curvApprx();
-
-	if ( tmp.gID != 0 ) {
-		fwrite( &tmp, sizeof(wghtd_imcurv_res), 1, externalfh );
-	}
-}
-
-
-void LSbox::writeGBContourPoints( FILE *externalfh, int gridblowup ) {
-	//inspect all grain boundary points find grain neighboring as exercised in computeVolumeEnergy buildDirectNeighbors
-	double hh = this->get_h();
-	GBContourPoint firstp( I_DONT_KNOW_YET, I_DONT_KNOW_YET,  I_DONT_KNOW_YET, I_DONT_KNOW_YET, 0, 0 ); //MK::in GraGLeS grain 0 is boundary/domain
-	double xx, yy;
-
-	for ( unsigned int k = 0; k < this->m_grainBoundary.getRawBoundary().size() - 1; k++ ) {
-		double px = this->m_grainBoundary.getRawBoundary()[k].x;
-		double py = this->m_grainBoundary.getRawBoundary()[k].y;
-		int pxGrid = int(px);
-		int pyGrid = int(py);
-		LSbox* candidate = NULL;
-		// evaluate the ID at a outer point -> there must be one, we are at the boundary
-		try {
-			if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-				pxGrid = int(px + 1);
-				if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-					pyGrid = int(py + 1);
-					if ( this->m_inputDistance->getValueAt(pyGrid, pxGrid) > 0) {
-						pxGrid = int(px);
-					}
-				}
-			}
-			candidate = this->getNeighbourAt( pyGrid, pxGrid );
-			if (candidate == NULL)
-				throw std::out_of_range("candidate neighbour is null");
-		}
-		catch (const std::out_of_range& oor) { return; }
-
-		xx = CLAMP( (px - gridblowup)*hh );
-		yy = CLAMP( (py - gridblowup)*hh );
-
-		//##MK::consider buffer and pipe all for the entire grain at once!
-		GBContourPoint ap( xx, yy, m_grainBoundary.getRawBoundary()[k].energy, m_grainBoundary.getRawBoundary()[k].mob, this->getID(), candidate->getID() );
-		fwrite( &ap, sizeof(GBContourPoint), 1, externalfh );
-
-		if ( k != 0 ) //store neighbor candidate for the last grainBoundaryPoint by copying the first
-			continue;
-		else {
-			firstp.x = xx;
-			firstp.y = yy;
-			firstp.energy = m_grainBoundary.getRawBoundary()[k].energy;
-			firstp.mobility = m_grainBoundary.getRawBoundary()[k].mob;
-			firstp.myid = this->getID();
-			firstp.nborid = candidate->getID();
-		}
-	}
-	if ( this->m_grainBoundary.getRawBoundary().size() > 0 ) //dont forget last point
-		fwrite( &firstp, sizeof(GBContourPoint), 1, externalfh );
-}
-
-void LSbox::writeGBJunctionPoints( FILE *externalfh, int gridblowup ) {
-	//inspect all grain boundary points find grain neighboring as exercised in computeVolumeEnergy buildDirectNeighbors
-	double hh = this->get_h();
-	double xx, yy;
-	for ( unsigned int j = 0; j < this->m_grainBoundary.getRawJunctions().size(); j++ ) {
-		xx = CLAMP( (this->m_grainBoundary.getRawJunctions()[j].coordinates.x - gridblowup)*hh );
-		yy = CLAMP( (this->m_grainBoundary.getRawJunctions()[j].coordinates.y - gridblowup)*hh );
-
-		GBJunctionPoint jp( xx, yy, this->getID(), this->m_grainBoundary.getRawJunctions()[j].junction_type );
-		fwrite( &jp, sizeof(GBJunctionPoint), 1, externalfh );
-	}
-};

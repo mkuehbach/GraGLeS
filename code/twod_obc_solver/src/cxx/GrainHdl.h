@@ -85,7 +85,6 @@ public:
 	//! A 2D vector which stores weights.
 	vector<vector<double> > weightsMatrix;
 
-	double ds;
 	double delta;
 	double *bunge;
 	double deviation;
@@ -174,9 +173,6 @@ public:
 	}
 	inline double getBoundaryGrainTube() {
 		return BoundaryGrainTube;
-	}
-	inline double get_ds() {
-		return ds;
 	}
 	inline double get_maxVol() {
 		return maxVol;

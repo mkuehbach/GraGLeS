@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	Settings::ConfigFileName = argv[2];
 	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID." + to_string(Settings::SimulationId) + ".nxs";
 
-	if ( Settings::initializeParameters(Settings::ConfigFileName) == false ) {
+	if ( Settings::initializeParameters() == false ) {
 		cout << "Loading configuration " << Settings::ConfigFileName << " failed or is invalid!" << "\n";
 		return 0;
 	}

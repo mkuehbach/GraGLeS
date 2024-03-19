@@ -78,7 +78,7 @@ double Settings::MagneticForceField = 0.0;
 double Settings::A_Value = 0.0;
 double Settings::C_Value = 0.0;
 
-double Settings::UserDefTimeSlope = 0.8359; //empirical was 0.8;
+double Settings::UserDefTimeSlope = 0.8; //empirical was 0.8359;
 double Settings::BoxDefaultStoredElasticEnergy = 0.0;
 bool Settings::StatusHealthy = true;
 
@@ -245,34 +245,25 @@ void Settings::initializeParameters(string filename)
 			ResearchProject = E_DEFAULT;
 	}
 	if (0 != rootNode->first_node("ConstantSectorRadius")) {
-		ConstantSectorRadius = std::stod(
-				rootNode->first_node("ConstantSectorRadius")->value());
+		ConstantSectorRadius = std::stod(rootNode->first_node("ConstantSectorRadius")->value());
 	}
 	if (0 != rootNode->first_node("InterpolatingSectorRadius")) {
-		InterpolatingSectorRadius = std::stod(
-				rootNode->first_node("InterpolatingSectorRadius")->value());
+		InterpolatingSectorRadius = std::stod(rootNode->first_node("InterpolatingSectorRadius")->value());
 	}
 	if (0 != rootNode->first_node("NeighbourTracking")) {
-		NeighbourTracking = std::stoul(
-				rootNode->first_node("NeighbourTracking")->value());
+		NeighbourTracking = std::stoul(rootNode->first_node("NeighbourTracking")->value());
 	}
 
 	if (0 != rootNode->first_node("UseStoredElasticEnergy")) {
-		UseStoredElasticEnergy = std::stoul(
-				rootNode->first_node("UseStoredElasticEnergy")->value());
+		UseStoredElasticEnergy = std::stoul(rootNode->first_node("UseStoredElasticEnergy")->value());
 	}
 	if (0 != rootNode->first_node("GrainScheduler")) {
-		GrainScheduler = (E_GRAIN_SCHEDULER) std::stoi(
-				rootNode->first_node("GrainScheduler")->value());
+		GrainScheduler = (E_GRAIN_SCHEDULER) std::stoi(rootNode->first_node("GrainScheduler")->value());
 		if (GrainScheduler >= E_DEFAULT_SCHEDULER)
 			GrainScheduler = E_DEFAULT_SCHEDULER;
 	}
-	if (0 != rootNode->first_node("DecoupleGrains")) {
-		DecoupleGrains = (bool) std::stoul(
-				rootNode->first_node("DecoupleGrains")->value());
-	}
-	if (0 != rootNode->first_node("GaussianKernelUserDefTimeSlope")) {
-		UserDefTimeSlope = std::stod(rootNode->first_node("GaussianKernelUserDefTimeSlope")->value());
+	if (0 != rootNode->first_node("UserDefTimeSlope")) {
+		UserDefTimeSlope = std::stod(rootNode->first_node("UserDefTimeSlope")->value());
 	}
 	if (0 != rootNode->first_node("BoxDefaultStoredElasticEnergy")) {
 		BoxDefaultStoredElasticEnergy = std::stod(rootNode->first_node("BoxDefaultStoredElasticEnergy")->value());

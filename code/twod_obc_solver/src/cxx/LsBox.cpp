@@ -466,7 +466,7 @@ void LSbox::calculateDistanceFunction() {
 
 void LSbox::executeConvolution(ExpandingVector<char>& mem_pool) {
 
-	//	plot_box(true, 1, "BeforeConvo", true);
+	//plot_box(true, 1, "BeforeConvo", true);
 	double h = m_grainHandler->get_h();
 	if (grainExists() != true)
 		return;
@@ -587,8 +587,8 @@ void LSbox::executeConvolution(ExpandingVector<char>& mem_pool) {
 			}
 		}
 	}
-//	plot_box(true, 1, "BeforeConvoGaussian", true);
-//	plot_box(true, 2, "AfterConvoGaussian", true);
+	//plot_box(true, 1, "BeforeConvoGaussian", true);
+	//plot_box(true, 2, "AfterConvoGaussian", true);
 	reizeIDLocalToDistanceBuffer();
 	m_IDLocal.clear();
 }
@@ -998,8 +998,8 @@ void LSbox::executeComparison() {
 		boundaryCondition();
 	} else
 		m_intersectsBoundaryGrain = false;
-	//	plot_box(true,2,"Com",true);
-	// 		plot_box(true,3,"IDLocalContour", true);
+	//plot_box(true,2,"Com",true);
+	//plot_box(true,3,"IDLocalContour", true);
 }
 
 bool LSbox::BoundaryIntersection() {
@@ -1141,36 +1141,33 @@ void LSbox::setIDLocal(int ID) {
 /**************************************/
 /**************************************/
 
-void LSbox::marchingSquares(DimensionalBufferReal* which) {
+void LSbox::marchingSquares(DimensionalBufferReal* which)
+{
 	m_exists = m_grainBoundary.extractBoundaryAndJunctions(*which, m_IDLocal);
 	m_volume = computeVolume();
 }
 
-void LSbox::extractContour() {
+
+void LSbox::extractContour()
+{
 	m_isMotionRegular = true;
 	double newVolume = -1;
 	int old_contour_len = m_grainBoundary.getBoundarySegmentCount();
-	m_exists = m_grainBoundary.extractBoundaryAndJunctions(*m_inputDistance,
-			m_IDLocal);
-
-	if (!grainExists())
+	m_exists = m_grainBoundary.extractBoundaryAndJunctions(*m_inputDistance, m_IDLocal);
+	if (!grainExists()) {
 		return;
+	}
 	newVolume = computeVolume();
-	if (isMotionRegular(old_contour_len,
-			m_grainBoundary.getBoundarySegmentCount(), getVolume(), newVolume)
-			== false) {
+	if (isMotionRegular(old_contour_len, m_grainBoundary.getBoundarySegmentCount(), getVolume(), newVolume) == false) {
 		do {
 			clearContourGrainArea();
-			m_exists = m_grainBoundary.extractBoundaryAndJunctions(
-					*m_inputDistance, m_IDLocal, m_grainHandler->loop);
+			m_exists = m_grainBoundary.extractBoundaryAndJunctions(*m_inputDistance, m_IDLocal, m_grainHandler->loop);
 			if (!grainExists()) {
 				cout << "we cleared a small grain " << m_ID << endl;
 				return;
 			}
 			newVolume = computeVolume();
-		} while (isMotionRegular(old_contour_len,
-				m_grainBoundary.getBoundarySegmentCount(), getVolume(),
-				newVolume) == false);
+		} while (isMotionRegular(old_contour_len, m_grainBoundary.getBoundarySegmentCount(), getVolume(), newVolume) == false);
 	}
 
 	if (Settings::ResearchMode && m_grainHandler->calcCentroid)
@@ -1193,7 +1190,7 @@ void LSbox::extractContour() {
 		m_newYMax = m;
 		out = true;
 	}
-	if (out) {
+	if (out == true) {
 		int loop = m_grainHandler->loop;
 		cout << endl << "Timestep: " << m_grainHandler->loop << endl << endl;
 		cout << "WARNING - undefined Boxsize in Box: " << m_ID
@@ -1202,18 +1199,17 @@ void LSbox::extractContour() {
 		cout << m_newYMin << " || " << m_newXMin << " || " << m_newYMax
 				<< " || " << m_newXMax << endl;
 	}
-	if (Settings::DecoupleGrains != 1) {
-		m_outputDistance->resize(m_newXMin, m_newYMin, m_newXMax, m_newYMax);
-		m_outputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
-	}
+	m_outputDistance->resize(m_newXMin, m_newYMin, m_newXMax, m_newYMax);
+	m_outputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
 
 	m_perimeter = m_grainBoundary.computePerimeter();
 
 	return;
 }
 
-bool LSbox::isMotionRegular(int old_contour, int new_contour, double old_volume,
-		double new_volume) {
+
+bool LSbox::isMotionRegular(int old_contour, int new_contour, double old_volume, double new_volume)
+{
 	//Formula approximating von-Neumann-Mullins rule.
 	//return (new_volume - old_volume)/m_grainHandler->get_dt() * (3/PI) >= -20.0;
 	//	Formula approximating von-Neumann-Mullins rule.
@@ -1454,7 +1450,6 @@ void LSbox::executeRedistancing() {
 			m_outputDistance->getMinY(), m_outputDistance->getMaxX(),
 			m_outputDistance->getMaxY());
 	// 	 set the references for the convolution step
-
 	//	if(id==1) plot_box(true, 2, "after_resize", true);
 }
 
@@ -1544,288 +1539,12 @@ void LSbox::resizeGrid(int newSize) {
 
 }
 
-void LSbox::recalculateIDLocal() {
+void LSbox::recalculateIDLocal()
+{
 	reizeIDLocalToDistanceBuffer();
-	if (Settings::DecoupleGrains != 1)
-		executeComparison();
-	else {
-		setIDLocal(m_grainHandler->boundary->getID());
-//		switchInNOut();
-	}
+	executeComparison();
 }
 
-void LSbox::plot_box_contour(int timestep, bool plot_energy,
-		ofstream* dest_file, bool absCoordinates, int threadID)
-// use plotenergy false in saveMicrostructure
-		{
-#define CLAMP(x) (x > 1.0 ? 1.0 : (x < 0.0 ? 0.0 : x))
-	if (grainExists() == false)
-		return;
-	ofstream* output_file = dest_file;
-	if (dest_file == NULL) {
-		output_file = new ofstream();
-		stringstream filename;
-		filename << "Contourline_" << m_ID;
-		filename << "_Timestep_" << timestep;
-		filename << ".gnu";
-		output_file->open(filename.str());
-	}
-	ofstream& file = *output_file;
-	if (absCoordinates) {
-		for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-			file
-					<< CLAMP(
-							(iterator.x - m_grainHandler->get_grid_blowup())
-									* m_grainHandler->get_h()) << "\t"
-					<< CLAMP(
-							(iterator.y - m_grainHandler->get_grid_blowup())
-									* m_grainHandler->get_h())
-					<< "\t" << m_ID; //##MK::added grain ID
-			if (plot_energy) {
-				file << '\t' << iterator.energy * iterator.mob << endl;
-				//##MK::called with plot_energy==true
-				continue;
-			}
-			if (Settings::UseMagneticField)
-				file << '\t' << m_magneticEnergy;
-			else
-				file << '\t' << threadID;
-
-			file << endl;
-		}
-	} else {
-		for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-			file << (iterator.x) << "\t" << (iterator.y);
-			if (plot_energy) {
-				file << '\t' << iterator.energy * iterator.mob;
-			}
-			if (Settings::UseMagneticField)
-				file << '\t' << m_magneticEnergy;
-			else
-				file << '\t' << threadID;
-			file << endl;
-		}
-	}
-	file << endl;
-	if (dest_file == NULL) {
-		file.close();
-		delete output_file;
-	}
-}
-
-void LSbox::plot_full_grain(int timestep, bool plot_energy, ofstream* dest_file,
-		bool absCoordinates) {
-	if (grainExists() == false)
-		return;
-	ofstream* output_file = dest_file;
-	if (dest_file == NULL) {
-		output_file = new ofstream();
-		stringstream filename;
-		filename << "Contourline_" << m_ID;
-		filename << "_Timestep_" << timestep;
-		filename << ".gnu";
-		output_file->open(filename.str());
-	}
-	ofstream& file = *output_file;
-
-	file << m_ID << "\t" << m_grainBoundary.getBoundarySegmentCount() << "\t"
-			<< m_orientationQuat->get_q0() << "\t"
-			<< m_orientationQuat->get_q1() << "\t"
-			<< m_orientationQuat->get_q2() << "\t"
-			<< m_orientationQuat->get_q3() << endl;
-
-	if (plot_energy) {
-		for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-			file << iterator.x << "\t" << iterator.y << "\t" << iterator.energy
-					<< endl;
-		}
-	} else if (absCoordinates) {
-		for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-			file
-					<< (iterator.x - m_grainHandler->get_grid_blowup())
-							* m_grainHandler->get_h() << "\t"
-					<< (iterator.y - m_grainHandler->get_grid_blowup())
-							* m_grainHandler->get_h() << endl;
-		}
-	} else {
-		for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
-			file << (iterator.x) << "\t" << (iterator.y) << endl;
-		}
-	}
-	file << endl;
-	if (dest_file == NULL) {
-		file.close();
-		delete output_file;
-	}
-}
-
-void LSbox::plot_box_parameters(ofstream* dest_file) {
-	if (grainExists() == false)
-		return;
-	ofstream* output_file = dest_file;
-	if (dest_file == NULL) {
-		output_file = new ofstream();
-		stringstream filename;
-		filename << "GrainParameters_" << m_ID;
-		filename << "_Timestep_" << m_grainHandler->loop;
-		filename << ".gnu";
-		output_file->open(filename.str());
-	}
-	ofstream& file = *output_file;
-	double *euler = new double[3];
-	euler = m_orientationQuat->quaternion2Euler();
-	file << m_ID << '\t' << m_grainBoundary.getDirectNeighboursCount() << '\t'
-			<< intersectsBoundaryGrain() << '\t' << getVolume() << '\t'
-			<< getPerimeter() << '\t' << m_energy << '\t' << euler[0] << '\t'
-			<< euler[1] << '\t' << euler[2];
-
-	if (dest_file == NULL) {
-		file.close();
-		delete output_file;
-	}
-	delete[] euler;
-}
-
-void LSbox::plot_box(bool distanceplot, int select, string simstep,
-		bool local) {
-	/*
-	 cout << " \nGrain  Info: " << endl;
-	 cout << " ID :" << m_ID << endl;
-	 cout << " xminIn, xmaxIn, yminIn, ymaxIn :" << m_inputDistance->getMinX()
-	 << " || " << m_inputDistance->getMaxX() << " || "
-	 << m_inputDistance->getMinY() << " || "
-	 << m_inputDistance->getMaxY() << endl;
-	 cout << " xminOut, xmaxOut, yminOut, ymaxOut :"
-	 << m_outputDistance->getMinX() << " || "
-	 << m_outputDistance->getMaxX() << " || "
-	 << m_outputDistance->getMinY() << " || "
-	 << m_outputDistance->getMaxY() << endl;
-	 cout << " xminId, xmaxId, yminId, ymaxId :" << m_IDLocal.getMinX()
-	 << " || " << m_IDLocal.getMaxX() << " || " << m_IDLocal.getMinY()
-	 << " || " << m_IDLocal.getMaxY() << endl;
-	 //     if (distanceplot==true) print_2dim_array(distance,ymax-ymin,xmax-xmin);
-	 // 		else cout << " no distance values in storage!" << endl;
-	 cout << " quaternion: " << m_orientationQuat[0] << " || "
-	 << m_orientationQuat[1] << " || " << m_orientationQuat[2] << " || "
-	 << m_orientationQuat[3] << endl;
-	 //	if (grainCharacteristics.empty() != true) {
-	 //		cout << " List of Neighbors : ";
-	 //		vector<characteristics>::iterator it;
-	 //		for (it = grainCharacteristics.begin(); it
-	 //				!= grainCharacteristics.end(); it++) {
-	 //			cout << (*it).directNeighbour->getID() << " || ";
-	 //		}
-	 //		cout << endl;
-	 //	} else
-	 //		cout << " neighbors unknown " << endl;
-
-	 if (m_secondOrderNeighbours.empty() != true) {
-	 cout << " List of 2order Neighbors : ";
-	 vector<LSbox*>::iterator it;
-	 for (it = m_secondOrderNeighbours.begin(); it
-	 != m_secondOrderNeighbours.end(); it++) {
-	 cout << (*it)->getID() << " || ";
-	 }
-	 cout << endl;
-	 } else
-	 cout << " neighbors_2order unknown " << endl;
-	 */
-	if (distanceplot) {
-		stringstream filename;
-		ofstream datei;
-		int loop = m_grainHandler->loop;
-		if (select == 2 && !local) {
-			filename << "BoxDistance_" << simstep << "out_T" << loop << "_"
-					<< m_ID << ".gnu";
-			datei.open(filename.str());
-			for (int i = 0; i < m_grainHandler->get_ngridpoints(); i++) {
-				for (int j = 0; j < m_grainHandler->get_ngridpoints(); j++) {
-					if (i >= m_outputDistance->getMinY()
-							&& i < m_outputDistance->getMaxY()
-							&& j >= m_outputDistance->getMinX()
-							&& j < m_outputDistance->getMaxX()) {
-						datei << ::std::fixed
-								<< m_outputDistance->getValueAt(i, j) << "\t";
-					} else
-						datei << ::std::fixed << -m_grainHandler->delta << "\t";
-				}
-				datei << endl;
-			}
-		}
-
-		if (select == 2 && local) {
-			filename << "BoxDistance_" << simstep << "out_T" << loop << "_"
-					<< m_ID << ".gnu";
-			datei.open(filename.str());
-			for (int i = m_outputDistance->getMinY();
-					i < m_outputDistance->getMaxY(); i++) {
-				for (int j = m_outputDistance->getMinX();
-						j < m_outputDistance->getMaxX(); j++) {
-					datei << ::std::fixed << m_outputDistance->getValueAt(i, j)
-							<< "\t";
-				}
-				datei << endl;
-			}
-		}
-		if (select == 1 && local) {
-			filename << "BoxDistance_" << simstep << "in_T" << loop << "_"
-					<< m_ID << ".gnu";
-			datei.open(filename.str());
-			for (int i = m_inputDistance->getMinY();
-					i < m_inputDistance->getMaxY(); i++) {
-				for (int j = m_inputDistance->getMinX();
-						j < m_inputDistance->getMaxX(); j++) {
-					datei << ::std::fixed << m_inputDistance->getValueAt(i, j)
-							<< "\t";
-				}
-				datei << endl;
-			}
-		}
-		if (select == 1 && !local) {
-			filename << "BoxDistance_" << simstep << "in_T" << loop << "_"
-					<< m_ID << ".gnu";
-			datei.open(filename.str());
-			for (int i = 0; i < m_grainHandler->get_ngridpoints(); i++) {
-				for (int j = 0; j < m_grainHandler->get_ngridpoints(); j++) {
-					if (i >= m_inputDistance->getMinY()
-							&& i < m_inputDistance->getMaxY()
-							&& j >= m_inputDistance->getMinX()
-							&& j < m_inputDistance->getMaxX()) {
-						datei << ::std::fixed
-								<< m_inputDistance->getValueAt(i, j) << "\t";
-					} else
-						datei << ::std::fixed << -m_grainHandler->delta << "\t";
-				}
-				datei << endl;
-			}
-		}
-		if (select == 3) {
-			filename << "IDLocal_" << simstep << "in_T" << loop << "_" << m_ID
-					<< ".gnu";
-			datei.open(filename.str());
-			for (int i = m_IDLocal.getMinY(); i < m_IDLocal.getMaxY(); i++) {
-				for (int j = m_IDLocal.getMinX(); j < m_IDLocal.getMaxX();
-						j++) {
-					double write = 0.0;
-					//if (IDLocal.getValueAt(i, j).getElementAt(0) != NULL)
-					if (m_grainHandler->getGrainByID(
-							m_IDLocal.getValueAt(i, j).grainID) != NULL)
-						write = 1.0;
-					datei << ::std::fixed << write << "\t";
-				}
-				datei << endl;
-			}
-		}
-		datei.close();
-	}
-	/*if (!m_grainBoundary.getRawBoundary().empty()) {
-	 for (unsigned int i = 0; i < m_grainBoundary.getRawBoundary().size(); i++) {
-	 double px = m_grainBoundary.getRawBoundary()[i].x;
-	 double py = m_grainBoundary.getRawBoundary()[i].y;
-	 cout << py << "   " << px << endl;
-	 }
-	 }*/
-}
 
 double LSbox::computeMisorientation(LSbox* grain_2) {
 	double result = 0.0;
@@ -1842,51 +1561,34 @@ double LSbox::computeMisorientation(LSbox* grain_2) {
 	else
 		return 1 * PI / 180.0;
 }
-double LSbox::computeMisorientation(unsigned int grainID) {
+
+
+double LSbox::computeMisorientation(unsigned int grainID)
+{
 	return computeMisorientation(m_grainHandler->getGrainByID(grainID));
 }
 
-double LSbox::GBEnergyReadShockley(double theta, LSbox* candidate) {
-	double gamma_hagb = 1.0; //relative value
-	double theta_ref = 15.0 * PI / 180.0;
-	double gamma;
+
+double LSbox::GbEnergyModel(double theta, LSbox* candidate)
+{
+	double gamma_hagb = 1.; //relative value
+	double theta_ref = DEG2RAD(15.);
 	if (Settings::ResearchMode == 0) {
-		if (Settings::IsIsotropicNetwork) {
-			return 1.0;
-		} else {
-			if (theta > theta_ref)
-				gamma = gamma_hagb;
-			else {
-				if (theta < 1.0 * PI / 180.0)
-					theta = 1.0 * PI / 180.0;
-				gamma = gamma_hagb * (theta / theta_ref)
-						* (1.0 - log(theta / theta_ref));
-				if (gamma != gamma) {
-					cout << getID() << "nan in Energy computation " << endl;
-					gamma = 0.01;
-				}
+		if (Settings::IsIsotropicNetwork == false) {
+			if (theta > theta_ref) {
+				return gamma_hagb;
 			}
-			return gamma;
+			if (theta < DEG2RAD(1.)) {
+				theta = DEG2RAD(1.);
+			}
+			return gamma_hagb * (theta / theta_ref) * (1. - log(theta / theta_ref)); //TODO::catch NaN
 		}
 	}
-	if (Settings::ResearchMode == 1) {
-		if (Settings::MicrostructureGenMode == E_GENERATE_TESTCASE) {
-			gamma = getWeigthFromHandler(getID(), candidate->getID());
-			return gamma;
-		} else
-			return 1.0;
-	} else if (Settings::ResearchMode == 2) {
-		theta_ref = 42 * PI / 180;
-		if (theta <= theta_ref)
-			gamma = 0.3;
-		else
-			gamma = gamma_hagb;
-		return gamma;
-	} else
-		return 1.0;
+	return gamma_hagb;
 }
 
-double LSbox::GBmobilityModel(double thetaMis, LSbox* candidate) {
+
+double LSbox::GbMobilityModel(double thetaMis, LSbox* candidate) {
 	if (Settings::UseMobilityModel == 0 || Settings::IsIsotropicNetwork
 			|| Settings::ResearchMode != 0) {
 		return 1.0;
@@ -1963,289 +1665,11 @@ void LSbox::clearContourGrainArea() {
 		}
 }
 
-void LSbox::calculateCentroid(SPoint& centroid,
-		vector<GrainJunction> junctions) {
 
-	int nVertices = junctions.size();
-	SPoint cent;
-	cent.x = 0.0;
-	cent.y = 0.0;
-	double areaSigned = 0.0;
-	double x0 = 0.0; // First vertex' x value
-	double y0 = 0.0; // Second vertex' Y value
-	double x1 = 0.0; // Next vertex' x value
-	double y1 = 0.0; // Next vertex' y value
-	double loopArea = 0.0; // Intermediate area
-
-	int i, j = 0;
-	for (i = 0, j = nVertices - 1; i < nVertices; j = i++) {
-
-		x0 = junctions[i].coordinates.x;
-		y0 = junctions[i].coordinates.y;
-		x1 = junctions[j].coordinates.x;
-		y1 = junctions[j].coordinates.y;
-		loopArea = x0 * y1 - x1 * y0;
-		areaSigned += loopArea;
-		cent.x += (x0 + x1) * loopArea;
-		cent.y += (y0 + y1) * loopArea;
-	}
-
-	areaSigned *= 0.5;
-	cent.x /= (6.0 * areaSigned);
-	cent.y /= (6.0 * areaSigned);
-
-	centroid = cent;
-}
-void LSbox::markAsInvalidMotion() {
-	plot_box(true, 2, "invalidDistanceBuffer", true);
-	plot_box(true, 1, "invalidDistanceBuffer", true);
-	plot_box(true, 3, "IDlocal", true);
-	m_isMotionRegular = false;
-	return;
-}
 double LSbox::getWeigthFromHandler(int i, int j) {
 	return m_grainHandler->weightsMatrix[i][j];
 }
 
-void LSbox::measureAngles(vector<double>& turningAngles,
-		vector<GrainJunction> junctions) {
-
-	m_regressionPoints.clear();
-	m_triangleCetroid.clear();
-
-	int nVertices = junctions.size();
-	int totalNumberPoints = m_grainBoundary.getBoundarySegmentCount() - 1;
-	int numberOfRegressionPoints = 4;
-
-	//! left and right corresponds to counter-clockwise and clockwise
-	vector<SPoint> rightPoints;
-	vector<SPoint> leftPoints;
-	rightPoints.reserve(numberOfRegressionPoints);
-	leftPoints.reserve(numberOfRegressionPoints);
-
-	double slopeRight = 0.0;
-	double slopeLeft = 0.0;
-
-	SPoint firstPointLeft;
-	SPoint firstPointRight;
-	SPoint lastPointRight;
-	SPoint lastPointLeft;
-
-	vector<SPoint>& contourGrain = m_grainBoundary.getRawBoundary();
-
-	for (int i = 0; i < nVertices; i++) {
-
-		int nearestPointtoTJId = junctions[i].contourSegment;
-
-		//! Find the neighboring points of the triple junction
-		for (int j = 0; j < numberOfRegressionPoints; j++) {
-
-			leftPoints.push_back(
-					contourGrain[PERIODIC(nearestPointtoTJId + j + 1,
-							totalNumberPoints)]);
-			rightPoints.push_back(
-					contourGrain[PERIODIC(nearestPointtoTJId - j,
-							totalNumberPoints)]);
-
-			if (j == 0) {
-				firstPointLeft = contourGrain[PERIODIC(
-						nearestPointtoTJId + j + 1, totalNumberPoints)];
-				firstPointRight = contourGrain[PERIODIC(nearestPointtoTJId - j,
-						totalNumberPoints)];
-			}
-
-			if (j + 1 == numberOfRegressionPoints) {
-				lastPointLeft = contourGrain[PERIODIC(
-						nearestPointtoTJId + j + 1, totalNumberPoints)];
-				lastPointRight = contourGrain[PERIODIC(nearestPointtoTJId - j,
-						totalNumberPoints)];
-			}
-
-			//			if (id == 1) {
-			//
-			//				cout << "Left points: ("<< contourGrain[PERIODIC(nearestPointtoTJId + j,totalNumberPoints)].x <<", "
-			//												<< contourGrain[PERIODIC(nearestPointtoTJId + j,totalNumberPoints)].y << ")"<< endl;
-			//				cout << "Right points: ("<< contourGrain[PERIODIC(nearestPointtoTJId - j - 1,totalNumberPoints)].x <<", "
-			//												<< contourGrain[PERIODIC(nearestPointtoTJId - j - 1,totalNumberPoints)].y << ")"<< endl;
-			//			}
-
-		}
-
-		//! Construct two regression lines and apply their slopes to determine their intersection angle
-		vector<double> linRegLeft = linearRegression(leftPoints);
-		vector<double> linRegRight = linearRegression(rightPoints);
-
-		slopeLeft = linRegLeft[0];
-		slopeRight = linRegRight[0];
-
-		//! Clean up
-		leftPoints.clear();
-		rightPoints.clear();
-
-		//! save Regression points
-		if (Settings::ResearchMode
-				&& m_grainHandler->project == E_TRIPLE_JUNCTION_DRAG_SINGLE
-				&& m_grainHandler->calcRegression && m_ID == 1) {
-
-			SPoint thirdPointLeft;
-			SPoint thirdPointRight;
-			if (firstPointLeft.x < lastPointLeft.x) {
-
-				thirdPointLeft.x = firstPointLeft.x
-						- fabs(firstPointLeft.x - lastPointLeft.x);
-				thirdPointLeft.y = slopeLeft * thirdPointLeft.x + linRegLeft[1];
-
-				thirdPointRight.x = firstPointRight.x
-						+ fabs(firstPointRight.x - lastPointRight.x);
-				thirdPointRight.y = slopeRight * thirdPointRight.x
-						+ linRegRight[1];
-			} else {
-
-				thirdPointLeft.x = firstPointLeft.x
-						+ fabs(firstPointLeft.x - lastPointLeft.x);
-				thirdPointLeft.y = slopeLeft * thirdPointLeft.x + linRegLeft[1];
-
-				thirdPointRight.x = firstPointRight.x
-						- fabs(firstPointRight.x - lastPointRight.x);
-				thirdPointRight.y = slopeRight * thirdPointRight.x
-						+ linRegRight[1];
-			}
-
-			firstPointLeft.y = slopeLeft * firstPointLeft.x + linRegLeft[1];
-			lastPointLeft.y = slopeLeft * lastPointLeft.x + linRegLeft[1];
-			firstPointRight.y = slopeRight * firstPointRight.x + linRegRight[1];
-			lastPointRight.y = slopeRight * lastPointRight.x + linRegRight[1];
-
-			m_regressionPoints.push_back(firstPointLeft);
-			m_regressionPoints.push_back(lastPointLeft);
-			m_regressionPoints.push_back(thirdPointLeft);
-
-			m_regressionPoints.push_back(firstPointRight);
-			m_regressionPoints.push_back(lastPointRight);
-			m_regressionPoints.push_back(thirdPointRight);
-
-			vector<SPoint> tri1 { lastPointRight, firstPointRight,
-					thirdPointLeft };
-			vector<SPoint> tri2 { lastPointLeft, firstPointLeft, thirdPointRight };
-			calculateTriangleCentroid(m_triangleCetroid, tri1);
-			calculateTriangleCentroid(m_triangleCetroid, tri2);
-
-		}
-		//!if (id == 1) {
-		//!	cout << "slopeLeft: " << slopeLeft << " and slopeRight: " << slopeRight;
-		//!}
-
-		//! Adds the angle of the turning angle. At first view this holds only for grains with a face
-		//! count of four or of higher number. The formula in use calculates the acute angle of two intersecting
-		//! lines.
-		turningAngles.push_back(
-				atan(
-						fabs(
-								(slopeLeft - slopeRight)
-										/ (1 + slopeLeft * slopeRight))));
-	}
-	//	for(int i = 0; i < triangleCentroid.size(); i++)
-	//		cout << "x: " << triangleCentroid[i].x << "and y: " << triangleCentroid[i].y << endl;
-}
-
-vector<double> LSbox::linearRegression(vector<SPoint>& points2D) {
-
-	//! the resulting vector contains two elements. The first element is
-	//! the slope of the regression line and the second element is the
-	//! y-intercept of this line.
-
-	vector<double> linearRegression;
-	linearRegression.reserve(2);
-
-	int numberPoints = points2D.size();
-
-	double meanX = 0.0;
-	double meanY = 0.0;
-
-	vector<SPoint>::iterator iter;
-	for (iter = points2D.begin(); iter != points2D.end(); iter++) {
-
-		meanX += (*iter).x;
-		meanY += (*iter).y;
-	}
-
-	meanX /= double(numberPoints);
-	meanY /= double(numberPoints);
-
-	double covarianceXY = 0.0;
-	double varianceX = 0.0;
-	for (int i = 0; i < numberPoints; i++) {
-		covarianceXY += (points2D[i].x - meanX) * (points2D[i].y - meanY);
-		varianceX += (points2D[i].x - meanX) * (points2D[i].x - meanX);
-	}
-
-	linearRegression.push_back(covarianceXY / varianceX);
-	linearRegression.push_back(meanY - ((covarianceXY / varianceX) * meanX));
-
-	return linearRegression;
-}
-
-void LSbox::calculateTriangleCentroid(vector<SPoint>& triangleCentroid,
-		vector<SPoint> triangle) {
-
-	int nVertices = triangle.size();
-	SPoint cent;
-	cent.x = 0.0;
-	cent.y = 0.0;
-	double areaSigned = 0.0;
-	double x0 = 0.0; // First vertex' x value
-	double y0 = 0.0; // Second vertex' Y value
-	double x1 = 0.0; // Next vertex' x value
-	double y1 = 0.0; // Next vertex' y value
-	double loopArea = 0.0; // Intermediate area
-
-	int i, j = 0;
-	for (i = 0, j = nVertices - 1; i < nVertices; j = i++) {
-
-		x0 = triangle[i].x;
-		y0 = triangle[i].y;
-		x1 = triangle[j].x;
-		y1 = triangle[j].y;
-		//cout << "Junction type of i is " << junctions[i].junction_type << " Junction type of j is " << junctions[j].junction_type <<endl;
-		loopArea = x0 * y1 - x1 * y0;
-		areaSigned += loopArea;
-		cent.x += (x0 + x1) * loopArea;
-		cent.y += (y0 + y1) * loopArea;
-	}
-
-	areaSigned *= 0.5;
-	cent.x /= (6.0 * areaSigned);
-	cent.y /= (6.0 * areaSigned);
-
-	triangleCentroid.push_back(cent);
-}
-
-void LSbox::plot_grain_junctions(int timestep, ofstream* dest_file,
-		bool absCoordinates) {
-	if (grainExists() == false)
-		return;
-	ofstream* output_file = dest_file;
-	if (dest_file == NULL) {
-		output_file = new ofstream();
-		stringstream filename;
-		filename << "Junctions_" << m_ID;
-		filename << "_Timestep_" << timestep;
-		filename << ".gnu";
-		output_file->open(filename.str());
-	}
-	ofstream& file = *output_file;
-
-	vector<GrainJunction>& junctions = m_grainBoundary.getRawJunctions();
-	for (unsigned int i = 0; i < junctions.size(); i++) {
-		file << junctions[i].coordinates.x << "\t" << junctions[i].coordinates.y
-				<< endl;
-	}
-
-	if (dest_file == NULL) {
-		file.close();
-		delete output_file;
-	}
-}
 
 LSbox* LSbox::getNeighbourAt(int i, int j) {
 	if (i < 0 || i >= m_IDLocal.getMaxY() || j < 0 || j >= m_IDLocal.getMaxX())
@@ -2583,23 +2007,6 @@ double LSbox::MisoriToTwinBoundary(LSbox* candidate) {
 			candidate->m_orientationQuat);
 	double angle = newQuat.misorientationCubicQxQ(m_grainHandler->TwinBoundary);
 	return angle;
-}
-
-TextureData LSbox::collectTextureData() {
-	double BulkEnergy;
-	if (!Settings::UseMagneticField)
-		BulkEnergy = m_StoredElasticEnergy;
-	else
-		BulkEnergy = m_magneticEnergy;
-	double x = (getMaxX() - getMinX()) / 2 + getMinX();
-	x *= m_grainHandler->get_h();
-	double y = (getMaxY() - getMinY()) / 2 + getMinY();
-	y *= m_grainHandler->get_h();
-
-	TextureData newdata(m_ID, getDirectNeighbourCount(),
-			(bool) intersectsBoundaryGrain(), m_volume, m_perimeter, m_energy,
-			BulkEnergy, m_orientationQuat, x, y);
-	return newdata;
 }
 
 

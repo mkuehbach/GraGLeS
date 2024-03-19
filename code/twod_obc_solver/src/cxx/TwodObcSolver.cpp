@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 	init_results_file();
 
 	grainhdl my_sim = grainhdl();
-	my_sim.setResearchAdjustments(Settings::ResearchProject);
+	my_sim.setResearchAdjustments();
 	
 	timeval time_start, time_end;
 	gettimeofday(&time_start, NULL);
@@ -152,9 +152,6 @@ int main(int argc, char *argv[])
 			+ (time_end.tv_usec - time_start.tv_usec) / 1000000.0;
 	cout << "elapsed secs for Initializing network (Read):" << elapsed_secs << endl << endl;
 
-	if (Settings::MicrostructureGenMode == E_GENERATE_WITH_VORONOY )
-		my_sim.save_Full_Microstructure_for_Restart();
-
 	gettimeofday(&time_start, NULL);
 	my_sim.run_sim();
 
@@ -162,9 +159,5 @@ int main(int argc, char *argv[])
 	elapsed_secs = (time_end.tv_sec - time_start.tv_sec) + (time_end.tv_usec
 			- time_start.tv_usec) / 1000000.0;
 	cout << "elapsed secs for main loop:" << elapsed_secs << endl;
-
-	my_sim.save_NrGrainsStats();
-
-	my_sim.clear_mem();
 	return 0;
 }

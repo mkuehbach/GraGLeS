@@ -25,14 +25,9 @@
  * \enum E_MICROSTRUCTURE_GEN_MODE
  * \brief Enumeration used to control how the microstructure in the simulation will be
  * generated.
- */
+ */	
 enum E_MICROSTRUCTURE_GEN_MODE {
-	E_READ_FROM_FILE,
-	E_GENERATE_WITH_VORONOY,
-	E_READ_VERTEX,
-	E_GENERATE_TESTCASE,
-	E_READ_VOXELIZED_MICROSTRUCTURE,
-	E_INVALID_VAL
+	E_READ_VOXELIZED_MICROSTRUCTURE
 };
 /*!
  * \enum E_CONVOLUTION_MODE
@@ -51,10 +46,7 @@ enum E_LATTICE_TYPE {
  * \brief Enumeration used to control the research project execution.
  */
 enum E_RESEARCH_PROJECT {
-	E_NO_PROJECT,
-	E_TRIPLE_JUNCTION_DRAG_SINGLE,
-	E_TRIPLE_JUNCTION_DRAG_NETWORK,
-	E_DEFAULT
+	E_NO_PROJECT
 };
 
 enum E_GRAIN_SCHEDULER {

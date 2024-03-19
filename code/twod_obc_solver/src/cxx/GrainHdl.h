@@ -83,17 +83,11 @@ public:
 	bool calcRegression;
 	E_RESEARCH_PROJECT project;
 	bool constantE;
-	vector<double> time;
-	vector<double> totalenergy;
-	vector<int> nr_grains;
-	vector<double> MODF;
 
 	//! A 2D vector which stores weights.
 	vector<vector<double> > weightsMatrix;
 
 	double ds;
-	double *ST;
-	double *part_pos;
 	double delta;
 	double *bunge;
 	double deviation;
@@ -112,38 +106,22 @@ public:
 	~grainhdl();
 
 	void setResearchAdjustments();
-	void setResearchAdjustments(E_RESEARCH_PROJECT project);
 	void setSimulationParameter();
-	void read_HeaderCPG();
 	void read_header_from_nexusfile();
-
-	void VOROMicrostructure();
-	void readMicrostructureFromVertex();
-	void readMicrostructure();
-	void save_Full_Microstructure_for_Restart();
-	void read_voxelized_microstructure();
 	void read_microstructure_from_nexusfile();
-
-	void createParamsForSim(const char* param_filename,
-			const char* vertex_dum_filename = NULL);
-
 	void find_neighbors();
 
 	void distanceInitialisation();
 	void convolution(double& plan_overhead);
 	void createConvolutionPlans();
 	void destroyConvolutionPlans();
-	void save_conv_step();
 	void comparison_box();
-	void tweakIDLocal();
 
 	void updateSecondOrderNeighbors();
 	void level_set();
 	void redistancing();
 
 	virtual void run_sim();
-	void save_NrGrainsStats();
-	void clear_mem();
 
 	vector<unsigned int> get_nexus_grain_identifier();
 	vector<double> get_nexus_grain_size();
@@ -158,30 +136,12 @@ public:
 	void get_nexus_grain_boundary_info(vector<double> & ifo );
 	bool save_NeXus();
 
-	void save_Texture();
-	void save_TextureFaces_Binary();
-	void save_RealtimeLog();
-	void save_id();
-	void save_regLine();
-	void save_Memory_Print();
-	void plot_contour();
 	void gridCoarsement();
-
-	void saveAllContourLines();
-	void save_NetworkPlot();
-	void save_GBCurvApprx();
-	void save_GBContourPlot();
-	void save_GBJunctionPlot();
 	void switchDistancebuffer();
-
-	void saveSpecialContourEnergies(int id);
-	void removeGrain(int id);
-	// 	wrapper functions:
 
 	void set_h(double hn);
 	void set_realDomainSize(int realDomainSizen);
 	//! Used if points are set manually
-	int read_ScenarioPoints();
 	void get_biggestGrainVol();
 	void find_correctTimestepSize();
 	inline LSbox* getGrainByID(unsigned int ID) {

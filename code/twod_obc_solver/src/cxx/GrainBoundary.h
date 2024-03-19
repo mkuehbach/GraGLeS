@@ -32,7 +32,6 @@ using namespace std;
 
 class LSbox;
 struct Face;
-struct TextureData;
 struct GBContourPoint;
 
 /*!
@@ -51,9 +50,9 @@ public:
 	ExplicitGrainBoundary(LSbox* owner);
 	~ExplicitGrainBoundary();
 
-	bool extractBoundaryAndJunctions(DimensionalBufferReal& distanceBuffer, DimensionalBufferIDLocal& idLocal, int timestep=-1, bool verbose = false);
+	bool extractBoundaryAndJunctions(DimensionalBufferReal& distanceBuffer, DimensionalBufferIDLocal& idLocal, int timestep=-1);
 	void buildBoundarySectors(DimensionalBufferIDLocal& idLocal, int timestep = -1, bool verbose = false);
-	void buildDirectNeighbours(DimensionalBufferReal& distanceBuffer, DimensionalBufferIDLocal& idLocal,  int timestep = -1, bool verbose = false);
+	void buildDirectNeighbours(DimensionalBufferReal& distanceBuffer, DimensionalBufferIDLocal& idLocal,  int timestep = -1);
 	double computeVolume(int timestep = -1, bool verbose = false);
 	double computeEnergy(int timestep = -1, bool verbose = false);
 	double computePerimeter(int timestep = -1, bool verbose = false);

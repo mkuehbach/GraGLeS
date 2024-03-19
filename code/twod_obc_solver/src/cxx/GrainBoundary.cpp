@@ -27,15 +27,19 @@
 #define PERIODIC(x) (((x) + (m_grainBoundary.size()-1)) % (m_grainBoundary.size() -1 ))
 
 ExplicitGrainBoundary::ExplicitGrainBoundary(LSbox* owner) :
-		m_owningGrain(owner) {
+		m_owningGrain(owner)
+{
 }
 
-ExplicitGrainBoundary::~ExplicitGrainBoundary() {
+
+ExplicitGrainBoundary::~ExplicitGrainBoundary()
+{
 }
 
-bool ExplicitGrainBoundary::extractBoundaryAndJunctions(
-		DimensionalBufferReal& distanceBuffer,
-		DimensionalBufferIDLocal& idLocal, int timestep, bool verbose) {
+
+bool ExplicitGrainBoundary::extractBoundaryAndJunctions(DimensionalBufferReal& distanceBuffer,
+		DimensionalBufferIDLocal& idLocal, int timestep)
+{
 	m_grainBoundary.clear();
 	m_grainJunctions.clear();
 
@@ -45,8 +49,9 @@ bool ExplicitGrainBoundary::extractBoundaryAndJunctions(
 			m_owningGrain);
 	bool has_contour = marchingSquares.generateContour(m_grainBoundary,
 			m_grainJunctions);
-	if (false == has_contour)
+	if (false == has_contour) {
 		return false;
+	}
 
 	//Project all found grain junctions to the grain boundary
 	double lambda;
@@ -59,32 +64,13 @@ bool ExplicitGrainBoundary::extractBoundaryAndJunctions(
 		m_grainJunctions[i].contourSegment = segment;
 		m_grainJunctions[i].lambda = lambda;
 	}
-
-	if (verbose) {
-		stringstream filename;
-		filename << "ContourLine_" << m_owningGrain->getID() << "_Timestep_"
-				<< timestep << ".gnu";
-		ofstream file;
-		file.open(filename.str());
-		for (unsigned int i = 0; i < m_grainBoundary.size(); i++)
-			file << m_grainBoundary[i].x << " " << m_grainBoundary[i].y << "\n";
-		file.close();
-
-		filename.str("");
-		filename << "Junctions_" << m_owningGrain->getID() << "_Timestep_"
-				<< timestep << ".gnu";
-		file.open(filename.str());
-		for (unsigned int i = 0; i < m_grainJunctions.size(); i++)
-			file << m_grainJunctions[i].coordinates.x << " "
-					<< m_grainJunctions[i].coordinates.y << endl;
-		file.close();
-	}
 	return true;
 }
 
-void ExplicitGrainBoundary::buildDirectNeighbours(
-		DimensionalBufferReal& distanceBuffer,
-		DimensionalBufferIDLocal& idLocal, int timestep, bool verbose) {
+
+void ExplicitGrainBoundary::buildDirectNeighbours(DimensionalBufferReal& distanceBuffer,
+		DimensionalBufferIDLocal& idLocal, int timestep)
+{
 	double line_length;
 	double h = m_owningGrain->get_h();
 	double thetaMis = 0;
@@ -114,91 +100,50 @@ void ExplicitGrainBoundary::buildDirectNeighbours(
 			candidate = m_owningGrain->getNeighbourAt(pyGrid, pxGrid);
 			if (candidate == NULL)
 				throw std::out_of_range("candidate neighbour is null");
-		} catch (const std::out_of_range& oor) {
-			m_owningGrain->markAsInvalidMotion();
+		}
+		catch (const std::out_of_range& oor) {
+			//plot_box(true, 2, "invalidDistanceBuffer", true);
+			//plot_box(true, 1, "invalidDistanceBuffer", true);
+			//plot_box(true, 3, "IDlocal", true);
+			cerr << "m_isMotionRegular = false!" << "\n";
 			return;
 		}
-		//		if (Settings::IsIsotropicNetwork == 0 && (Settings::ResearchMode != 1)) {
-		//			thetaMis = m_owningGrain->computeMisorientation(candidate);
-		//			m_grainBoundary[i].mob = m_owningGrain->GBmobilityModel(thetaMis,
-		//					candidate);
-		//			if (thetaMis <= theta_ref) {
-		//				if (thetaMis < 1 * PI / 180)
-		//					thetaMis = 1 * PI / 180;
-		//			}
-		//			m_grainBoundary[i].energy = m_owningGrain->GBEnergyReadShockley(
-		//					thetaMis);
-		//			if (Settings::IdentifyTwins)
-		//				if (m_owningGrain->MisoriToTwinBoundary(candidate) < 8.66025
-		//						* PI / 180.0) {
-		//					//if the GB is TWIN Boundary set the Energy to the lowest one allowed : theta_mis = 1 degree
-		//					m_grainBoundary[i].energy
-		//							= m_owningGrain->GBEnergyReadShockley(1 * PI / 180);
-		//				}
-		//			//check for nan:
-		//			if (m_grainBoundary[i].energy != m_grainBoundary[i].energy) {
-		//				cout << m_owningGrain->getID() << "nan in Energy computation "
-		//						<< endl;
-		//				m_grainBoundary[i].energy = 0.01;
-		//			}
-		//
-		//		} else if (Settings::ResearchMode == 1) {
-		//			if (Settings::MicrostructureGenMode == E_GENERATE_TESTCASE) {
-		//				m_grainBoundary[i].energy
-		//						= m_owningGrain->getWeigthFromHandler(
-		//								m_owningGrain->getID(), candidate->getID());
-		//				m_grainBoundary[i].mob = 1.0;
-		//			}
-		//
-		//			else if (Settings::ResearchProject != 0) {
-		//				m_grainBoundary[i].energy = 1.0;
-		//				m_grainBoundary[i].mob = 1.0;
-		//			} else {
-		//				thetaMis = m_owningGrain->computeMisorientation(candidate);
-		//				theta_ref = 42 * PI / 180;
-		//				if (thetaMis <= theta_ref)
-		//					m_grainBoundary[i].energy = 0.3;
-		//				else
-		//					m_grainBoundary[i].energy = gamma_hagb;
-		//				m_grainBoundary[i].mob = 1.0;
-		//			}
-		//		} else if (Settings::IsIsotropicNetwork) {
-		//			m_grainBoundary[i].energy = 1.0;
-		//			m_grainBoundary[i].mob = 1.0;
-		//		}
+
 		thetaMis = m_owningGrain->computeMisorientation(candidate);
 		double StoredElasticEnergy = candidate->get_StoredElasticEnergy();
 		double magneticEnergy = candidate->get_magneticEnergy();
-		m_grainBoundary[i].mob = m_owningGrain->GBmobilityModel(thetaMis,
-				candidate);
-		m_grainBoundary[i].energy = m_owningGrain->GBEnergyReadShockley(
-				thetaMis, candidate);
+		m_grainBoundary[i].mob = m_owningGrain->GbMobilityModel(thetaMis, candidate);
+		m_grainBoundary[i].energy = m_owningGrain->GbEnergyModel(thetaMis, candidate);
 		line_length = (m_grainBoundary[i] - m_grainBoundary[i + 1]).len();
 		line_length *= h;
 
 		//  save length in GrainCharaczeristics
 
-		for (it = m_directNeighbourhood.begin();
-				it != m_directNeighbourhood.end(); it++) {
+		for (it = m_directNeighbourhood.begin(); it != m_directNeighbourhood.end(); it++) {
 			if (candidate == (*it).directNeighbour)
 				break;
 		}
 		if (it == m_directNeighbourhood.end()) {
-			m_directNeighbourhood.push_back(
-					characteristics(candidate, 0, m_grainBoundary[i].energy,
-							thetaMis, m_grainBoundary[i].mob,
-							StoredElasticEnergy, magneticEnergy));
+			m_directNeighbourhood.push_back(characteristics(
+				candidate,
+				0,
+				m_grainBoundary[i].energy,
+				thetaMis,
+				m_grainBoundary[i].mob,
+				StoredElasticEnergy,
+				magneticEnergy));
 			it = m_directNeighbourhood.end();
 			it--;
 		}
 		it->length += line_length;
 	}
-	m_grainBoundary[m_grainBoundary.size() - 1].energy =
-			m_grainBoundary[0].energy;
+	m_grainBoundary[m_grainBoundary.size() - 1].energy = m_grainBoundary[0].energy;
 	m_grainBoundary[m_grainBoundary.size() - 1].mob = m_grainBoundary[0].mob;
 }
 
-double ExplicitGrainBoundary::computeVolume(int timestep, bool verbose) {
+
+double ExplicitGrainBoundary::computeVolume(int timestep, bool verbose)
+{
 	double current_volume = 0;
 	double h = m_owningGrain->get_h();
 
@@ -212,7 +157,9 @@ double ExplicitGrainBoundary::computeVolume(int timestep, bool verbose) {
 	return current_volume;
 }
 
-double ExplicitGrainBoundary::computeEnergy(int timestep, bool verbose) {
+
+double ExplicitGrainBoundary::computeEnergy(int timestep, bool verbose)
+{
 	double total_energy = 0;
 	for (unsigned int i = 0; i < m_grainBoundary.size() - 1; i++) {
 		total_energy += (m_grainBoundary[i] - m_grainBoundary[i + 1]).len()
@@ -221,7 +168,9 @@ double ExplicitGrainBoundary::computeEnergy(int timestep, bool verbose) {
 	return total_energy;
 }
 
-double ExplicitGrainBoundary::computePerimeter(int timestep, bool verbose) {
+
+double ExplicitGrainBoundary::computePerimeter(int timestep, bool verbose)
+{
 	double perimeter = 0;
 	for (unsigned int i = 0; i < m_grainBoundary.size() - 1; i++) {
 		perimeter += (m_grainBoundary[i] - m_grainBoundary[i + 1]).len()
@@ -230,8 +179,9 @@ double ExplicitGrainBoundary::computePerimeter(int timestep, bool verbose) {
 	return perimeter;
 }
 
-void ExplicitGrainBoundary::buildBoundarySectors(
-		DimensionalBufferIDLocal& idLocal, int timestep, bool verbose) {
+
+void ExplicitGrainBoundary::buildBoundarySectors(DimensionalBufferIDLocal& idLocal, int timestep, bool verbose)
+{
 	m_constantSectors.clear();
 	m_interpolatingSectors.clear();
 
@@ -341,8 +291,9 @@ void ExplicitGrainBoundary::buildBoundarySectors(
 	}
 }
 
-double ExplicitGrainBoundary::getWeight(int i, int j,
-		DimensionalBufferIDLocal& idLocal, int timestep, bool verbose) {
+
+double ExplicitGrainBoundary::getWeight(int i, int j, DimensionalBufferIDLocal& idLocal, int timestep, bool verbose)
+{
 	double lambda;
 	int segment = projectToGrainBondary(SPoint(j, i, 0, 0), lambda);
 
@@ -362,8 +313,9 @@ double ExplicitGrainBoundary::getWeight(int i, int j,
 	return m_owningGrain->getGBEnergyTimesGBMobility(i, j);
 }
 
-int ExplicitGrainBoundary::projectToGrainBondary(SPoint point,
-		double& out_lambda) const {
+
+int ExplicitGrainBoundary::projectToGrainBondary(SPoint point, double& out_lambda) const
+{
 	double minDist = 1000000.0;
 	int minimal_segment = 0;
 	// first search on vertices:
@@ -421,32 +373,13 @@ int ExplicitGrainBoundary::projectToGrainBondary(SPoint point,
 	if (out_lambda < 0)
 		out_lambda = 0;
 
-	// original algorithm:
-	//	for (unsigned int k = 1, l = 0; k < m_grainBoundary.size(); k++, l++) {
-	//		SPoint u = m_grainBoundary[k] - m_grainBoundary[l];
-	//		double lambda = (point - m_grainBoundary[l]).dot(u);
-	//		lambda /= u.dot(u);
-	//		if (lambda < 0)
-	//			dist = (point - m_grainBoundary[l]).lenSqr();
-	//		else if (lambda > 1)
-	//			dist = (m_grainBoundary[k] - point).lenSqr();
-	//		else
-	//			dist = (point - (m_grainBoundary[l] + u * lambda)).lenSqr();
-	//
-	//		if (dist < minDist) {
-	//			minimal_segment = l;
-	//			minDist = dist;
-	//			out_lambda = lambda;
-	//			if (out_lambda > 1)
-	//				out_lambda = 1;
-	//			if (out_lambda < 0)
-	//				out_lambda = 0;
-	//		}
-	//	}
+	// original algorithm in git repo
 	return minimal_segment;
 }
 
-double ExplicitGrainBoundary::DistanceToGrainBondary(SPoint point) const {
+
+double ExplicitGrainBoundary::DistanceToGrainBondary(SPoint point) const
+{
 	double minDist = 1000000.0;
 	int minimal_segment = 0;
 	// first search on vertices:
@@ -496,32 +429,15 @@ double ExplicitGrainBoundary::DistanceToGrainBondary(SPoint point) const {
 		minimal_segment = previous;
 		minDist = dist;
 	}
-	// original algorithm:
-	//	for (unsigned int k = 1, l = 0; k < m_grainBoundary.size(); k++, l++) {
-	//		SPoint u = m_grainBoundary[k] - m_grainBoundary[l];
-	//		double lambda = (point - m_grainBoundary[l]).dot(u);
-	//		lambda /= u.dot(u);
-	//		if (lambda < 0)
-	//			dist = (point - m_grainBoundary[l]).lenSqr();
-	//		else if (lambda > 1)
-	//			dist = (m_grainBoundary[k] - point).lenSqr();
-	//		else
-	//			dist = (point - (m_grainBoundary[l] + u * lambda)).lenSqr();
-	//
-	//		if (dist < minDist) {
-	//			minimal_segment = l;
-	//			minDist = dist;
-	//			out_lambda = lambda;
-	//			if (out_lambda > 1)
-	//				out_lambda = 1;
-	//			if (out_lambda < 0)
-	//				out_lambda = 0;
-	//		}
-	//	}
+
+	// original algorithm in git repo
+
 	return minDist;
 }
 
-void ExplicitGrainBoundary::setPointsOnBoundary(ContourSector& sector) {
+
+void ExplicitGrainBoundary::setPointsOnBoundary(ContourSector& sector)
+{
 	double dist = 0;
 	//Construct left side
 	int l_segment = sector.getJunctions()[0]->contourSegment;
@@ -558,8 +474,9 @@ void ExplicitGrainBoundary::setPointsOnBoundary(ContourSector& sector) {
 	sector.setLeftContourPoint(l_segment);
 }
 
-characteristics& ExplicitGrainBoundary::getDirectNeighbourCaracteristic(
-		LSbox* neighbour) {
+
+characteristics& ExplicitGrainBoundary::getDirectNeighbourCaracteristic(LSbox* neighbour)
+{
 	static characteristics defaultCharacteristic(NULL, 0, 1.0, 1.0);
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		if (m_directNeighbourhood[i].directNeighbour == neighbour) {
@@ -570,12 +487,16 @@ characteristics& ExplicitGrainBoundary::getDirectNeighbourCaracteristic(
 	return defaultCharacteristic;
 }
 
-map<int, double>& ExplicitGrainBoundary::getlocalMODF() {
+
+map<int, double>& ExplicitGrainBoundary::getlocalMODF()
+{
 	calculateDiscreteEnergyDistribution();
 	return m_localMODF;
 }
 
-void ExplicitGrainBoundary::calculateDiscreteEnergyDistribution() {
+
+void ExplicitGrainBoundary::calculateDiscreteEnergyDistribution()
+{
 	m_localMODF.clear();
 	double dh;
 	if (Settings::LatticeType == 0)
@@ -597,14 +518,19 @@ void ExplicitGrainBoundary::calculateDiscreteEnergyDistribution() {
 	}
 }
 
-bool ExplicitGrainBoundary::isBoxDirectNeighbour(LSbox* neighbour) {
+
+bool ExplicitGrainBoundary::isBoxDirectNeighbour(LSbox* neighbour)
+{
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		if (m_directNeighbourhood[i].directNeighbour == neighbour)
 			return true;
 	}
 	return false;
 }
-double ExplicitGrainBoundary::get_f_StoredElasticEnergy(int neighbor) {
+
+
+double ExplicitGrainBoundary::get_f_StoredElasticEnergy(int neighbor)
+{
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		if (m_directNeighbourhood[i].directNeighbour->getID() == neighbor)
 			return (m_owningGrain->get_StoredElasticEnergy()
@@ -613,14 +539,20 @@ double ExplicitGrainBoundary::get_f_StoredElasticEnergy(int neighbor) {
 	}
 	return -1;
 }
-double ExplicitGrainBoundary::getMobility(int neighbor) {
+
+
+double ExplicitGrainBoundary::getMobility(int neighbor)
+{
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		if (m_directNeighbourhood[i].directNeighbour->getID() == neighbor)
 			return m_directNeighbourhood[i].mobility;
 	}
 	return -1;
 }
-double ExplicitGrainBoundary::get_f_magneticEnergy(int neighbor) {
+
+
+double ExplicitGrainBoundary::get_f_magneticEnergy(int neighbor)
+{
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		if (m_directNeighbourhood[i].directNeighbour->getID() == neighbor)
 			return ((m_owningGrain->get_magneticEnergy()
@@ -630,8 +562,9 @@ double ExplicitGrainBoundary::get_f_magneticEnergy(int neighbor) {
 	return -1;
 }
 
-SPoint ExplicitGrainBoundary::calculateCentroid() {
 
+SPoint ExplicitGrainBoundary::calculateCentroid(
+{
 	int nVertices = m_grainJunctions.size();
 	SPoint cent;
 	cent.x = 0.0;
@@ -663,7 +596,9 @@ SPoint ExplicitGrainBoundary::calculateCentroid() {
 	return cent;
 }
 
-double ExplicitGrainBoundary::getMeanM() const {
+
+double ExplicitGrainBoundary::getMeanM() const
+{
 	double avg_m = 0;
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		avg_m +=
@@ -671,10 +606,11 @@ double ExplicitGrainBoundary::getMeanM() const {
 	}
 	avg_m /= m_directNeighbourhood.size();
 	return avg_m;
-
 }
 
-double ExplicitGrainBoundary::getMeanA() const {
+
+double ExplicitGrainBoundary::getMeanA() const
+{
 	double avg_a = 0;
 	for (unsigned int i = 0; i < m_grainJunctions.size(); i++) {
 		if (i == m_grainJunctions.size() - 1) {
@@ -690,7 +626,9 @@ double ExplicitGrainBoundary::getMeanA() const {
 	return avg_a;
 }
 
-vector<int> ExplicitGrainBoundary::getDirectNeighbours() {
+
+vector<int> ExplicitGrainBoundary::getDirectNeighbours() 
+{
 	vector<int> neighbors;
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		neighbors.push_back(m_directNeighbourhood[i].directNeighbour->getID());
@@ -698,22 +636,23 @@ vector<int> ExplicitGrainBoundary::getDirectNeighbours() {
 	return neighbors;
 }
 
-vector<double> ExplicitGrainBoundary::getGbSegmentLength() {
+
+vector<double> ExplicitGrainBoundary::getGbSegmentLength()
+{
 	vector<double> SegmentLengths;
 	for (unsigned int i = 0; i < m_directNeighbourhood.size(); i++) {
 		SegmentLengths.push_back(m_directNeighbourhood[i].length);
 	}
 	return SegmentLengths;
 }
-vector<Face>* ExplicitGrainBoundary::getFaces() {
+
+
+vector<Face>* ExplicitGrainBoundary::getFaces()
+{
 	vector<Face>* my_faces = new vector<Face>;
-	for (vector<characteristics>::iterator it = m_directNeighbourhood.begin();
-			it != m_directNeighbourhood.end(); it++) {
+	for (vector<characteristics>::iterator it = m_directNeighbourhood.begin(); it != m_directNeighbourhood.end(); it++) {
 		if (it->directNeighbour->getID() < m_owningGrain->getID())
-			my_faces->push_back(
-					Face(it->length, m_owningGrain->getID(),
-							it->directNeighbour->getID()));
+			my_faces->push_back(Face(it->length, m_owningGrain->getID(), it->directNeighbour->getID()));
 	}
 	return my_faces;
 }
-

@@ -148,7 +148,7 @@ public:
 	double getGBEnergyTimesGBMobility(int i, int j);
 	double getGBEnergyTimesGBMobility(LSbox* neighbour);
 	double getGBEnergy(LSbox* neighbour);
-	double GBmobilityModel(double thetaMis, LSbox* candidate);
+	double GbMobilityModel(double thetaMis, LSbox* candidate);
 	double getWeigthFromHandler(int i, int j);
 	void constructBoundarySectors();
 	double getWeight(int i, int j);
@@ -164,18 +164,6 @@ public:
 	void reizeIDLocalToDistanceBuffer();
 	void recalculateIDLocal();
 	void setIDLocal(int ID);
-
-	//Debug printing functions
-	void plot_box_contour(int timestep = -1, bool plot_energy = false,
-			ofstream* dest_file = NULL, bool absCoordinates = false,
-			int threadID = 0);
-	//void plot_box_contour_bin( int timestep = -1, bool
-	void plot_full_grain(int timestep = -1, bool plot_energy = false,
-			ofstream* dest_file = NULL, bool absCoordinates = false);
-	void plot_box_parameters(ofstream* dest_file = NULL);
-	void plot_grain_junctions(int timestep = -1, ofstream* dest_file = NULL,
-			bool absCoordinates = false);
-	void plot_box(bool distanceplot, int select, string simstep, bool local);
 
 	double computeMisorientation(LSbox* grain_2);
 	double computeMisorientation(unsigned int grainID);
@@ -207,20 +195,11 @@ public:
 	void calculateMagneticEnergy();
 	void approximateCurvature( int gridblowup );
 
-	//todo: Analyze if function is required
-	void measureAngles(vector<double>& turningAngles,
-			vector<GrainJunction> junctions);
-	vector<double> linearRegression(vector<SPoint>& points2D);
-	void calculateTriangleCentroid(vector<SPoint>& triangleCentroid,
-			vector<SPoint> triangle);
-	void calculateCentroid(SPoint& centroid, vector<GrainJunction> junctions);
-
 	double MisoriToTwinBoundary(LSbox* candidate);
-	double GBEnergyReadShockley(double theta, LSbox* candidate);
+	double GbEnergyModel(double theta, LSbox* candidate);
 	double get_h();
 
 	void outputMemoryUsage(ofstream& output);
-	TextureData collectTextureData();
 	size_t get_contour_vertices(vector<double> & vrts);
 	void get_contour_xdmf_topology(const unsigned int vrts_offset, vector<unsigned int> & fcts);
 	void get_contour_xdmf_info(vector<double> & info);

@@ -830,19 +830,17 @@ void grainhdl::run_sim() {
 		gettimeofday(&time, NULL);
 		parallelRest += time.tv_sec + time.tv_usec / 1000000.0 - timer;
 
-		if (Settings::DecoupleGrains != 1) {
-			gettimeofday(&time, NULL);
-			timer = time.tv_sec + time.tv_usec / 1000000.0;
-			comparison_box();
-			gettimeofday(&time, NULL);
-			comparison_time += time.tv_sec + time.tv_usec / 1000000.0 - timer;
+		gettimeofday(&time, NULL);
+		timer = time.tv_sec + time.tv_usec / 1000000.0;
+		comparison_box();
+		gettimeofday(&time, NULL);
+		comparison_time += time.tv_sec + time.tv_usec / 1000000.0 - timer;
 
-			gettimeofday(&time, NULL);
-			timer = time.tv_sec + time.tv_usec / 1000000.0;
-			switchDistancebuffer();
-			gettimeofday(&time, NULL);
-			parallelRest += time.tv_sec + time.tv_usec / 1000000.0 - timer;
-		}
+		gettimeofday(&time, NULL);
+		timer = time.tv_sec + time.tv_usec / 1000000.0;
+		switchDistancebuffer();
+		gettimeofday(&time, NULL);
+		parallelRest += time.tv_sec + time.tv_usec / 1000000.0 - timer;
 
 		gettimeofday(&time, NULL);
 		timer = time.tv_sec + time.tv_usec / 1000000.0;
@@ -1051,15 +1049,15 @@ void grainhdl::gridCoarsement()
 
 void grainhdl::initEnvironment() {
 	//Set up correct Maximum Number of threads
-	if (Settings::ExecuteInParallel) {
-		Settings::MaximumNumberOfThreads = omp_get_max_threads();
-
-	} else {
-		Settings::MaximumNumberOfThreads = 1;
-		omp_set_num_threads(Settings::MaximumNumberOfThreads);
+	if (Settings::MaxNumberOfOpenMpThreads > 0) {
+		Settings::MaxNumberOfOpenMpThreads = omp_get_max_threads();
+	}
+	else {
+		Settings::MaxNumberOfOpenMpThreads = 1;
+		omp_set_num_threads(Settings::MaxNumberOfOpenMpThreads);
 	}
 
-	m_ThreadPoolCount = Settings::MaximumNumberOfThreads;
+	m_ThreadPoolCount = Settings::MaxNumberOfOpenMpThreads;
 	m_ThreadMemPool.resize(m_ThreadPoolCount);
 
 	//These lines might need to be moved if spatial distribution of grains is utilized
@@ -1068,22 +1066,25 @@ void grainhdl::initEnvironment() {
 	//m_grainScheduler = new IterativeGrainScheduler(Settings::MaximumNumberOfThreads, Settings::NumberOfParticles);
 
 	//choose grain scheduler:
-	if (Settings::GrainScheduler == E_ITERATIVE) {
-		m_grainScheduler = new IterativeGrainScheduler(
-				Settings::MaximumNumberOfThreads, Settings::NumberOfParticles);
-	} else if (Settings::GrainScheduler == E_SQUARES) {
+	if (Settings::GrainScheduler == E_SQUARES) {
 		m_grainScheduler = new SquaresGrainScheduler(
-				Settings::MaximumNumberOfThreads, Settings::NumberOfParticles);
-	} else if (Settings::GrainScheduler == E_DEFAULT_SCHEDULER) {
-		m_grainScheduler = new IterativeGrainScheduler(
-				Settings::MaximumNumberOfThreads, Settings::NumberOfParticles);
+				Settings::MaxNumberOfOpenMpThreads, Settings::NumberOfParticles);
 	}
+	else if (Settings::GrainScheduler == E_ITERATIVE) {
+		m_grainScheduler = new IterativeGrainScheduler(
+				Settings::MaxNumberOfOpenMpThreads, Settings::NumberOfParticles);
+	}
+	else {
+		cerr << "No grain scheduler!" << "\n";
+		return;
+	}
+
 	initNUMABindings();
-#pragma omp parallel
+
+	#pragma omp parallel
 	{
-		double max_size = Settings::NumberOfPointsPerGrain
-				* Settings::NumberOfPointsPerGrain * 50;
-		int power_of_two = 1 << (int) (ceil(log2(max_size)) + 0.5);
+		unsigned long max_size = sqr(Settings::NumberOfPointsPerGrain) * 50;
+		int power_of_two = 1 << (int) (ceil(log2((double) max_size)) + 0.5);
 		//!int power_of_two = 1 << (int) (ceil(log2(2<<20)) + 0.5); //!27
 		m_ThreadMemPool[omp_get_thread_num()].resize(power_of_two);
 	}

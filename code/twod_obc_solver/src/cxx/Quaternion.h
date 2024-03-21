@@ -41,7 +41,7 @@ public:
 	void euler2quaternion(double *euler);
 	double* quaternion2EulerConst(void) const;
 	double* quaternion2Euler(void);
-	void randomOriShoemakeQuat(mathMethods* math);
+	//void randomOriShoemakeQuat(mathMethods* math);
 	double misorientationCubicQxQ(Quaternion* p);
 
 	inline double get_q0() {return q0;};

@@ -41,14 +41,6 @@ enum E_CONVOLUTION_MODE {
 #define E_BCC		229		//Body-centered cubic
 #define	E_HCP		194		//Hexagonal
 
-/*!
- * \enum E_RESEARCH_PROJECT
- * \brief Enumeration used to control the research project execution.
- */
-enum E_RESEARCH_PROJECT {
-	E_DEFAULT_PROJECT
-};
-
 enum E_GRAIN_SCHEDULER {
 	E_ITERATIVE,
 	E_SQUARES,
@@ -88,33 +80,32 @@ public:
 	static unsigned long NumberOfPointsPerGrain;
 	static unsigned long NumberOfTimesteps;
 	static unsigned long BreakupNumber;
+	static unsigned long GrainExport;
 	static unsigned long NetworkExport;
 	static unsigned long DomainBorderSize;
 	static unsigned long GrainScheduler;
 	static E_MICROSTRUCTURE_GEN_MODE MicrostructureGenMode;
-	static E_RESEARCH_PROJECT ResearchProject;
-	static std::string InputStructureFilename;
+	static E_CONVOLUTION_MODE ConvolutionMode;
 	static std::string ConfigFileName;
 	static std::string ResultsFileName;
+	static std::string InputStructureFilename;
+
 	static unsigned short LatticeType;
 	static double HAGB_Mobility;
 	static double HAGB_Energy;
 	static double Physical_Domain_Size;
-	static double TriplePointDrag;
+	//static double TriplePointDrag;
 	static double DislocEnPerM;
 	static bool IdentifyTwins;
 	static bool IsIsotropicNetwork;
-	static double MaxMisOrientation;
 	static bool ExecuteInParallel;
 	static bool GridCoarsement;
 	static double GridCoarsementGradient;
-	static unsigned long MaximumNumberOfThreads;
-	static E_CONVOLUTION_MODE ConvolutionMode;
+	static unsigned long MaxNumberOfOpenMpThreads;
 	static double ConstantSectorRadius;
 	static double InterpolatingSectorRadius;
 	static bool UseStoredElasticEnergy;
 	static bool UseMagneticField;
-	static bool DecoupleGrains;
 	static Magnetic MagneticParams;
 	static double UserDefTimeSlope;
 

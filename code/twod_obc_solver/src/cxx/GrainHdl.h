@@ -79,7 +79,6 @@ public:
 	bool loadCurvature;
 	unsigned int loadCurvatureLoop;
 	bool convolutionCorrection;
-	E_RESEARCH_PROJECT project;
 	bool constantE;
 
 	//! A 2D vector which stores weights.

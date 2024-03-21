@@ -25,7 +25,6 @@
 #include "DimensionalBuffer.h"
 #include "pooledDimensionalBufferDouble.h"
 #include "Spoint.h"
-#include "Curvapprx.h"
 #include "ContourSector.h"
 #include "GrainBoundary.h"
 #include "BoundaryInfo.h"
@@ -251,9 +250,6 @@ public:
 	}
 	inline double get_magneticEnergy() {
 		return m_magneticEnergy;
-	}
-	inline struct wghtd_imcurv_res get_curvApprx() {
-		return m_curvapprx;
 	}
 	inline unsigned char has_edge_contact() {
 		return (unsigned char) this->m_intersectsBoundaryGrain;

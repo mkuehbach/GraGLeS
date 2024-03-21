@@ -28,7 +28,6 @@ using namespace rapidxml;
 //Initializing the static setting variables
 E_CONVOLUTION_MODE Settings::ConvolutionMode = E_GAUSSIAN;
 E_MICROSTRUCTURE_GEN_MODE Settings::MicrostructureGenMode = E_READ_VOXELIZED_MICROSTRUCTURE;
-E_RESEARCH_PROJECT Settings::ResearchProject = E_DEFAULT_PROJECT;
 string Settings::InputStructureFilename = "";
 string Settings::ConfigFileName = "";
 string Settings::ResultsFileName = "";
@@ -42,8 +41,7 @@ unsigned long Settings::NumberOfTimesteps = 0;
 unsigned long Settings::GrainExport = 0;
 unsigned long Settings::NetworkExport = 0;
 unsigned long Settings::DomainBorderSize = 0;
-unsigned long Settings::MaximumNumberOfThreads = 0;
-unsigned long Settings::GrainScheduler = 0;
+unsigned long Settings::GrainScheduler = E_SQUARES;
 double Settings::GridCoarsementGradient = 0.95;
 
 //physics
@@ -53,15 +51,12 @@ double Settings::HAGB_Mobility = 1.;
 bool Settings::IdentifyTwins = false;
 double Settings::Physical_Domain_Size = 0.;
 double Settings::DislocEnPerM = 0.;
-double Settings::TriplePointDrag = 0.;
+//double Settings::TriplePointDrag = 0.;
 Magnetic Settings::MagneticParams = Magnetic();
 double Settings::UserDefTimeSlope = 0.8; //empirical was 0.8359;
 bool Settings::IsIsotropicNetwork = false;
-double Settings::MaxMisOrientation = 0.;
-bool Settings::ExecuteInParallel = false;
 bool Settings::GridCoarsement = false;
-bool Settings::DecoupleGrains = false;
-
+int Settings::MaxNumberOfOpenMpThreads = 1;
 double Settings::ConstantSectorRadius = 0.0;
 double Settings::InterpolatingSectorRadius = 0.0;
 bool Settings::UseStoredElasticEnergy = false;
@@ -119,10 +114,9 @@ bool Settings::initializeParameters()
 	if (0 != rootNode->first_node(key.c_str())) {
 		BreakupNumber = std::stoul(rootNode->first_node(key.c_str())->value());
 	}
-
-	if (0 != rootNode->first_node("DomainBorderSize")) {
-		DomainBorderSize = std::stoul(
-				rootNode->first_node("DomainBorderSize")->value());
+	key = "DomainBorderSize";
+	if (0 != rootNode->first_node(key.c_str())) {
+		DomainBorderSize = std::stoul(rootNode->first_node(key.c_str())->value());
 	}
 	key = "InputStructureFilename";
 	if (0 != rootNode->first_node(key.c_str())) {
@@ -172,41 +166,29 @@ bool Settings::initializeParameters()
 	if (0 != rootNode->first_node(key.c_str())) {
 		IsIsotropicNetwork = (bool) std::stoul(rootNode->first_node(key.c_str())->value());
 	}
-	if (0 != rootNode->first_node("MaxMisOrientation")) {
-		MaxMisOrientation = std::stoul(
-				rootNode->first_node("MaxMisOrientation")->value());
-	}
-	if (0 != rootNode->first_node("ExecuteInParallel")) {
-		ExecuteInParallel = (bool) std::stoul(
-				rootNode->first_node("ExecuteInParallel")->value());
-	}
-	if (0 != rootNode->first_node("MaximumNumberOfThreads")) {
-		MaximumNumberOfThreads = std::stoul(
-				rootNode->first_node("MaximumNumberOfThreads")->value());
-
+	key = "MaxNumberOfOpenMpThreads";
+	if (0 != rootNode->first_node(key.c_str())) {
+		MaxNumberOfOpenMpThreads = std::stoul(rootNode->first_node(key.c_str())->value());
 	}
 	if (0 != rootNode->first_node("GridCoarsement")) {
 		GridCoarsement = (bool) std::stoul(rootNode->first_node("GridCoarsement")->value());
 	}
-	if (0 != rootNode->first_node("GridCoarsementGradient")) {
-		GridCoarsementGradient = std::stod(rootNode->first_node("GridCoarsementGradient")->value());
+	key = "GridCoarsementGradient";
+	if (0 != rootNode->first_node(key.c_str())) {
+		GridCoarsementGradient = std::stod(rootNode->first_node(key.c_str())->value());
 	}
-	if (0 != rootNode->first_node("ConvolutionMode")) {
-		ConvolutionMode = E_GAUSSIAN;
+	ConvolutionMode = E_GAUSSIAN;
+	key = "ConstantSectorRadius";
+	if (0 != rootNode->first_node(key.c_str())) {
+		ConstantSectorRadius = std::stod(rootNode->first_node(key.c_str())->value());
 	}
-	if (0 != rootNode->first_node("ConstantSectorRadius")) {
-		ConstantSectorRadius = std::stod(rootNode->first_node("ConstantSectorRadius")->value());
+	key = "IpolSectorRadius";
+	if (0 != rootNode->first_node(key.c_str())) {
+		InterpolatingSectorRadius = std::stod(rootNode->first_node(key.c_str())->value());
 	}
-	if (0 != rootNode->first_node("InterpolatingSectorRadius")) {
-		InterpolatingSectorRadius = std::stod(rootNode->first_node("InterpolatingSectorRadius")->value());
-	}
-	if (0 != rootNode->first_node("UseStoredElasticEnergy")) {
-		UseStoredElasticEnergy = (bool) std::stoul(rootNode->first_node("UseStoredElasticEnergy")->value());
-	}
-	if (0 != rootNode->first_node("GrainScheduler")) {
-		GrainScheduler = (E_GRAIN_SCHEDULER) std::stoi(rootNode->first_node("GrainScheduler")->value());
-		if (GrainScheduler >= E_DEFAULT_SCHEDULER)
-			GrainScheduler = E_DEFAULT_SCHEDULER;
+	key = "UseStoredElasticEnergy";
+	if (0 != rootNode->first_node(key.c_str())) {
+		UseStoredElasticEnergy = (bool) std::stoul(rootNode->first_node(key.c_str())->value());
 	}
 	if (0 != rootNode->first_node("UserDefTimeSlope")) {
 		UserDefTimeSlope = std::stod(rootNode->first_node("UserDefTimeSlope")->value());

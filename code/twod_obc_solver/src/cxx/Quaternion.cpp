@@ -288,6 +288,8 @@ double* Quaternion::quaternion2EulerConst(void) const {
 	return euler;
 }
 
+
+/*
 void Quaternion::randomOriShoemakeQuat(mathMethods* math) {
 	//K. Shoemake, Graphic Gems III (editor D. Kirk) CalTech pp124-134
 	//##MK::mind order
@@ -305,6 +307,8 @@ void Quaternion::randomOriShoemakeQuat(mathMethods* math) {
 	//normalize
 	Normalize();
 }
+*/
+
 
 double Quaternion::misorientationCubicQxQ(Quaternion* p) {
 	int i;

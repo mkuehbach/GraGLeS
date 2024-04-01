@@ -3,8 +3,8 @@
    <StartTime>0</StartTime>
    <NumberOfParticles>12991</NumberOfParticles> 
    <NumberOfPointsPerGrain>15</NumberOfPointsPerGrain>
-   <AnalysisTimestep>1</AnalysisTimestep>
-   <NumberOfTimesteps>100</NumberOfTimesteps>  <!--100000</NumberOfTimesteps>-->
+   <AnalysisTimestep>100</AnalysisTimestep>
+   <NumberOfTimesteps>10000</NumberOfTimesteps>  <!--100000</NumberOfTimesteps>-->
    <PlotInterval>20</PlotInterval>
    <!-- in every x-th Analysisstep the full structure is plotted -> very memory intense -->
 

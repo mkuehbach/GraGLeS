@@ -256,13 +256,16 @@ void grainhdl::find_correctTimestepSize() {
 			my_min = 0.0;
 		m_Energy_deltaMAX = (my_max - my_min);
 	}
+
+	cout << "m_Energy_deltaMAX " << m_Energy_deltaMAX << "\n";
+	cout << "dt " << dt << "\n";
 	double vmax = (m_Energy_deltaMAX * dt);
 	double m_dt_Correction = 0.5/(vmax / h) ;
-	;
+	cout << "m_dt_Correction " << m_dt_Correction << "\n";
 	if (m_dt_Correction > 1.0)
 		m_dt_Correction = 1.0;
-	dt *= m_dt_Correction;
-
+	dt *= 1.; //*= m_dt_Correction;
+	cout << "dt " << dt << "\n";
 }
 void grainhdl::read_HeaderCPG() {
 	FILE * compressedGrainInfo;
@@ -337,7 +340,9 @@ void grainhdl::read_header_from_nexusfile()
 	dsnm = grpnm + "/extent";
 	vector<unsigned int> nxy = {0, 0};
 	if ( h5r.nexus_read(dsnm, nxy) != MYHDF5_SUCCESS ) { return; }
-	realDomainSize = nxy[0];
+	realDomainSize = (int) nxy[0];
+	cout << "realDomainSize " << realDomainSize << "\n";
+	cout << "grid_blowup " << grid_blowup << "\n";
 
 	dsnm = grpnm + "/number_of_subgrains";
 	unsigned int n_subgr = 0;
@@ -642,7 +647,8 @@ void grainhdl::read_microstructure_from_nexusfile()
 		if (ngrains == 1) {
 			see_mimx.first = 0.;
 		}
-		m_Energy_deltaMAX = Settings::DislocEnPerM * (see_mimx.second - see_mimx.first) / Settings::HAGB_Energy * Settings::Physical_Domain_Size;
+		m_Energy_deltaMAX = Settings::DislocEnPerM * (see_mimx.second - see_mimx.first)
+			/ Settings::HAGB_Energy * Settings::Physical_Domain_Size;
 	}
 
 	dsnm = grpnm + "/subgrain_structure";

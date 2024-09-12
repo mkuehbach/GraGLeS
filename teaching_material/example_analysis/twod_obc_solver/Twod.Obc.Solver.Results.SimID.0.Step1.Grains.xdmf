@@ -1,0 +1,28 @@
+<?xml version="1.0" ?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf xmlns:xi="http://www.w3.org/2003/XInclude" Version="2.2">
+  <Domain>
+    <Grid GridName="simid 0, step1" GridType="Uniform">
+      <Topology TopologyType="Mixed" NumberOfElements="12991">
+        <DataItem Dimensions="707945 1" NumberType="UInt" Precision="4" Format="HDF">
+Twod.Obc.Solver.Results.SimID.0.nxs:/entry1/ms/step1/grain_boundary_xdmf_topology
+        </DataItem>
+      </Topology>
+      <Geometry GeometryType="XY">
+        <DataItem Dimensions="681963 2" NumberType="Float" Precision="8" Format="HDF">
+Twod.Obc.Solver.Results.SimID.0.nxs:/entry1/ms/step1/grain_boundary_vertices
+        </DataItem>
+      </Geometry>
+      <Attribute AttributeType="Scalar" Center="Cell" Name="grain index">
+        <DataItem Dimensions="12991 1" DataType="UInt" Precision="4" Format="HDF">
+Twod.Obc.Solver.Results.SimID.0.nxs:/entry1/ms/step1/grain_boundary_xdmf_grain_id
+        </DataItem>
+      </Attribute>
+      <!--<Attribute AttributeType="Scalar" Center="Edge" Name="edge_id">
+        <DataItem Dimensions="8" DataType="UInt" Precision="4" Format="XML">
+0 1 2 3 4 5 6 7
+        </DataItem>
+      </Attribute>-->
+    </Grid>
+  </Domain>
+</Xdmf>

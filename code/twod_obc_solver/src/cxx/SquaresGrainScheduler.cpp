@@ -40,7 +40,7 @@ void SquaresGrainScheduler::buildGrainWorkloads(
 				continue;
 			SPoint center = find_center(contours[i], n_gridpoints);
 			//check for coordinate system
-			std::cout << center.x << center.y << endl;
+			//std::cout << center.x << center.y << endl;
 			if (center.x > 2) { // coordinates are in gridpoint ids
 				pos_x = int(center.x / n_gridpoints + 0.5);
 				pos_y = int(center.y / n_gridpoints + 0.5);

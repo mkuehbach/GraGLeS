@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -25,7 +25,7 @@
 #include "random.h"
 #include "mymath.h"
 
-#define  PHYSICAL_LOWER_LIMIT_DISLOCATION_DENSITY			(0.0) //(1.0e11) only for simulation comparing to Holm and coworkers
+#define  PHYSICAL_LOWER_LIMIT_DISLOCATION_DENSITY			(0.) //(1.0e11) only for simulation comparing to Holm and coworkers
 
 
 randomClass::randomClass(long sd)
@@ -113,7 +113,7 @@ void randomClass::r4_nor_setup ( void )
   wn[0] = ( float ) ( q / R4M1 );
   wn[127] = ( float ) ( dn / R4M1 );
 
-  fn[0] = 1.0;
+  fn[0] = 1.;
   fn[127] = ( float ) ( exp ( - 0.5 * dn * dn ) );
 
   for ( i = 126; 1 <= i; i-- )
@@ -343,7 +343,7 @@ float randomClass::r4_uni ( void )
   jsr_r4 = ( jsr_r4 ^ ( jsr_r4 <<    5 ) );
 
   value = fmod ( 0.5
-    + ( float ) ( jsr_input + jsr_r4 ) / 65536.0 / 65536.0, 1.0 );
+    + ( float ) ( jsr_input + jsr_r4 ) / 65536.0 / 65536.0, 1. );
 
   return value;
 }

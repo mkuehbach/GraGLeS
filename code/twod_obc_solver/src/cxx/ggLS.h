@@ -40,6 +40,7 @@
 #include <fstream>
 #include <iomanip>
 #include <list>
+#include <limits>
 #include <sstream>
 #include <string.h>
 #include <algorithm>

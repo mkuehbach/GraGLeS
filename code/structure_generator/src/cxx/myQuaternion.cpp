@@ -54,7 +54,7 @@ myQuaternion::myQuaternion(double alpha, double x, double y, double z,
 
 	//##MK::URGENT CHECK NECESSARY IT IS VERY LIKELY INCONSISTENT WITH OUR BUNGE INTERPRETATION AND THAT WE USE "ZXZ" convention!
 
-	double _normVector = 1.0 / sqrt(SQR(x) + SQR(y) + SQR(z));
+	double _normVector = 1. / sqrt(SQR(x) + SQR(y) + SQR(z));
 	if (!radiant)
 		alpha = alpha * PI / 180;
 
@@ -87,9 +87,9 @@ void myQuaternion::Normalize() {
 
 
 void myQuaternion::Invert() {
-	q1 *= -1.0;
-	q2 *= -1.0;
-	q3 *= -1.0;
+	q1 *= -1.;
+	q2 *= -1.;
+	q3 *= -1.;
 }
 
 myQuaternion myQuaternion::Inverse() {
@@ -153,7 +153,7 @@ myQuaternion myQuaternion::misorientationQuaternionCubic(myQuaternion* p) {
 	double c = result.q2;
 	double d = result.q3;
 
-	double fac = 1.0 / sqrt(2.0); //0.70710678;
+	double fac = 1. / sqrt(2.0); //0.70710678;
 
 	//six fundamental quaternions
 	r0[0][0] = (a + b) * fac;
@@ -182,7 +182,7 @@ myQuaternion myQuaternion::misorientationQuaternionCubic(myQuaternion* p) {
 	r0[5][3] = d;
 
 	int mi = 0;
-	double max = 0.0;
+	double max = 0.;
 
 	for (int i = 0; i < 6; i++) //Determing the quaternion with the maximal component and the component itself
 		for (int j = 0; j < 4; j++) {
@@ -265,9 +265,9 @@ double* myQuaternion::Quaternion2Euler(void) {
 	}
 
 	//without additional sample and crystal symmetry the Euler space is symmetric to 0 <= phi1 <= 2*_PI_ , 0 <= PHI <= _PI_, 0 <= phi2 <= 2*_PI_
-	if (phi1 < 0.0)
+	if (phi1 < 0.)
 		phi1 += 2 * PI;
-	if (phi2 < 0.0)
+	if (phi2 < 0.)
 		phi2 += 2 * PI;
 
 	double *euler = new double[3];
@@ -314,9 +314,9 @@ double* myQuaternion::Quaternion2EulerConst(void) const {
 	}
 
 	//without additional sample and crystal symmetry the Euler space is symmetric to 0 <= phi1 <= 2*_PI_ , 0 <= PHI <= _PI_, 0 <= phi2 <= 2*_PI_
-	if (phi1 < 0.0)
+	if (phi1 < 0.)
 		phi1 += 2 * PI;
-	if (phi2 < 0.0)
+	if (phi2 < 0.)
 		phi2 += 2 * PI;
 
 	double *euler = new double[3];
@@ -434,7 +434,7 @@ double myQuaternion::misorientationCubicQxQ(myQuaternion* p) {
 	double c = r.q2;
 	double d = r.q3;
 
-	Real fac = 1.0 / sqrt(2.0); //0.70710678;
+	Real fac = 1. / sqrt(2.0); //0.70710678;
 
 	//six fundamental quaternions
 	r0[0][0] = (a + b) * fac;
@@ -462,21 +462,21 @@ double myQuaternion::misorientationCubicQxQ(myQuaternion* p) {
 	r0[5][2] = c;
 	r0[5][3] = d;
 
-	Real omega = 0.0;
+	Real omega = 0.;
 
 	for (i = 0; i < 6; i++)
 		for (int j = 0; j < 4; j++)
 			if (fabs(r0[i][j]) > omega)
 				omega = fabs(r0[i][j]);
 
-	if (omega > 1.0) //avoid singularity of acos function
+	if (omega > 1.) //avoid singularity of acos function
 		omega = (Real) (int) omega;
 
 	omega = 2 * acos(omega);
 	return omega;
 }
 
-myQuaternion* myQuaternion::specificallyDisorientednewOriFromReference(
+myQuaternion* myQuaternion::DisorientedFromReference(
 		double sigma_rayl_dis2bunge, randomClass& r) {
 	myQuaternion* cand = NULL;
 
@@ -494,7 +494,7 @@ myQuaternion* myQuaternion::specificallyDisorientednewOriFromReference(
 		myQuaternion newori = (*cand) * (*this);
 
 		theta = this->misorientationCubicQxQ( &newori );
-		prob = 1.0 - exp(-0.5 * SQR(theta / sigma_rayl_dis2bunge));
+		prob = 1. - exp(-0.5 * SQR(theta / sigma_rayl_dis2bunge));
 
 		//acceptance rejectance scheme
 		coinFlip = r.MersenneTwister();
@@ -574,41 +574,41 @@ void myQuaternion::project2fundamentalregion_ipfz( void )
 	//MK::ok, define crystallographic m-3m symmetry operators in quaternion representation
 	double qsymm[SYMMETRIES_IN_CUBIC][4];
 
-	double _sqrt2 = 1.0 / pow ( 2.0, 0.5);
+	double _sqrt2 = 1. / pow ( 2.0, 0.5);
 	double half = 0.5;
 
 	//<100>90*degrees four-fold symmetries
-	qsymm[0][0] = 1.0;				qsymm[0][1] = 0.0;				qsymm[0][2] = 0.0;				qsymm[0][3] = 0.0;			/*identity*/
-	qsymm[1][0] = _sqrt2;			qsymm[1][1] = _sqrt2;			qsymm[1][2] = 0.0;				qsymm[1][3] = 0.0;			/*[100]90*/
-	qsymm[2][0] = 0.0;				qsymm[2][1] = 1.0;				qsymm[2][2] = 0.0;				qsymm[2][3] = 0.0;			/*[100]180*/
-	qsymm[3][0] = -1.0 * _sqrt2;	qsymm[3][1] = _sqrt2;			qsymm[3][2] = 0.0;				qsymm[3][3] = 0.0;			/*[100]270*/
-	qsymm[4][0] = _sqrt2;			qsymm[4][1] = 0.0;				qsymm[4][2] = _sqrt2;			qsymm[4][3] = 0.0;			/*[010]90*/ //MTex -sq2 0 -sq2 0
-	qsymm[5][0] = 0.0;				qsymm[5][1] = 0.0;				qsymm[5][2] = 1.0;				qsymm[5][3] = 0.0;			/*[010]180*/ //##MK::be careful, this is consistent with Pomana it is inconsistent with Mtex stating 0,0,-1,0 but q = -q are the same quaternions
-	qsymm[6][0] = -1.0 * _sqrt2;	qsymm[6][1] = 0.0;				qsymm[6][2] = _sqrt2;			qsymm[6][3] = 0.0;			/*[010]270*/
-	qsymm[7][0] = _sqrt2;			qsymm[7][1] = 0.0;				qsymm[7][2] = 0.0;				qsymm[7][3] = _sqrt2;		/*[001]90*/
-	qsymm[8][0] = 0.0;				qsymm[8][1] = 0.0;				qsymm[8][2] = 0.0;				qsymm[8][3] = 1.0;			/*[001]180*/
-	qsymm[9][0] = -1.0 * _sqrt2;	qsymm[9][1] = 0.0;				qsymm[9][2] = 0.0;				qsymm[9][3] = _sqrt2;		/*[001]270*/
+	qsymm[0][0] = 1.;				qsymm[0][1] = 0.;				qsymm[0][2] = 0.;				qsymm[0][3] = 0.;			/*identity*/
+	qsymm[1][0] = _sqrt2;			qsymm[1][1] = _sqrt2;			qsymm[1][2] = 0.;				qsymm[1][3] = 0.;			/*[100]90*/
+	qsymm[2][0] = 0.;				qsymm[2][1] = 1.;				qsymm[2][2] = 0.;				qsymm[2][3] = 0.;			/*[100]180*/
+	qsymm[3][0] = -1. * _sqrt2;	qsymm[3][1] = _sqrt2;			qsymm[3][2] = 0.;				qsymm[3][3] = 0.;			/*[100]270*/
+	qsymm[4][0] = _sqrt2;			qsymm[4][1] = 0.;				qsymm[4][2] = _sqrt2;			qsymm[4][3] = 0.;			/*[010]90*/ //MTex -sq2 0 -sq2 0
+	qsymm[5][0] = 0.;				qsymm[5][1] = 0.;				qsymm[5][2] = 1.;				qsymm[5][3] = 0.;			/*[010]180*/ //##MK::be careful, this is consistent with Pomana it is inconsistent with Mtex stating 0,0,-1,0 but q = -q are the same quaternions
+	qsymm[6][0] = -1. * _sqrt2;	qsymm[6][1] = 0.;				qsymm[6][2] = _sqrt2;			qsymm[6][3] = 0.;			/*[010]270*/
+	qsymm[7][0] = _sqrt2;			qsymm[7][1] = 0.;				qsymm[7][2] = 0.;				qsymm[7][3] = _sqrt2;		/*[001]90*/
+	qsymm[8][0] = 0.;				qsymm[8][1] = 0.;				qsymm[8][2] = 0.;				qsymm[8][3] = 1.;			/*[001]180*/
+	qsymm[9][0] = -1. * _sqrt2;	qsymm[9][1] = 0.;				qsymm[9][2] = 0.;				qsymm[9][3] = _sqrt2;		/*[001]270*/
 
 	//<110>180*degrees two-fold symmetries
-	qsymm[10][0] = 0.0;				qsymm[10][1] = _sqrt2;			qsymm[10][2] = _sqrt2;			qsymm[10][3] = 0.0;			/*[110]180*/
-	qsymm[11][0] = 0.0;				qsymm[11][1] = _sqrt2;			qsymm[11][2] = -1.0 * _sqrt2;	qsymm[11][3] = 0.0;			/*[1-10]180*/
-	qsymm[12][0] = 0.0;				qsymm[12][1] = _sqrt2;			qsymm[12][2] = 0.0;				qsymm[12][3] = _sqrt2;		/*[101]180*/
-	qsymm[13][0] = 0.0;				qsymm[13][1] = -1.0 * _sqrt2;	qsymm[13][2] = 0.0;				qsymm[13][3] = _sqrt2;		/*[-101]180*/ //mtex332 0 sq2 0 -sq2
-	qsymm[14][0] = 0.0;				qsymm[14][1] = 0.0;				qsymm[14][2] = _sqrt2;			qsymm[14][3] = _sqrt2;		/*[011]180*/ //mtex 0 0 -sq -sq
-	qsymm[15][0] = 0.0;				qsymm[15][1] = 0.0;				qsymm[15][2] = -1.0 * _sqrt2;	qsymm[15][3] = _sqrt2;		/*[110]180*/
+	qsymm[10][0] = 0.;				qsymm[10][1] = _sqrt2;			qsymm[10][2] = _sqrt2;			qsymm[10][3] = 0.;			/*[110]180*/
+	qsymm[11][0] = 0.;				qsymm[11][1] = _sqrt2;			qsymm[11][2] = -1. * _sqrt2;	qsymm[11][3] = 0.;			/*[1-10]180*/
+	qsymm[12][0] = 0.;				qsymm[12][1] = _sqrt2;			qsymm[12][2] = 0.;				qsymm[12][3] = _sqrt2;		/*[101]180*/
+	qsymm[13][0] = 0.;				qsymm[13][1] = -1. * _sqrt2;	qsymm[13][2] = 0.;				qsymm[13][3] = _sqrt2;		/*[-101]180*/ //mtex332 0 sq2 0 -sq2
+	qsymm[14][0] = 0.;				qsymm[14][1] = 0.;				qsymm[14][2] = _sqrt2;			qsymm[14][3] = _sqrt2;		/*[011]180*/ //mtex 0 0 -sq -sq
+	qsymm[15][0] = 0.;				qsymm[15][1] = 0.;				qsymm[15][2] = -1. * _sqrt2;	qsymm[15][3] = _sqrt2;		/*[110]180*/
 
 	//<111>120*degrees, three-fold symmetries
 	qsymm[16][0] = half;			qsymm[16][1] = half;			qsymm[16][2] = half;			qsymm[16][3] = half;		/*[111]120*/
-	qsymm[17][0] = -1.0 * half;		qsymm[17][1] = half;			qsymm[17][2] = half;			qsymm[17][3] = half;		/*[111]240*/
-	qsymm[18][0] = half;			qsymm[18][1] = half;			qsymm[18][2] = -1.0 * half;		qsymm[18][3] = half;		/*[1-11]240*/
-	qsymm[19][0] = -1.0 * half; 	qsymm[19][1] = half;			qsymm[19][2] = -1.0 * half;		qsymm[19][3] = half;		/*[1-11]240*/
-	qsymm[20][0] = half;			qsymm[20][1] = -1.0 * half;		qsymm[20][2] = half;			qsymm[20][3] = half;		/*[-111]120*/
-	qsymm[21][0] = -1.0 * half;		qsymm[21][1] = -1.0 * half;		qsymm[21][2] = half;			qsymm[21][3] = half;		/*[-111]240*/ //mtex h h -h -h
-	qsymm[22][0] = half;			qsymm[22][1] = -1.0 * half;		qsymm[22][2] = -1.0 * half;		qsymm[22][3] = half;		/*[-1-11]120*/ //Mtex332-h h h -h
-	qsymm[23][0] = -1.0 * half;		qsymm[23][1] = -1.0 * half;		qsymm[23][2] = -1.0 * half;		qsymm[23][3] = half;		/*[-1-11]240*/
+	qsymm[17][0] = -1. * half;		qsymm[17][1] = half;			qsymm[17][2] = half;			qsymm[17][3] = half;		/*[111]240*/
+	qsymm[18][0] = half;			qsymm[18][1] = half;			qsymm[18][2] = -1. * half;		qsymm[18][3] = half;		/*[1-11]240*/
+	qsymm[19][0] = -1. * half; 	qsymm[19][1] = half;			qsymm[19][2] = -1. * half;		qsymm[19][3] = half;		/*[1-11]240*/
+	qsymm[20][0] = half;			qsymm[20][1] = -1. * half;		qsymm[20][2] = half;			qsymm[20][3] = half;		/*[-111]120*/
+	qsymm[21][0] = -1. * half;		qsymm[21][1] = -1. * half;		qsymm[21][2] = half;			qsymm[21][3] = half;		/*[-111]240*/ //mtex h h -h -h
+	qsymm[22][0] = half;			qsymm[22][1] = -1. * half;		qsymm[22][2] = -1. * half;		qsymm[22][3] = half;		/*[-1-11]120*/ //Mtex332-h h h -h
+	qsymm[23][0] = -1. * half;		qsymm[23][1] = -1. * half;		qsymm[23][2] = -1. * half;		qsymm[23][3] = half;		/*[-1-11]240*/
 //cout << "All m-3m fcc crystal symmetry quaternion operators loaded successfully." << endl;
 
-	double nd[3] = {0.0, 0.0, 1.0}; //z-direction normal vector
+	double nd[3] = {0., 0., 1.}; //z-direction normal vector
 
 	//project to standard triangle by calculating symmetric variants, first ndp
 	double triposp[SYMMETRIES_IN_CUBIC][2];
@@ -636,23 +636,23 @@ void myQuaternion::project2fundamentalregion_ipfz( void )
        	hbar[2] = (2*(q1*q3 - q0*q2)						 * nd[0])	+ (2*(q2*q3 + q0*q1) 						* nd[1]) 	+ (SQR(q0) - SQR(q1) - SQR(q2) + SQR(q3) * nd[2]);
 
        	//##MK::antipodal consistency with MTex3.3.2
-		if ( hbar[2] < 0.0 ) {
-			hbar[0] *= -1.0;
-			hbar[1] *= -1.0;
-			hbar[2] *= -1.0;
+		if ( hbar[2] < 0. ) {
+			hbar[0] *= -1.;
+			hbar[1] *= -1.;
+			hbar[2] *= -1.;
 		}
 
 		//now get the azimuth angle theta and assure no throw out of range exceptions by the acos function, but before range limiting
-		if( hbar[2] > (1.0 - DOUBLE_ACCURACY) ) hbar[2]= 1.0;
-		if( hbar[2] < (-1.0 + DOUBLE_ACCURACY) ) hbar[2] = -1.0;
+		if( hbar[2] > (1. - DOUBLE_ACCURACY) ) hbar[2]= 1.;
+		if( hbar[2] < (-1. + DOUBLE_ACCURACY) ) hbar[2] = -1.;
 
-		double theta = acos( hbar[2] ); //result is [0.0 <= theta <= pi]
+		double theta = acos( hbar[2] ); //result is [0. <= theta <= pi]
 
 		//the fact that theta goes to pi can cause tan singularities if theta --> pi/2 periodicities
 		double tt = tan(theta/2);
-		if ( tt > (1.0 - DOUBLE_ACCURACY) ) { tt = 1.0; }
+		if ( tt > (1. - DOUBLE_ACCURACY) ) { tt = 1.; }
 
-		double psi = 0.0; //capture discontinuity of the atan2 at 0,0
+		double psi = 0.; //capture discontinuity of the atan2 at 0,0
 		if ( fabs(hbar[0]) > DOUBLE_ACCURACY && fabs(hbar[1]) > DOUBLE_ACCURACY ) {
 			psi = atan2( hbar[1], hbar[0] );
 		}
@@ -660,7 +660,7 @@ void myQuaternion::project2fundamentalregion_ipfz( void )
 		//psi is limited against pi
 		double epps = 1e-10;
 		if ( psi > ( _PI_ - epps ) ) { psi = _PI_; }
-		if ( psi < ( (-1.0 * _PI_) + epps ) ) { psi = -1.0 * _PI_; }
+		if ( psi < ( (-1. * _PI_) + epps ) ) { psi = -1. * _PI_; }
 
 
 		triposp[s][0] = tt * cos(psi);
@@ -673,14 +673,14 @@ void myQuaternion::project2fundamentalregion_ipfz( void )
 	double xmin = FAIL_MYMATH_NUMERIC;
 	double ymin = FAIL_MYMATH_NUMERIC;
 
-	//double sstr = pow( 2, 0.5 ) - 1.0;
+	//double sstr = pow( 2, 0.5 ) - 1.;
 	//sstr = pow ( sstr + EPS_ENVIRONMENT, 2); //radius of the sst circle
 
 	for	( int s = 0; s < SYMMETRIES_IN_CUBIC; s++) {
 		double x2y2 = SQR(triposp[s][0]) + SQR(triposp[s][1]);
 		norm = pow( x2y2, 0.5 );
 
-		if ( norm <= minnorm && triposp[s][0] >= 0.0 && triposp[s][1] >= 0.0 && triposp[s][0] >= triposp[s][1] ) { //&& x2y2 <= sstr ) {
+		if ( norm <= minnorm && triposp[s][0] >= 0. && triposp[s][1] >= 0. && triposp[s][0] >= triposp[s][1] ) { //&& x2y2 <= sstr ) {
 			xmin = triposp[s][0];
 			ymin = triposp[s][1];
 			minnorm = norm;
@@ -710,8 +710,8 @@ void myQuaternion::quat2ipfz( unsigned char *rgb )
 
 	//heuristic approach to catch numeric cases too close to the IPFZ coloring triangle vertices
 	//"red"
-	double xr = 0.0;							double yr = 0.0; //red
-	double xg = pow(2.0, 0.5) - 1.0;			double yg = 0.0; //green
+	double xr = 0.;							double yr = 0.; //red
+	double xg = pow(2.0, 0.5) - 1.;			double yg = 0.; //green
 	double xb = (0.5 * pow(3.0, 0.5)) - 0.5;	double yb = xb; //blue
 
 	double xo = position[0];					double yo = position[1];
@@ -766,7 +766,7 @@ void myQuaternion::quat2ipfz( unsigned char *rgb )
 	//x0 == zero already excluded by R vertex proximity check and the coordiante system choice x>=y
 	double xrbar = pow( (2+k1r), 0.5);
 	xrbar = xrbar - 1;
-	xrbar /= (k1r + 1.0);
+	xrbar /= (k1r + 1.);
 	double yrbar = yo/xo * xrbar;
 	double absrrbar = fabs(pow( (SQR(xr-xrbar) + SQR(yr-yrbar)), 0.5));
 	double absorbar = fabs(pow( (SQR(xo-xrbar) + SQR(yo-yrbar)), 0.5));
@@ -782,9 +782,9 @@ void myQuaternion::quat2ipfz( unsigned char *rgb )
 	if ( rrggbb[2] > maxx ) maxx = rrggbb[2];
 
 	//K. Molodov got a better agrreement with the HKL colo though by anisotropically IPF_COLOR_STRETCHING via reverse engineering
-	int rr = rrggbb[0] * (1.0 / maxx) * 255;
-	int gg = rrggbb[1] * (1.0 / maxx) * 255;
-	int bb = rrggbb[2] * (1.0 / maxx) * 255;
+	int rr = rrggbb[0] * (1. / maxx) * 255;
+	int gg = rrggbb[1] * (1. / maxx) * 255;
+	int bb = rrggbb[2] * (1. / maxx) * 255;
 
 	//"RRGGBB=" << rr << ";" << gg << ";" << bb << endl;
 

@@ -36,12 +36,14 @@ using namespace std;
 using namespace voro;
 using namespace Eigen;
 
-Grains::Grains() {
+Grains::Grains()
+{
 }
 
-Grains::Grains(int id, vector<Vector3d>& hull,
-		DimensionalBuffer<unsigned int>* container, double volume) :
-		m_ID(id), m_oldID(id), m_Volume(volume) {
+
+Grains::Grains(int id, vector<Vector3d>& hull, DimensionalBuffer<unsigned int>* container,
+	double volume) : m_Volume(volume), m_ID(id), m_oldID(id)
+{
 	m_orientation = NULL;
 	int xmin = Settings::NumberOfGridpoints, xmax = 0, ymin =
 			Settings::NumberOfGridpoints, ymax = 0, zmin =
@@ -73,9 +75,9 @@ Grains::Grains(int id, vector<Vector3d>& hull,
 		ymax = ymax + 1;
 	if (zmax < (Settings::NumberOfGridpoints - 2))
 		zmax = zmax + 1;
-	if (Settings::PlotDimension == E_2D) {
-		zmax = 1;
+	if (Settings::Dimensionality == E_2D) {
 		zmin = 0;
+		zmax = 1;
 	}
 
 	m_orientation = NULL;
@@ -84,28 +86,33 @@ Grains::Grains(int id, vector<Vector3d>& hull,
 	m_localContainer = new DimensionalBuffer<unsigned int>(ymin, xmin, zmin,
 			ymax, xmax, zmax);
 }
-void Grains::copyContainerToGrain(DimensionalBuffer<unsigned int>* container) {
+
+
+void Grains::copyContainerToGrain(DimensionalBuffer<unsigned int>* container)
+{
 	copyVoxelData(container);
 }
 
 
-Grains::Grains(myQuaternion ori, double SEE) :
-		m_SEE(SEE) {
+Grains::Grains(myQuaternion ori, double SEE) : m_SEE(SEE) {
 	m_orientation = NULL;
 	set_Orientation(ori);
 }
 
 
-Grains::~Grains() {
+Grains::~Grains()
+{
 	delete m_localContainer;
-	if (m_orientation != NULL)
+	if (m_orientation != NULL) {
 		delete m_orientation;
-	if(m_PrefOri != NULL )
+	}
+	if(m_PrefOri != NULL ) {
 		delete m_PrefOri;
-
-	vector<SubGrain*>::iterator it;
-	for ( it = m_SubGrains.begin(); it != m_SubGrains.end(); it++ ) {
-		delete *it;
+	}
+	for ( vector<SubGrain*>::iterator itS = m_SubGrains.begin(); itS != m_SubGrains.end(); itS++ ) {
+		if ((*itS) != NULL ) {
+			delete *itS;
+		}
 	}
 }
 
@@ -136,12 +143,14 @@ void Grains::computeDirectNeighbours(
 }
 
 void Grains::copyVoxelData(DimensionalBuffer<unsigned int> *container) {
-	for (int k = getMinZ(); k < getMaxZ(); k++)
-		for (int j = getMinY(); j < getMaxY(); j++)
+	for (int k = getMinZ(); k < getMaxZ(); k++) {
+		for (int j = getMinY(); j < getMaxY(); j++) {
 			for (int i = getMinX(); i < getMaxX(); i++) {
 				unsigned int value = container->getValueAt(j, i, k);
 				m_localContainer->setValueAt(j, i, k, value);
 			}
+		}
+	}
 }
 
 
@@ -150,23 +159,28 @@ int Grains::copySubgrainsToGlobalContainer(
 	unsigned int newOffset = 0;
 	if (m_SubGrains.size() > 1) {
 		newOffset = rehashAllSubGrains(offset);
-		for (int k = getMinZ(); k < getMaxZ(); k++)
+		for (int k = getMinZ(); k < getMaxZ(); k++) {
 			for (int j = getMinY(); j < getMaxY(); j++) {
-				for (int i = getMinX(); i < getMaxX(); i++)
-					if (m_localContainer->getValueAt(j, i, k) > 0)
-						container->setValueAt(j, i, k,
-								(unsigned int) offset
-										+ m_localContainer->getValueAt(j, i,
-												k));
+				for (int i = getMinX(); i < getMaxX(); i++) {
+					if (m_localContainer->getValueAt(j, i, k) > 0) {
+						container->setValueAt(
+							j, i, k, (unsigned int) offset + m_localContainer->getValueAt(j, i, k));
+					}
+				}
 			}
-	} else {
+		}
+	} 
+	else {
 		newOffset = offset + 1;
-		for (int k = getMinZ(); k < getMaxZ(); k++)
+		for (int k = getMinZ(); k < getMaxZ(); k++) {
 			for (int j = getMinY(); j < getMaxY(); j++) {
-				for (int i = getMinX(); i < getMaxX(); i++)
-					if (m_localContainer->getValueAt(j, i, k) == m_ID)
+				for (int i = getMinX(); i < getMaxX(); i++) {
+					if (m_localContainer->getValueAt(j, i, k) == m_ID) {
 						container->setValueAt(j, i, k, (unsigned int) newOffset);
+					}
+				}
 			}
+		}
 		m_ID = newOffset; //but the m_oldID is not overwritten to allow identifying the parent grain
 	}
 	return newOffset;
@@ -215,52 +229,18 @@ int Grains::rehashAllSubGrains(int offset) {
 	return offset + m_SubGrains.size();
 }
 
-void Grains::plotLocalContainer() {
-//	string filename = string("LocalContainer_")
-//			+ to_string((unsigned long long) m_ID) + string(".gnu");
-//	FILE* output = fopen(filename.c_str(), "wt");
-//	if (output == NULL) {
-//		throw runtime_error("Unable to save box hull!");
-//	}
-//	for (int k = getMinZ(); k < getMaxZ(); k++) {
-//		for (int i = getMinX(); i < getMaxX(); i++) {
-//			for (int j = getMinY(); j < getMaxY(); j++) {
-//				fprintf(output, "%d \t %d \t %d \t %d \n", i, j, k,
-//						(int) m_localContainer->getValueAt(j, i, k));
-//			}
-//		}
-//	}
-//	fclose(output);
-	stringstream filename2;
-	filename2.str("");
-	filename2 << "LocalContainer" << m_ID << "_dim_" << getMaxX() - getMinX()
-			<< "_" << getMaxY() - getMinY() << "_" << getMaxZ() - getMinZ()
-			<< ".raw";
-	FILE* binaryFile;
-	int size = (getMaxX() - getMinX()) * (getMaxY() - getMinY())
-			* (getMaxZ() - getMinZ());
-	binaryFile = fopen(filename2.str().c_str(), "w");
-	fwrite(m_localContainer->getRawData(), sizeof(unsigned int), size,
-			binaryFile);
-	fclose(binaryFile);
-}
-
-void Grains::plotDensityOfOrientation() {
-
-}
 
 void Grains::generateSubGrainOri(randomClass& r) {
-	vector<SubGrain*>::iterator itG;
-	double NrGrains = 0;
+	
 	double deviation = m_PrefOri->subgrainsScatterOri;
-	if (Settings::NumberOfSubgrains != 0 && m_SubGrains.size() > 1)
-		for (itG = ++m_SubGrains.begin(); itG != m_SubGrains.end(); itG++) {
-			myQuaternion* newori =
-					m_orientation->specificallyDisorientednewOriFromReference(
-							deviation, r);
-			(*itG)->set_Orientation(*newori); //##MK::passes pointer to allocated heap object, requires only to copy properties via the operator=
+	if (Settings::NumberOfSubgrains != 0 && m_SubGrains.size() > 1) {
+		for (vector<SubGrain*>::iterator itG = ++m_SubGrains.begin(); itG != m_SubGrains.end(); itG++) {
+			if ( (*itG) != NULL ) {
+				myQuaternion* newori = m_orientation->DisorientedFromReference(deviation, r);
+				(*itG)->set_Orientation(*newori); //##MK::passes pointer to allocated heap object, requires only to copy properties via the operator=
+			}
 		}
-
+	}
 }
 
 void Grains::generateSubGrainSEE(randomClass& r) {
@@ -277,17 +257,19 @@ void Grains::generateSubGrainSEE(randomClass& r) {
 }
 
 
-void Grains::SubGrainConstructor(randomClass& r) {
+void Grains::SubGrainConstructor(randomClass& r)
+{
 	if (Settings::NumberOfSubgrains == 0) {
 		return;
 	}
 
-	bool randbedingung = false;
-	if ( Settings::NumberOfGrains == 1 && Settings::VoronoiPeriodic == true )
-		randbedingung = true;
+	bool is_periodic = false;
+	if ( Settings::NumberOfGrains == 1 && Settings::VoronoiPeriodic == true ) {
+		is_periodic = true;
+	}
 
 	int i = 1;
-	double f = m_Volume / double(1. / Settings::NumberOfGrains) * pow( (1.0 / this->get_RelSizeScalingFromPrefori() ), 3.0);
+	double f = m_Volume / double(1. / Settings::NumberOfGrains) * pow( (1. / this->get_RelSizeScalingFromPrefori() ), 3.);
 	int subgrains = Settings::NumberOfSubgrains * f;
 	if (subgrains < 2) {
 		cout << "grain " << m_ID << " gets " << 0 << " subgrains" << endl;
@@ -297,23 +279,26 @@ void Grains::SubGrainConstructor(randomClass& r) {
 	if (blocks < 1)
 		blocks = 1;
 	voro::container con(getMinY(), getMaxY(), getMinX(), getMaxX(), getMinZ(),
-			getMaxZ(), blocks, blocks, blocks, randbedingung, randbedingung,
-			randbedingung, 8);
+			getMaxZ(), blocks, blocks, blocks, is_periodic, is_periodic, is_periodic, 8);
 
-// 5,5,5 = the number of grid blocks in each of the three coordinate directions
-// 2 = the initial memory allocation for each block
+	// 5,5,5 = the number of grid blocks in each of the three coordinate directions
+	// 2 = the initial memory allocation for each block
 
 	/**********************************************************/
-// Randomly add particles into the container
+	// Randomly add particles into the container
 	while (i <= subgrains) {
 		double x = r.MersenneTwister() * (getMaxX() - getMinX()) + getMinX();
 		double y = r.MersenneTwister() * (getMaxY() - getMinY()) + getMinY();
 		double z = r.MersenneTwister() * (getMaxZ() - getMinZ()) + getMinZ();
 
-		if ( int(x) == getMaxX() || int(y) == getMaxY() || int(z) == getMaxZ() )
-			cout << "ERROR hitting bounds" << endl;
+		if ( int(x) == getMaxX() || int(y) == getMaxY() || int(z) == getMaxZ() ) {
+			#pragma omp critical
+			{
+				cerr << "grain " << m_ID << " hitting bounds!" << "\n";
+			}
+		}
 
-		if (Settings::PlotDimension == E_2D) {
+		if (Settings::Dimensionality == E_2D) {
 			z = getMinZ();
 		}
 		if (m_localContainer->getValueAt(int(y), int(x), int(z)) == m_ID) {
@@ -322,7 +307,10 @@ void Grains::SubGrainConstructor(randomClass& r) {
 		}
 	}
 
-	cout << "grain " << m_ID << " gets " << --i << " subgrains" << endl;
+	#pragma omp critical
+	{
+		cout << "grain " << m_ID << " gets " << --i << " subgrains" << endl;
+	}
 
 	voro::voronoicell_neighbor c;
 	vector<double> cellCoordinates;
@@ -333,10 +321,10 @@ void Grains::SubGrainConstructor(randomClass& r) {
 				double rx, ry, rz;
 				if (m_localContainer->getValueAt(j, i, k) == m_ID) {
 					if (con.find_voronoi_cell(j, i, k, rx, ry, rz, cell_ID)) {
-						m_localContainer->setValueAt(j, i, k,
-								(unsigned int) cell_ID);
+						m_localContainer->setValueAt(j, i, k, (unsigned int) cell_ID);
 					}
-				} else {
+				}
+				else {
 					m_localContainer->setValueAt(j, i, k, 0);
 				}
 			}
@@ -351,16 +339,13 @@ void Grains::SubGrainConstructor(randomClass& r) {
 			//new: get the grain_id
 			int box_id = vl.pid();
 			vl.pos(ry, rx, rz);
-			c.vertices(ry, rx, rz, cellCoordinates); //Erstellung des Polyheders
-//			cout << getMinX() << "  " << getMaxX() << "  " << getMinY() << "  "
-//					<< getMaxY() << "  " << getMinZ() << "  " << getMaxZ()
-//					<< " \n";
+			c.vertices(ry, rx, rz, cellCoordinates);
 			SubGrain* newSubgrain = new SubGrain(box_id, cellCoordinates,
 					c.volume(), this);
 			m_SubGrains[box_id] = newSubgrain;
 		} while (vl.inc());
-
-	} else {
+	}
+	else {
 		throw runtime_error("Voronoi container error at start() method!");
 	}
 	m_SubGrains[0] = NULL;

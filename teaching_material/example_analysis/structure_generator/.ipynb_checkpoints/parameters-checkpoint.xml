@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Parameters>
+<SimulationID>10</SimulationID>
+<Dimensionality>2</Dimensionality><!--2 or 3-->
+<NumberOfGrains>8</NumberOfGrains>
+<NumberOfSubgrains>1000</NumberOfSubgrains>
+<NumberOfPointsPerSubGrain>15</NumberOfPointsPerSubGrains>
+<PhysicalEdgeLengthPerMaterialPoint>0.1e-6</PhysicalEdgeLengthPerMaterialPoint>
+<CrystalStructure>0</CrystalStructure><!--0 fcc, 1 bcc, 2 hcp-->
+<StoredElasticEnergyMin>10.8e14</StoredElasticEnergyMin>
+<StoredElasticEnergyMax>10.8e14</StoredElasticEnergyMax>
+<StoredElasticEnergyScatterGrain>4.e14</StoredElasticEnergyScatterGrain>
+<StoredElasticEnergyScatterSubgrain>0.8e14</StoredElasticEnergyScatterSubgrain>
+<OrientationScatterSubgrain>5.</OrientationScatterSubgrain>
+<GrainShape>0</GrainShape><!--0 globulitic, 1, flat-->
+<DefGrainRelDimensionY>0.05</DefGrainRelDimensionY>
+<DefGrainRelDimensionZ>1.</DefGrainRelDimensionZ>
+<RandomnessX>0.</RandomnessX>
+<RandomnessY>0.</RandomnessY>
+<UseMultithreading>1</UseMultithreading>
+<ReadFromFilename>CR70FeSi.Rogge.MTEX.vpsc.odf.5000.txt</ReadFromFilename>
+<AdditionalFilename>PreferenceOrientations.txt</AdditionalFilename>	
+</Parameters>

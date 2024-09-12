@@ -1,0 +1,159 @@
+Number of Gridpoints: 219 h:0.00456621
+We are allowed to used node 0
+Will bind thread 12 to cpu 12
+Successful
+Will bind thread 10 to cpu 10
+Successful
+Will bind thread 0 to cpu 0
+Successful
+Will bind thread 16 to cpu 16
+Successful
+Will bind thread 28 to cpu 28
+Successful
+Will bind thread 22 to cpu 22
+Successful
+Will bind thread 8 to cpu 8
+Successful
+Will bind thread 14 to cpu 14
+Successful
+Will bind thread 26 to cpu 26
+Successful
+Will bind thread 20 to cpu 20
+Successful
+Will bind thread 4 to cpu 4
+Successful
+Will bind thread 18 to cpu 18
+Successful
+Will bind thread 2 to cpu 2
+Successful
+Will bind thread 24 to cpu 24
+Successful
+Will bind thread 6 to cpu 6
+Successful
+Will bind thread 15 to cpu 15
+Successful
+Will bind thread 25 to cpu 25
+Successful
+Will bind thread 13 to cpu 13
+Successful
+Will bind thread 19 to cpu 19
+Successful
+Will bind thread 31 to cpu 31
+Successful
+Will bind thread 29 to cpu 29
+Successful
+Will bind thread 7 to cpu 7
+Successful
+Will bind thread 21 to cpu 21
+Successful
+Will bind thread 5 to cpu 5
+Successful
+Will bind thread 3 to cpu 3
+Successful
+Will bind thread 11 to cpu 11
+Successful
+Will bind thread 17 to cpu 17
+Successful
+Will bind thread 1 to cpu 1
+Successful
+Will bind thread 9 to cpu 9
+Successful
+Will bind thread 27 to cpu 27
+Successful
+Will bind thread 23 to cpu 23
+Successful
+Will bind thread 30 to cpu 30
+Successful
+ParticleFile read successfully with m_OrientationSpace.size = 5000
+PrefRefs = 0;0;0;5;4.6e+14;1.5e+14;3e+13;1
+PrefRefs = 0;35;45;5;4.6e+14;1.5e+14;3e+13;1
+PrefRefs = 0;55;45;5;4.6e+14;1.5e+14;3e+13;1
+PrefRefs = 30;55;45;5;1.7e+15;2e+14;4e+13;1
+PrefRefs = 60;55;45;5;1.7e+15;2e+14;4e+13;1
+PrefRefs = 90;55;45;5;1.7e+15;2e+14;4e+13;1
+PrefRefDefault = 5;1.08e+15;4e+14;1
+Started Voro Gen
+JitterGrid FlatGrainMorphology Nx/Ny/Nz = 0;14;0---1.35721;0.0678604;1.35721
+1;0.678604;0.0339302;0.678604
+2;0.678604;0.101791;0.678604
+3;0.678604;0.169651;0.678604
+4;0.678604;0.237512;0.678604
+5;0.678604;0.305372;0.678604
+6;0.678604;0.373232;0.678604
+7;0.678604;0.441093;0.678604
+8;0.678604;0.508953;0.678604
+9;0.678604;0.576814;0.678604
+10;0.678604;0.644674;0.678604
+11;0.678604;0.712535;0.678604
+12;0.678604;0.780395;0.678604
+13;0.678604;0.848256;0.678604
+14;0.678604;0.916116;0.678604
+15;0.678604;0.983976;0.678604
+JitterGrid-FlatGrainMorphology - I am resetting the number of grains to N/NumberOfGrains = 15;15
+Started Initializing Grains 
+Parent grain geometry constructed 
+Sample grain orientations
+Grain 1 becomes mapped on linearly identified UserDefinedOrientation 1
+Grain 2 becomes mapped on linearly identified UserDefinedOrientation 2
+Grain 3 becomes mapped on linearly identified UserDefinedOrientation 3
+Grain 4 becomes mapped on linearly identified UserDefinedOrientation 4
+Grain 5 becomes mapped on linearly identified UserDefinedOrientation 5
+Grain 6 becomes mapped on linearly identified UserDefinedOrientation 6
+Grain 7 becomes mapped on linearly identified UserDefinedOrientation 7
+Grain 8 becomes mapped on linearly identified UserDefinedOrientation 8
+Grain 9 becomes mapped on linearly identified UserDefinedOrientation 9
+Grain 10 becomes mapped on linearly identified UserDefinedOrientation 10
+Grain 11 becomes mapped on linearly identified UserDefinedOrientation 11
+Grain 12 becomes mapped on linearly identified UserDefinedOrientation 12
+Grain 13 becomes mapped on linearly identified UserDefinedOrientation 13
+Grain 14 becomes mapped on linearly identified UserDefinedOrientation 14
+Grain 15 becomes mapped on linearly identified UserDefinedOrientation 15
+Sample sub-grain orientation from reference orientation of grain
+Start subgrain construction 
+grain 12 gets 1017 subgrains
+grain 15 gets 749 subgrains
+grain 7 gets 1017 subgrains
+grain 9 gets 1017 subgrains
+grain grain 14 gets 10174 subgrains gets 1017 subgrains
+
+grain 5 gets 1017 subgrains
+grain 1 gets 1017 subgrains
+grain 2 gets 1017 subgrains
+grain 13 gets 1017 subgrains
+grain 11 gets 1017 subgrains
+grain 10 gets 1017 subgrains
+grain 8 gets 1017 subgrains
+grain 6 gets 1017 subgrains
+grain 3 gets 1017 subgrains
+Sample Stored Elastic Energy
+>Rehashing grain IDs
+Pipe data into file
+Total number of subgrains = 14987
+created and piped subgrains to binary file. Move on ... 
+Pipe diagnostics into ASCII file
+Total number of subgrains = 14987
+Generating a grain ID mapping of the domain in 3D on 0;218;0;218;0;218
+Buffer length len 219
+Writing 3D volume representation with 1 as the first ID was successful.
+Generating a IPF mapping of the domain in 2D on 0;218;0;218 width 219 x 219
+Total number of subgrains = 14987
+Colormapping of orientations was successful
+Mapping of sub-grain IDs to colors was successful, writing image...
+
+Approximate OpenMP omp_get_wtime report (seconds)
+ReadAdditionalInput;0.00436824
+GenerateGrainHull;0.830918
+DistriGrainPrefOris;4.0979e-05
+GenerateSubgrainHull;0.235012
+DistrSubgrainOris;0.0414146
+DistrStoredElasticEnergy;0.00228359
+RehashingIDs;0.019802
+BreakPeriodicity;1.2e-07
+WritingASCIIUDS;0.0414361
+WritingBINARYContainer;0.0356149
+WritingASCIIDiagnostics;0.0599279
+PlottingStructure3D;0.0505546
+ParallelIPFColorMapping;0.00259122
+MappingIDs2Colors;0.000137895
+PlottingStructure2D;0.0130328
+Program finished successfully!

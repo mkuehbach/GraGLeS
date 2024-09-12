@@ -216,6 +216,66 @@ LSbox::LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
 }
 
+
+LSbox::LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion, 
+		const double StoredElasticEnergy, grainhdl* owner) :
+		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
+				true), m_intersectsBoundaryGrain(false), m_volume(0), m_energy(
+				0), m_perimeter(0), m_StoredElasticEnergy(StoredElasticEnergy) {
+	m_orientationQuat = new Quaternion(quaternion[0], quaternion[1], quaternion[2], quaternion[3]);
+	if (Settings::UseMagneticField) {
+		calculateMagneticEnergy();
+	}
+	if (Settings::UseStoredElasticEnergy) {
+		//real time scaling
+		m_StoredElasticEnergy *= Settings::DislocEnPerM / Settings::HAGB_Energy
+				* Settings::Physical_Domain_Size;
+	}
+	int grid_blowup = m_grainHandler->get_grid_blowup();
+	// determine size of grain
+	int xmax = 0;
+	int xmin = m_grainHandler->get_ngridpoints();
+	int ymax = 0;
+	int ymin = xmin;
+
+	double y, x;
+	for (int k = 0; k < vertices.size(); k++) {
+		y = vertices[k].y;
+		x = vertices[k].x;
+		if (y < ymin)
+			ymin = y;
+		if (y > ymax)
+			ymax = y;
+		if (x < xmin)
+			xmin = x;
+		if (x > xmax)
+			xmax = x;
+	}
+	xmax += 2 * grid_blowup;
+	ymax += 2 * grid_blowup;
+
+	if (ymax > m_grainHandler->get_ngridpoints())
+		ymax = m_grainHandler->get_ngridpoints();
+	if (xmax > m_grainHandler->get_ngridpoints())
+		xmax = m_grainHandler->get_ngridpoints();
+	if (ymin < 0)
+		ymin = 0;
+	if (xmin < 0)
+		xmin = 0;
+	//	cout << "constructed a box with size: "<< xmin << "  " << xmax << "  " << ymin << "  " << xmax << "  " << endl;
+
+	m_inputDistance = new DimensionalBufferReal(xmin, ymin, xmax, ymax);
+	m_outputDistance = new DimensionalBufferReal(xmin, ymin, xmax, ymax);
+	m_inputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
+	m_outputDistance->resizeToSquare(m_grainHandler->get_ngridpoints());
+	//	inputDistance->clearValues(0.0);
+	//	outputDistance->clearValues(0.0);
+
+	reizeIDLocalToDistanceBuffer();
+	// 	cout << "made a new box: xmin="<<xmin<< " xmax="<<xmax <<" ymin="<<ymin << " ymax="<<ymax<<endl;
+}
+
+
 LSbox::LSbox(int id, int nedges, double* edges, double phi1, double PHI,
 		double phi2, grainhdl* owner) :
 		m_ID(id), m_exists(true), m_grainHandler(owner), m_grainBoundary(this), m_isMotionRegular(
@@ -2547,8 +2607,83 @@ TextureData LSbox::collectTextureData() {
 	return newdata;
 }
 
-#define I_DONT_KNOW_YET		(-100.0)
 
+size_t LSbox::get_contour_vertices( vector<double> & vrts )
+{
+	//vertices
+	//facets
+	//absCoordinates
+	//x = CLAMP((iterator.x - m_grainHandler->get_grid_blowup()) * m_grainHandler->get_h());
+	//y = CLAMP((iterator.y - m_grainHandler->get_grid_blowup()) * m_grainHandler->get_h());
+	//for ( const auto& iterator : m_grainBoundary.getRawBoundary()) {
+	for ( vector<SPoint>::iterator it = m_grainBoundary.getRawBoundary().begin();
+		it != m_grainBoundary.getRawBoundary().end(); it++ ) {
+		vrts.push_back( it->x );
+		vrts.push_back( it->y );
+	}
+	return m_grainBoundary.getRawBoundary().size();
+	//aforementioned loops follows the sequence
+	/*
+	unsigned int prv = 0;
+	unsigned int nxt = 1;
+	size_t last = m_grainBoundary.getRawBoundary().size();
+	for ( vector<SPoint>::iterator it = m_grainBoundary.getRawBoundary().begin();
+		it != m_grainBoundary.getRawBoundary().end(); it++ ) {
+		fcts.push_back(prv);
+		fcts.push_back(nxt);
+		prv++;
+		fcts.push_back( fct_id );
+	}
+	*/
+}
+
+
+void LSbox::get_contour_xdmf_topology( const unsigned int vrts_offset, vector<unsigned int> & inds )
+{
+	inds.push_back( 3 ); //XDMF polygon topology
+	inds.push_back( m_grainBoundary.getRawBoundary().size() );
+	unsigned int i = 0;
+	for ( const auto& iterator : m_grainBoundary.getRawBoundary()) {
+		inds.push_back( vrts_offset + i ); //+1 missing ?
+		i++;
+	}
+}
+
+
+void LSbox::get_contour_xdmf_info( vector<double> & ifo )
+{
+	for (const auto& iterator : m_grainBoundary.getRawBoundary()) {
+		ifo.push_back( iterator.energy * iterator.mob );
+	}
+}
+
+
+vector<double> LSbox::get_quaternion() {
+	/*
+	double* newori = this->m_orientationQuat->quaternion2Euler();
+	double phi1 = newori[0];
+	double Phi = newori[1];
+	double phi2 = newori[2];
+	delete [] newori;
+	return vector<double> { phi1, Phi, phi2 };
+	*/
+	return vector<double> {
+		m_orientationQuat->get_q0(),
+		m_orientationQuat->get_q1(),
+		m_orientationQuat->get_q2(),
+		m_orientationQuat->get_q3() };
+}
+
+
+vector<double> LSbox::get_barycentre() {
+	double x = (getMaxX() - getMinX()) / 2 + getMinX();
+	x *= m_grainHandler->get_h();
+	double y = (getMaxY() - getMinY()) / 2 + getMinY();
+	y *= m_grainHandler->get_h();
+	return vector<double>{ x, y };
+}
+
+#define I_DONT_KNOW_YET		(-100.0)
 
 
 

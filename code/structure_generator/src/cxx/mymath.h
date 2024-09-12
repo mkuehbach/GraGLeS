@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -101,7 +101,7 @@ public:
 	void newOrientationFromReference( double *oriOri, double deviation, double *newOri );
 	
 	//identify orientation by RGB scheme
-	void devtorefEuler2RGB ( double *bunge, double *ideal, double maxDev, unsigned char *rgb); //blue channel stretch from 0.0 to maxDev in radian, all other orientations white
+	void devtorefEuler2RGB ( double *bunge, double *ideal, double maxDev, unsigned char *rgb); //blue channel stretch from 0. to maxDev in radian, all other orientations white
 	
 	
 	//an own Park-Miller PRNG
@@ -109,7 +109,7 @@ public:
 	
 	
 	//currently not implemented functions
-	void devtoaxisEuler2RGB( double *bunge, double *uvw, double maxDev, unsigned char *rgb); //blue channel stretch from 0.0 to maxDev in radian, disorientation to axis of misorientation
+	void devtoaxisEuler2RGB( double *bunge, double *uvw, double maxDev, unsigned char *rgb); //blue channel stretch from 0. to maxDev in radian, disorientation to axis of misorientation
 	void patalaQuat2RGB ( double *q, unsigned char *rgb); //Patala, Schuh unique coloring of misorientations via HSV2RGB
 
 	

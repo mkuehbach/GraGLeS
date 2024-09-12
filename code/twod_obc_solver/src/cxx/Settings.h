@@ -69,12 +69,13 @@ enum E_GRAIN_SCHEDULER {
 class Settings {
 public:
 	static unsigned long StartTime;
+	static unsigned int SimulationId;
 	static unsigned int NumberOfParticles;
 	static unsigned long NumberOfPointsPerGrain;
 	static unsigned long NumberOfTimesteps;
 	static unsigned long BreakupNumber;
 	static unsigned long AnalysisTimestep;
-	static unsigned long PlotInterval;
+	static unsigned long NetworkExport;
 	static unsigned long DiscreteSamplingRate;
 	static unsigned long DomainBorderSize;
 	static unsigned long GrainScheduler;
@@ -82,6 +83,8 @@ public:
 	static E_RESEARCH_PROJECT ResearchProject;
 	static std::string ReadFromFilename;
 	static std::string AdditionalFilename;
+	static std::string ConfigFileName;
+	static std::string ResultsFileName;
 	static unsigned long LatticeType;
 	static double HAGB_Mobility;
 	static double HAGB_Energy;
@@ -118,7 +121,7 @@ public:
 	static double GaussianKernelUserDefTimeSlope;
 	static double GaussianKernelTimeStepFactor;
 	static double BoxDefaultStoredElasticEnergy;
-	static unsigned long UserDefNumberOfPointsPerGrain;
+	static bool StatusHealthy;
 
 	static void initializeParameters(std::string filename = "");
 	static void readMagneticFieldParams(std::string filename);

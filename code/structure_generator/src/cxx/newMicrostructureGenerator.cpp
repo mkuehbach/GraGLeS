@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -28,51 +28,47 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-	Settings::StatusHealthy = true;
-	try {
-		if (argc > 1)
-			Settings::readXML(argv[1]);
-		else
-			Settings::readXML();
-	} catch (exception& e) { 
-		cout << "Unable to parse parameters file! Details:" << endl << e.what() << endl << "Simulation will now halt!" << endl; return 0;
+	if ( argc != 3 ) {
+		cout << "Command line call has to be <<app>> <<simid>> <<configfile>>" << "\n";
+		return 0;
 	}
-	if (Settings::StatusHealthy == false ) { cout << "Parameter set inconsistency!" << endl << "Simulation will now halt!" << endl; return 0; }
+	double gtic = omp_get_wtime();
+	Settings::SimulationId = std::stoul(argv[1]);
+	Settings::ConfigFileName = argv[2];
+	Settings::ResultsFileName = "StructureGenerator.Results.SimID." 
+		+ to_string(Settings::SimulationId) + ".nxs";
+	
+	Settings::ReadXmlConfig(Settings::ConfigFileName);
+	if (Settings::StatusHealthy == false ) {
+		cout << "Loading configuration " << Settings::ConfigFileName << " failed or is invalid!" << "\n";
+		return 0;
+	}
 
-	microStructureHdl myHdl;
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) { 
+		cout << "Creating results NeXus/HDF5 file " << Settings::ResultsFileName << " failed!" << "\n";
+		return 0;
+	}
 
-	//myHdl.DebugHDF5XDMF();
-	//return 0;
-
-	//myHdl.testprng( 100000, 1.0e+14, 5.0e+13 );
-	myHdl.initEnvironment();
+	microStructureHdl myHdl = microStructureHdl();
+	myHdl.InitEnvironment();
 	myHdl.ReadAdditionalInputFiles();
-	if (Settings::StatusHealthy == false) { cout << "Simulation will now halt!" << endl; return 0; }
-
-	myHdl.GeneratePolycrystallineStructureOfGrains();
-	myHdl.DistributeGrainOriAndSEE();
+	myHdl.ReportConfig();
+	if (Settings::StatusHealthy == false) {
+		cout << "Configuring the tool failed!" << "\n"; return 0;
+	}
+	myHdl.GenerateGrainStructureAsParentGrains();
+	myHdl.DistributeGrainOriAndSee();
 	myHdl.GenerateSubgrainStructureInEachGrain();
 	myHdl.DistributeSubgrainOrientations();
-	myHdl.DistributeSubgrainSEE();
-
-	myHdl.RehashGrainIDs();
-	myHdl.BreakPeriodicity();
+	myHdl.DistributeSubgrainSee();
+	myHdl.RehashGrainIds();
+	//myHdl.BreakPeriodicity();
 	//from now on all sub-grains and grains have a contiguous numbering
+	myHdl.SaveNeXus();
 
-	myHdl.SaveDataGraGeLeS();
-	myHdl.SaveDataDAMASK();
-	myHdl.SaveDetailedDiagnosticsASCII();
-	/*	deprecated I/O functions
-		myHdl.SaveDetailedDiagnosticsBINARY();
-		myHdl.SaveParenthood();
-		myHdl.DebugHDF5();
-	*/
-	myHdl.Plot3DVolume(); //#output too small?
-//##MK	myHdl.SaveHDF5();
-	myHdl.PlotIPF2DSection();
-	
 	myHdl.ReportProfile();
-	cout << "Program finished successfully!";
+	cout << "structure_generator finished successfully in " << (omp_get_wtime() - gtic) << " seconds" << endl;
 	return 0;
 }
 

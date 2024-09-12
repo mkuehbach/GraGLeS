@@ -123,6 +123,9 @@ public:
 			double phi2, grainhdl* owner);
 	LSbox(int id, const vector<SPoint>& vertices, Quaternion ori,
 			double StoredElasticEnergy, grainhdl* owner);
+	LSbox(int id, const vector<SPoint>& vertices, vector<double> const & quaternion,
+			const double StoredElasticEnergy, grainhdl* owner);
+	
 	//Dtors
 	~LSbox();
 	void calculateDistanceFunction();
@@ -220,6 +223,11 @@ public:
 
 	void outputMemoryUsage(ofstream& output);
 	TextureData collectTextureData();
+	size_t get_contour_vertices(vector<double> & vrts);
+	void get_contour_xdmf_topology(const unsigned int vrts_offset, vector<unsigned int> & fcts);
+	void get_contour_xdmf_info(vector<double> & info);
+	vector<double> get_quaternion();
+	vector<double> get_barycentre();
 	void writeGBCurvatureApprx( FILE *externalfh );
 	void writeGBContourPoints( FILE *externalfh, int gridblowup );
 	void writeGBJunctionPoints( FILE *externalfh, int gridblowup );
@@ -283,6 +291,9 @@ public:
 	}
 	inline struct wghtd_imcurv_res get_curvApprx() {
 		return m_curvapprx;
+	}
+	inline unsigned char has_edge_contact() {
+		return (unsigned char) this->m_intersectsBoundaryGrain;
 	}
 	LSbox* getNeighbourAt(int i, int j);
 };

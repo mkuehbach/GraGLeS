@@ -70,7 +70,8 @@ void grainhdl::setSimulationParameter() {
 		fclose(getNumber);
 	} else if (Settings::MicrostructureGenMode
 			== E_READ_VOXELIZED_MICROSTRUCTURE) {
-		read_HeaderCPG();
+		//read_HeaderCPG();
+		read_header_from_nexusfile();
 	} else {
 		ngrains = Settings::NumberOfParticles;
 		currentNrGrains = ngrains;
@@ -89,22 +90,22 @@ void grainhdl::setSimulationParameter() {
 	switch (Settings::ConvolutionMode) {
 	case E_LAPLACE: {
 		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 		TimeSlope = 0.8482;
 		break;
 	}
 	case E_LAPLACE_RITCHARDSON: {
 		dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 		TimeSlope = 0.8202;
 		break;
 	}
 	case E_GAUSSIAN: {
 		dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 		if(Settings::DecoupleGrains == 1) {
 			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-			* Settings::UserDefNumberOfPointsPerGrain / 2 / 5.0; //MK factor 2 to translate diameter in radius, factor 5.0
+			* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
 		}
 		TimeSlope = 0.8359;
 		//##overwrite to user timeslope
@@ -164,7 +165,8 @@ void grainhdl::setSimulationParameter() {
 	}
 	case E_READ_VOXELIZED_MICROSTRUCTURE: {
 		cout << "Starting to read microstructure input files" << endl;
-		read_voxelized_microstructure();
+		//read_voxelized_microstructure();
+		read_microstructure_from_nexusfile();
 		cout << "Read microstructure input files successfully" << endl;
 		break;
 	}
@@ -318,10 +320,39 @@ void grainhdl::read_HeaderCPG() {
 	}
 	ngrains = Settings::NumberOfParticles;
 	currentNrGrains = ngrains;
-	Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+	//Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
 	// half open container of VORO++
 	fclose(compressedGrainInfo);
 }
+
+
+void grainhdl::read_header_from_nexusfile()
+{
+	cout << __func__ << "\n";
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	string grpnm = "/entry1/ms";
+	string dsnm = "";
+
+	//key quantities relevant to define the discretization of the simulated VE
+	dsnm = grpnm + "/extent";
+	vector<unsigned int> nxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, nxy) != MYHDF5_SUCCESS ) { return; }
+	realDomainSize = nxy[0];
+
+	dsnm = grpnm + "/number_of_subgrains";
+	unsigned int n_subgr = 0;
+	if ( h5r.nexus_read(dsnm, n_subgr) != MYHDF5_SUCCESS ) { return; }
+	Settings::NumberOfParticles = n_subgr;
+	ngrains = Settings::NumberOfParticles;
+	currentNrGrains = ngrains;
+	//Settings::NumberOfPointsPerGrain = (int) (realDomainSize / sqrt(ngrains));
+	dsnm = grpnm + "/average_subgrain_discretization";
+	vector<unsigned int> dxy;
+	if ( h5r.nexus_read( dsnm, dxy) != MYHDF5_SUCCESS ) { return; }
+	Settings::NumberOfPointsPerGrain = dxy.at(0);
+	cout << "NumberOfPointsPerGrain " << Settings::NumberOfPointsPerGrain << "\n";
+}
+
 
 void grainhdl::read_voxelized_microstructure() {
 	FILE * compressedGrainInfo;
@@ -499,6 +530,156 @@ void grainhdl::read_voxelized_microstructure() {
 		delete[] StoredElasticEnergy;
 	}
 }
+
+
+void grainhdl::read_microstructure_from_nexusfile()
+{
+	cout << __func__ << "\n";
+	HdfFiveSeqHdl h5r = HdfFiveSeqHdl( Settings::AdditionalFilename );
+	string grpnm = "/entry1/ms";
+	string dsnm = "";
+
+	//key quantities relevant to define the discretization of the simulated VE
+	dsnm = grpnm + "/average_subgrain_discretization";
+	vector<unsigned int> dxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, dxy) != MYHDF5_SUCCESS ) { return; }
+	dsnm = grpnm + "/extent";
+	vector<unsigned int> nxy = {0, 0};
+	if ( h5r.nexus_read(dsnm, nxy) != MYHDF5_SUCCESS ) { return; }
+	dsnm = grpnm + "/number_of_subgrains";
+	unsigned int n_subgr = 0;
+	if ( h5r.nexus_read(dsnm, n_subgr) != MYHDF5_SUCCESS ) { return; }
+
+	//grain-specific quantities
+	dsnm = grpnm + "/grain_size";
+	vector<double> sz;
+	if ( h5r.nexus_read(dsnm, sz) != MYHDF5_SUCCESS ) { return; }
+	vector<int> counts = vector<int>(n_subgr + 1, 0);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		counts[i] = (int) sz[i-1];
+	}
+	sz = vector<double>();
+
+	int id_offset = 1;
+	dsnm = grpnm + "/grain_identifier";
+	vector<int> id_tmp;
+	if ( h5r.nexus_read(dsnm, id_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<int> ID = vector<int>(n_subgr + 1, -1);
+	//grains with zero count or other problems are marked with -1
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		if ( counts[i] > 0 ) {
+			ID[i] = id_tmp[i-1] - (id_offset - 1);
+		}
+	}
+	id_tmp = vector<int>();
+
+	dsnm = grpnm + "/grain_aabb";
+	vector<int> aabb_tmp;
+	if ( h5r.nexus_read(dsnm, aabb_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<vector<SPoint>> vertices;
+	vertices.resize(n_subgr + 1);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		int xmi = aabb_tmp[4*(i-1)+0];
+		int xmx = aabb_tmp[4*(i-1)+1];
+		int ymi = aabb_tmp[4*(i-1)+2];
+		int ymx = aabb_tmp[4*(i-1)+3];
+		vertices[i].push_back(SPoint(xmi, ymi, 0, 0));
+		vertices[i].push_back(SPoint(xmi, ymx, 0, 0));
+		vertices[i].push_back(SPoint(xmx, ymi, 0, 0));
+		vertices[i].push_back(SPoint(xmx, ymx, 0, 0));
+	}
+	aabb_tmp = vector<int>();
+
+	/*
+	dsnm = grpnm + "/grain_barycentre_naive";
+	vector<double> xy_tmp;
+	if ( h5r.nexus_read(dsnm, xy_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<double> xy = vector<double>( 2*(n_subgr + 1), -1);
+	for( unsigned int i = 1; i <= n_subgr; i++ ) {
+		for ( unsigned int j = 0; j < 2; j++ ) {
+			xy[(2*i)+j] = (int) xy_tmp[2*(i-1)+j];
+		}
+	}
+	xy_tmp = vector<double>(); //TODO::int ????
+	*/
+
+	dsnm = grpnm + "/grain_orientation";
+	vector<double> q4_tmp;
+	if ( h5r.nexus_read(dsnm, q4_tmp) != MYHDF5_SUCCESS ) { return; }
+	vector<double> quat = vector<double>(4*(n_subgr + 1), 0.); //scalar, vector???
+	for ( unsigned int i = 1; i <= n_subgr; i++ ) {
+		for( unsigned int j = 0; j < 4; j++ ) {
+			quat[(4*i)+j] = q4_tmp[4*(i-1)+j];
+		}
+	}
+	q4_tmp = vector<double>();
+
+	pair<double, double> see_mimx = pair<double, double>(1.e20, 0.);
+	vector<double> stored_elastic_energy = vector<double>( n_subgr + 1, 0.);
+	if (Settings::UseStoredElasticEnergy) {
+		dsnm = grpnm + "/grain_dislocation_density";
+		vector<double> see_tmp;
+		if ( h5r.nexus_read(dsnm, see_tmp) != MYHDF5_SUCCESS ) { return; }
+		for( unsigned int i = 1; i <= n_subgr; i++ ) {
+			stored_elastic_energy[i] = see_tmp[i-1];
+			if ( see_tmp[i-1] <= see_mimx.first ) {
+				see_mimx.first = see_tmp[i-1];
+			}
+			if ( see_tmp[i-1] >= see_mimx.second ) {
+				see_mimx.second = see_tmp[i-1];
+			}
+		}
+		see_tmp = vector<double>();
+	}
+
+	double real_time_scaling = 1. / Settings::DislocEnPerM * Settings::HAGB_Energy / Settings::Physical_Domain_Size;
+	//1/((N/m^2)*m^2)*(J/m^2)/m = (1/N)*Nm/m = 1
+	// find maximum Velocity driven exclusively by Stored Elastic Energy
+	// adapt timestep with
+	if (Settings::UseStoredElasticEnergy) {
+		see_mimx.first = see_mimx.first * real_time_scaling;
+		see_mimx.second = see_mimx.second * real_time_scaling;
+		if (ngrains == 1) {
+			see_mimx.first = 0.;
+		}
+		m_Energy_deltaMAX = Settings::DislocEnPerM * (see_mimx.second - see_mimx.first) / Settings::HAGB_Energy * Settings::Physical_Domain_Size;
+	}
+
+	dsnm = grpnm + "/subgrain_structure";
+	vector<unsigned int> tmp;
+	if( h5r.nexus_read( dsnm, tmp ) != MYHDF5_SUCCESS ) { return; }
+
+	IDField = new DimensionalBuffer<int> (0, 0, ngridpoints, ngridpoints);
+	cout << "ngridpoints " << ngridpoints << "\n";
+	cout << "grid_blowup " << grid_blowup << "\n";
+	for (int j = 0; j < ngridpoints; j++) {
+		for (int i = 0; i < ngridpoints; i++) {
+			IDField->setValueAt(j, i, 0);
+		}
+	}
+
+	for (int j = grid_blowup; j < (ngridpoints - grid_blowup); j++) {
+		int yoff = (j - grid_blowup) * nxy[0];
+		for (int i = grid_blowup; i < (ngridpoints - grid_blowup); i++) {
+			int ixy = (i - grid_blowup) + yoff;
+			if ( ixy >= tmp.size() ) {
+				cout << "j, i " << j << "\t\t" << i << "\t\t" << ixy << "\n";
+			}
+			int box_id = (int) tmp.at(ixy);
+			box_id = box_id - (id_offset - 1);
+			if (box_id < 0) {
+				box_id = 0;
+			}
+			IDField->setValueAt(j, i, box_id);
+		}
+	}
+	tmp = vector<unsigned int>();
+
+	cout << "Build boxes..." << "\n";
+
+	buildBoxVectors(ID, vertices, quat, stored_elastic_energy);
+}
+
 
 void grainhdl::VOROMicrostructure() {
 
@@ -859,6 +1040,288 @@ for	(auto id : workload) {
 }
 }
 
+
+vector<unsigned int> grainhdl::get_nexus_grain_identifier()
+{
+	vector<unsigned int> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->getID() );
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_size()
+{
+	vector<double> retval;
+	double A = Settings::Physical_Domain_Size * Settings::Physical_Domain_Size;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->getVolume() ); //*0.5 ??
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_stored_elastic_energy()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->get_StoredElasticEnergy() );
+		}
+	}
+	return retval;
+}
+
+
+vector<unsigned char> grainhdl::get_nexus_grain_edge_contact()
+{
+	vector<unsigned char> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists()) {
+			retval.push_back( grains[i]->has_edge_contact() );
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_orientation()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> quat = grains[i]->get_quaternion();
+			retval.insert( retval.end(), quat.begin(), quat.end());
+			/*
+			for( size_t j = 0; j < bunge.size(); j++ ) {
+				retval.push_back( bunge[j] );
+			}
+			*/
+		}
+	}
+	return retval;
+}
+
+
+vector<double> grainhdl::get_nexus_grain_barycentre()
+{
+	vector<double> retval;
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> xy = grains[i]->get_barycentre();
+			retval.insert( retval.end(), xy.begin(), xy.end() );
+			/*
+			for( size_t j = 0; j < xy.size(); j++ ) {
+				f64.push_back( xy[j] );
+			}
+			*/
+		}
+	}
+	return retval;
+}
+
+
+void grainhdl::get_nexus_grain_boundary_vertices( vector<double> & vrts )
+{
+	nx_vrts_offsets = vector<size_t>( grains.size(), 0 );
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> i_vrts;
+			nx_vrts_offsets[i] = grains[i]->get_contour_vertices( i_vrts );
+			vrts.insert( vrts.end(), i_vrts.begin(), i_vrts.end() );
+			i_vrts = vector<double>();
+		}
+	}
+}
+
+
+void grainhdl::get_nexus_grain_boundary_xdmf_topology( vector<unsigned int> & inds )
+{
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<unsigned int> i_inds;
+			unsigned int i_offset = 0;
+			for ( int j = 0; j < i; j++ ) {
+				i_offset += nx_vrts_offsets[j];
+			}
+			grains[i]->get_contour_xdmf_topology( i_offset, i_inds );
+			inds.insert( inds.end(), i_inds.begin(), i_inds.end() );
+			i_inds = vector<unsigned int>();
+		}
+	}
+}
+
+
+void grainhdl::get_nexus_grain_boundary_xdmf_grain_indices( vector<unsigned int> & grain_ids )
+{
+	//individual indices on pointer array grains
+	//which is not necessarily for each grain the return value of grains[i]->getID() !
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			grain_ids.push_back( i );
+		}
+	}
+}
+
+
+void grainhdl::get_nexus_grain_boundary_info( vector<double> & ifo )
+{
+	for (int i = 1; i < grains.size(); i++) {
+		if (grains[i] != NULL && grains[i]->grainExists() ) {
+			vector<double> i_ifo;
+			grains[i]->get_contour_xdmf_info( i_ifo );
+			ifo.insert( ifo.end(), i_ifo.begin(), i_ifo.end() );
+			i_ifo = vector<double>();
+		}
+	}
+}
+
+
+bool grainhdl::save_NeXus()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
+	vector<unsigned int> u32;
+	vector<double> f64;
+	vector<unsigned char> u8;
+
+	grpnm = "/entry1/ms/step" + to_string(loop);
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot") );
+	if ( h5w.nexus_path_exists( grpnm ) == false ) {
+		if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return false; }
+	}
+	else {
+		return true;
+	}
+
+	dsnm = grpnm + "/grain_identifier";
+	u32 = get_nexus_grain_identifier();
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u32,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	u32 = vector<unsigned int>();
+
+	dsnm = grpnm + "/grain_size";
+	f64 = get_nexus_grain_size();
+	anno = ioAttributes();
+	//anno.add( "unit", string("m") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+
+	dsnm = grpnm + "/grain_stored_elastic_energy";
+	f64 = get_nexus_grain_stored_elastic_energy();
+	anno = ioAttributes();
+	//anno.add( "unit", string("1/m^2") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size()}, {f64.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+
+	if ( loop == 1 ) {
+		dsnm = grpnm + "/grain_orientation";
+		f64 = get_nexus_grain_orientation();
+		anno = ioAttributes();
+		//anno.add( "unit", string("°") );
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64.size() / 4, 4}, {f64.size() / 4, 4}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64 = vector<double>();
+	}
+
+	/*
+	dsnm = grpnm + "/grain_barycentre";
+	f64 = get_nexus_grain_barycentre();
+	anno = ioAttributes();
+	//anno.add( "unit", string("m") );
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({f64.size() / 2, 2}, {f64.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		f64,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	f64 = vector<double>();
+	*/
+
+	dsnm = grpnm + "/grain_edge_contact";
+	u8 = get_nexus_grain_edge_contact();
+	anno = ioAttributes();
+	if ( h5w.nexus_write(
+		dsnm,
+		io_info({u8.size()}, {u8.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+		u8,
+		anno ) != MYHDF5_SUCCESS ) { return false; }
+	u8 = vector<unsigned char>();
+
+	if ( (loop - Settings::StartTime) % Settings::NetworkExport == 0) {
+		vector<double> f64_vrts;
+		//should be implemented with incrementally writing i.e.
+		//first a probe_nexus_grain_boundary to find the bounds
+		dsnm = grpnm + "/grain_boundary_vertices";
+		get_nexus_grain_boundary_vertices( f64_vrts );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64_vrts.size() / 2, 2}, {f64_vrts.size() / 2, 2}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64_vrts,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64_vrts = vector<double>();
+
+		vector<unsigned int> u32_xdmf_topo;
+		dsnm = grpnm + "/grain_boundary_xdmf_topology";
+		get_nexus_grain_boundary_xdmf_topology( u32_xdmf_topo );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({u32_xdmf_topo.size()}, {u32_xdmf_topo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			u32_xdmf_topo,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		u32_xdmf_topo = vector<unsigned int>();
+
+		dsnm = grpnm + "/grain_boundary_xdmf_grain_id";
+		get_nexus_grain_boundary_xdmf_grain_indices( u32 );
+		anno = ioAttributes();
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({u32.size()}, {u32.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			u32,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		u32 = vector<unsigned int>();
+
+		vector<double> f64_ifo;
+		dsnm = grpnm + "/grain_boundary_energy_times_mobility";
+		get_nexus_grain_boundary_info( f64_ifo );
+		anno = ioAttributes();
+		//anno.add( "unit", string("(J/m^2)*(m^4/J/s)") );
+		if ( h5w.nexus_write(
+			dsnm,
+			io_info({f64_ifo.size()}, {f64_ifo.size()}, MYHDF5_COMPRESSION_GZIP, 0x01),
+			f64_ifo,
+			anno ) != MYHDF5_SUCCESS ) { return false; }
+		f64_ifo = vector<double>();
+	}
+
+	return true;
+}
+
+
 void grainhdl::save_Texture() {
 	cerr << "grainhdl::save_Texture FIX ME !!" << "\n";
 	/*
@@ -1148,7 +1611,7 @@ void grainhdl::run_sim() {
 		//		switchDistancebuffer();
 		if (((loop - Settings::StartTime) % int(Settings::AnalysisTimestep))
 				== 0 || loop == Settings::NumberOfTimesteps) {
-			if ( ((loop - Settings::StartTime) % ( int(Settings::PlotInterval * Settings::AnalysisTimestep) ) == 0) && loop != 0 ) {
+			if ( ((loop - Settings::StartTime) % ( int(Settings::NetworkExport * Settings::AnalysisTimestep) ) == 0) && loop != 0 ) {
 				//##MK::for debug purposes still do plotting of network
 				//save_NetworkPlot();
 				/*
@@ -1160,6 +1623,12 @@ void grainhdl::run_sim() {
 
 			//if ( loop >= 4000 )
 
+			if ( save_NeXus() == true ) {
+				cout << "Writing snapshot data for loop " << loop << " into NeXus file success." << "\n";
+			}
+			else {
+				cerr << "Writing snapshot data for loop " << loop << " into NeXus file failed!" << "\n";
+			}
 			/*
 			save_TextureFaces_Binary(); //MK::save_Texture(); MODF writing disabled to reduce number of files
 			*/
@@ -1599,12 +2068,12 @@ for		(auto id : workload) {
 	switch (Settings::ConvolutionMode) {
 		case E_LAPLACE: {
 			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 			break;
 		}
 		case E_LAPLACE_RITCHARDSON: {
 			dt = 0.8 / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0;
+				* Settings::NumberOfPointsPerGrain / 2 / 5.;
 			break;
 		}
 		case E_GAUSSIAN: {
@@ -1612,10 +2081,10 @@ for		(auto id : workload) {
 			//dt = 0.8 / double(realDomainSize * realDomainSize)
 			//	* Settings::NumberOfPointsPerGrain / 2; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 			dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-				* Settings::NumberOfPointsPerGrain / 2 / 5.0; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
+				* Settings::NumberOfPointsPerGrain / 2 / 5.; //CM::one grid point per integration step defined such that grain with radius 5 migrates at most 1 px per integration step
 			if(Settings::DecoupleGrains == 1) {
 				dt = Settings::GaussianKernelTimeStepFactor / double(realDomainSize * realDomainSize)
-					* Settings::UserDefNumberOfPointsPerGrain / 2 / 5.0; //MK factor 2 to translate diameter in radius, factor 5.0
+					* Settings::NumberOfPointsPerGrain / 2 / 5.; //MK factor 2 to translate diameter in radius, factor 5.0
 			}
 			break;
 		}
@@ -1727,7 +2196,7 @@ void grainhdl::initNUMABindings() {
 	bitmask* cpus = numa_allocate_cpumask();
 	for (unsigned int j = 0; j < mask->size; j++) {
 		if (numa_bitmask_isbitset(mask, j)) {
-			printf("We are allowed to used node %d\n", j);
+			cout << "We are allowed to used node " << j << "\n";
 			NUMANode node;
 			memset(&node, 0xFF, sizeof(node));
 			numa_node_to_cpus(j, cpus);
@@ -1745,21 +2214,25 @@ void grainhdl::initNUMABindings() {
 		}
 	}
 	numa_free_cpumask(cpus);
-#pragma omp parallel
+	#pragma omp parallel
 	{
 		int threadID = omp_get_thread_num();
 		for (unsigned int i = 0; i < nodes.size(); i++) {
 			if (threadID < nodes.at(i).num_cpus) {
-#pragma omp critical
+				#pragma omp critical
 				{
-					printf("Will bind thread %d to cpu %d\n",
-							omp_get_thread_num(),
-							nodes.at(i).numa_cpus[threadID]);
+					cout << "Will bind thread " << omp_get_thread_num() << " to CPU " << nodes.at(i).numa_cpus[threadID];
 					cpu_set_t set;
 					CPU_ZERO(&set);
 					CPU_SET(nodes.at(i).numa_cpus[threadID], &set);
 					int res = sched_setaffinity(0, sizeof(set), &set);
-					printf(res == 0 ? "Successful\n" : "Failed\n");
+					if ( res == 0 ) {
+						cout << ", success";
+					}
+					else {
+						cout << ", failed!";
+					}
+					cout << "\n";
 				}
 				break;
 			}
@@ -1833,6 +2306,34 @@ for	(auto id : workload) {
 	}
 }
 }
+
+
+void grainhdl::buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
+	vector<double> & q, vector<double> & see )
+{
+	m_grainScheduler->buildGrainWorkloads(contours, ngridpoints);
+	cout << "Construct LSbox objects" << endl;
+	#pragma omp parallel
+	{
+		vector<unsigned int>& workload = m_grainScheduler->getThreadWorkload(omp_get_thread_num());
+		for	(auto id : workload) {
+			if (id <= Settings::NumberOfParticles) {
+				if (ID[id] == -1) {
+					grains[id] = NULL;
+					continue;
+				}
+				LSbox* grain;
+				double stored_elastic_energy = (Settings::UseStoredElasticEnergy) ? see[id] : 0.;
+				vector<double> qt;
+				for( unsigned int i = 0; i < 4; i++ ) { qt.push_back(q[(4*id)+i]); }
+
+				grain = new LSbox(ID[id], contours[id], qt, stored_elastic_energy, this);
+				grains[id] = grain;
+			}
+		}
+	}
+}
+
 
 void grainhdl::set_h(double hn) {
 	h = hn;

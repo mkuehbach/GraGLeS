@@ -27,11 +27,24 @@
 #include "misorientation.h"
 #include "IGrainScheduler.h"
 #include "dimensionalBuffer.h"
+#include "../../../utils/src/cxx/PARAPROBE_HDF5Core.h"
 
 #define xsect(p1,p2) (h[p2]*xh[p1]-h[p1]*xh[p2])/(h[p2]-h[p1])
 #define ysect(p1,p2) (h[p2]*yh[p1]-h[p1]*yh[p2])/(h[p2]-h[p1])
 // #define min(x,y) (x<y?x:y)
 // #define max(x,y) (x>y?x:y)
+
+#define NX_IDENTIFIER		0	//id
+#define NX_SIZE				1	//volume
+//double perimeter;
+//double GBEnergy;
+#define NX_SEE				4	//BulkEnergy
+#define NX_ORI				5	//phi1, PHI, phi2
+#define NX_BARY				6	//x, y
+#define NX_NBOR_CNT			7	//NeighbourCount
+#define NX_EDGE_CONTACT		8	//intersectsBoundaryGrain
+
+
 
 using namespace voro;
 using namespace std;
@@ -102,12 +115,14 @@ public:
 	void setResearchAdjustments(E_RESEARCH_PROJECT project);
 	void setSimulationParameter();
 	void read_HeaderCPG();
+	void read_header_from_nexusfile();
 
 	void VOROMicrostructure();
 	void readMicrostructureFromVertex();
 	void readMicrostructure();
 	void save_Full_Microstructure_for_Restart();
 	void read_voxelized_microstructure();
+	void read_microstructure_from_nexusfile();
 
 	void createParamsForSim(const char* param_filename,
 			const char* vertex_dum_filename = NULL);
@@ -129,6 +144,20 @@ public:
 	virtual void run_sim();
 	void save_NrGrainsStats();
 	void clear_mem();
+
+	vector<unsigned int> get_nexus_grain_identifier();
+	vector<double> get_nexus_grain_size();
+	vector<double> get_nexus_grain_stored_elastic_energy();
+	vector<unsigned char> get_nexus_grain_edge_contact();
+	vector<double> get_nexus_grain_orientation();
+	vector<double> get_nexus_grain_barycentre();
+	void get_nexus_grain_boundary_vertices(vector<double> & vrts);
+	vector<size_t> nx_vrts_offsets;
+	void get_nexus_grain_boundary_xdmf_topology(vector<unsigned int> & inds );
+	void get_nexus_grain_boundary_xdmf_grain_indices( vector<unsigned int> & grain_ids );
+	void get_nexus_grain_boundary_info(vector<double> & ifo );
+	bool save_NeXus();
+
 	void save_Texture();
 	void save_TextureFaces_Binary();
 	void save_RealtimeLog();
@@ -203,6 +232,8 @@ protected:
 			vector<double>& q2, vector<double>& q3, vector<double>& q4);
 	void buildBoxVectors(int* ID, vector<vector<SPoint>>& contours,
 			Quaternion* Quaternionen, double* StoredElasticEnergy);
+	void buildBoxVectors(vector<int> & ID, vector<vector<SPoint>> & contours,
+			vector<double> & q, vector<double> & see );
 	int m_ThreadPoolCount;
 	vector<ExpandingVector<char> > m_ThreadMemPool;
 };

@@ -27,41 +27,144 @@ using namespace std;
 #include <stdio.h>
 
 
-int main(int argc, char *argv[]) {
+void init_results_file()
+{
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	ioAttributes anno = ioAttributes();
+	string grpnm = "";
+	string dsnm = "";
 
-	if (argc > 1)
-		Settings::initializeParameters(argv[1]);
-	else
-		Settings::initializeParameters();
+	unsigned int entry_id = 1;
+	grpnm = "/entry" + to_string(entry_id);
 
-	grainhdl* my_sim = NULL;
+	stringstream sstr;
+	sstr << "https://github.com/mkuehbach/GraGLeS/<<ADD COMMID ID>>/NXms_gragles_results";
+	cout << sstr.str() << "\n";
+	anno = ioAttributes();
+	anno.add( "version", string(sstr.str()) );
+	anno.add( "NX_class", string("NXentry") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
 
-	my_sim = new grainhdl();
+	dsnm = grpnm + "/definition";
+	string appdef_name = "NXms_gragles_results";
+	anno = ioAttributes();
+	if ( h5w.nexus_write( dsnm, appdef_name, anno ) != MYHDF5_SUCCESS ) { return; }
 
-	my_sim->setResearchAdjustments(Settings::ResearchProject);
+	dsnm = grpnm + "/program";
+	string program_name = "twod_obc_solver";
+	anno = ioAttributes();
+	anno.add( "version", string("<<ADD PARSING OF xstr(GITSHA)>>") );
+	anno.add( "preprocessor_date", string(__DATE__) );
+	anno.add( "preprocessor_time", string(__TIME__) );
+	if ( h5w.nexus_write( dsnm, program_name, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	dsnm = grpnm + "/analysis_identifier";
+	unsigned int identifier = Settings::SimulationId;
+	anno = ioAttributes();
+	//anno.add( "unit", string("NX_UNITLESS") );
+	if ( h5w.nexus_write( dsnm, identifier, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	dsnm = grpnm + "/start_time";
+	string start_time_stamp = "<<ADD TIME PARSING via utils/src/cxx>>";
+	anno = ioAttributes();
+	//MK::IF THE VALUE to WRTIE IS A STRING IT MUST NOT BE A CONST STRING
+	if ( h5w.nexus_write( dsnm, start_time_stamp, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	dsnm = grpnm + "/config_filename";
+	string config_file_sha256 = "<<ADD SHA256( ConfigShared::ConfigurationFile )>>";
+	string config_file_name = "<<ADD ConfigShared::ConfigurationFile>>";
+	cout << "config_file_sha256 " << config_file_sha256 << "\n";
+	cout << "config_file_name " << config_file_name << "\n";
+	anno = ioAttributes();
+	anno.add( "version", config_file_sha256 );
+	anno.add( "comment", string("SHA256 checksum"));
+	if ( h5w.nexus_write( dsnm, config_file_name, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	grpnm = "/entry" + to_string(entry_id) + "/coordinate_system_set";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXcoordinate_system_set") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	grpnm = "/entry" + to_string(entry_id) + "/coordinate_system_set/gragles";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXtransformations") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+
+	vector<string> axis_name = { "/x", "/y", "/z" };
+	for( size_t i = 0; i < 3; i++ ) {
+		dsnm = grpnm + axis_name[i];
+		vector<double> real = vector<double>( 3, 0. );
+		real[i] = 1.;
+		anno = ioAttributes();
+		anno.add( "depends_on", string(".") );
+		anno.add( "offset", string("{0., 0., 0.}, storing 1d array as an attribute value not yet implemented") ); //##MK::not yet implemented
+		anno.add( "offset_units", string("nm") );
+		if ( h5w.nexus_write(
+				dsnm,
+				io_info({3, 1},
+						{3, 1}),
+				real,
+				anno) != MYHDF5_SUCCESS ) { return; }
+	}
+	//##MK::add dim_alias names
+
+	grpnm = "/entry" + to_string(entry_id) + "/ms";
+	anno = ioAttributes();
+	anno.add( "NX_class", string("NXms_snapshot_set") );
+	if ( h5w.nexus_write_group( grpnm, anno ) != MYHDF5_SUCCESS ) { return; }
+}
+
+
+int main(int argc, char *argv[])
+{
+	if ( argc != 3 ) {
+		cout << "Command line call has to be <<app>> <<simid>> <<configfile>>" << "\n";
+		return 0;
+	}
+	double gtic = omp_get_wtime();
+	Settings::SimulationId = std::stoul(argv[1]);
+	Settings::ConfigFileName = argv[2];
+	Settings::ResultsFileName = "Twod.Obc.Solver.Results.SimID."
+		+ to_string(Settings::SimulationId) + ".nxs";
+
+	Settings::initializeParameters(Settings::ConfigFileName);
+	if (Settings::StatusHealthy == false ) {
+		cout << "Loading configuration " << Settings::ConfigFileName << " failed or is invalid!" << "\n";
+		return 0;
+	}
+
+	HdfFiveSeqHdl h5w = HdfFiveSeqHdl( Settings::ResultsFileName );
+	if( h5w.nexus_create() != MYHDF5_SUCCESS ) { 
+		cout << "Creating results NeXus/HDF5 file " << Settings::ResultsFileName << " failed!" << "\n";
+		return 0;
+	}
+	init_results_file();
+
+	grainhdl my_sim = grainhdl();
+	my_sim.setResearchAdjustments(Settings::ResearchProject);
+	
 	timeval time_start, time_end;
 	gettimeofday(&time_start, NULL);
-	my_sim->setSimulationParameter();
+
+	my_sim.setSimulationParameter();
 	gettimeofday(&time_end, NULL);
 	double elapsed_secs = (time_end.tv_sec - time_start.tv_sec)
 			+ (time_end.tv_usec - time_start.tv_usec) / 1000000.0;
 	cout << "elapsed secs for Initializing network (Read):" << elapsed_secs << endl << endl;
 
 	if (Settings::MicrostructureGenMode == E_GENERATE_WITH_VORONOY )
-		my_sim->save_Full_Microstructure_for_Restart();
+		my_sim.save_Full_Microstructure_for_Restart();
 
 	gettimeofday(&time_start, NULL);
-	my_sim->run_sim();
+	my_sim.run_sim();
 
 	gettimeofday(&time_end, NULL);
 	elapsed_secs = (time_end.tv_sec - time_start.tv_sec) + (time_end.tv_usec
 			- time_start.tv_usec) / 1000000.0;
 	cout << "elapsed secs for main loop:" << elapsed_secs << endl;
 
-	my_sim->save_NrGrainsStats();
+	my_sim.save_NrGrainsStats();
 
-	my_sim->clear_mem();
-
-	delete my_sim;
-
+	my_sim.clear_mem();
+	return 0;
 }

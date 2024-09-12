@@ -3,7 +3,7 @@
 	A program to instantiate two-staged Poisson-Voronoi tessellation microstructures of 
 	parent grains and their sub-grains with adjustable properties such as orientation, and dislocation density
 	Copyright (C) 2016
-	Christian Miessen (data structures), Markus Kühbach (physical metallurgy functionalities, PRNGs), 
+	Christian Miessen (data structures), Markus Kï¿½hbach (physical metallurgy functionalities, PRNGs), 
 	Nikola Velinov (data structures), Luis Antonio Barrales-Mora (PRNGs, Math), Jonathan Nierengarten
 
 	The work was funded by the DFG Reinhart-Koselleck project GO 335/44-1
@@ -49,12 +49,13 @@ struct myPreferenceOri {
 		;
 		SEEGrainScatter = Settings::StoredElasticScatterGrain; //interpreted as the sigma of the distribution
 		SEESubgrainScatter = Settings::StoredElasticScatterSubgrain;
-		subgrainsScatterOri = Settings::SubgrainOriScatter*PI/180.0; //interpreted as the sigma of a rAyleigh distribution
-		RelSubgrainSizeScaling = 1.0;
+		subgrainsScatterOri = DEG2RAD(Settings::SubgrainOriScatter); //interpreted as the sigma of a rAyleigh distribution
+		RelSubgrainSizeScaling = 1.;
 	}
 	myPreferenceOri(double phi1, double PHI, double phi2, double _oriScatter,
 			double _SEE, double _SEEGrainScatter, double _SEESubgrainScatter, double _RelSizeScaler) :
-			SEE(_SEE), SEEGrainScatter(_SEEGrainScatter), SEESubgrainScatter(_SEESubgrainScatter), subgrainsScatterOri(_oriScatter), RelSubgrainSizeScaling(_RelSizeScaler) {
+			SEE(_SEE), SEEGrainScatter(_SEEGrainScatter), SEESubgrainScatter(_SEESubgrainScatter),
+			subgrainsScatterOri(_oriScatter), RelSubgrainSizeScaling(_RelSizeScaler) {
 		double euler[3] = { phi1, PHI, phi2 };
 		ori.euler2Quaternion(euler);
 	}
@@ -100,20 +101,15 @@ public:
 	//set functions
 	void set_Orientation(myQuaternion ori);
 
-	void computeDirectNeighbours(
-			const RTree<unsigned int, int, 3, float>& tree);
+	void computeDirectNeighbours(const RTree<unsigned int, int, 3, float>& tree);
 	void copyVoxelData(DimensionalBuffer<unsigned int> *container);
-	int copySubgrainsToGlobalContainer(
-			DimensionalBuffer<unsigned int> *container, int offset);
-	//void correctSubgrainVolWhenBreakingPer();
-
-	void plotDensityOfOrientation();
-	void plotLocalContainer();
+	int copySubgrainsToGlobalContainer(DimensionalBuffer<unsigned int> *container, int offset);
 	void copyContainerToGrain(DimensionalBuffer<unsigned int>* container);
 
 	void generateSubGrainOri(randomClass& r);
 	void generateSubGrainSEE(randomClass& r);
 	int rehashAllSubGrains(int offset);
+
 	//get functions
 	inline myQuaternion getOri() {
 		return *m_orientation;
